@@ -9,7 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
-// Web fallback için ekle
+// Web fallback için ekle thbhybg
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:typed_data';
