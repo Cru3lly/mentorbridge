@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "118238915722",
+    "firebase_url": "https://mentorbridge-c5e60-default-rtdb.firebaseio.com",
+    "project_id": "mentorbridge-c5e60",
+    "storage_bucket": "mentorbridge-c5e60.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:118238915722:android:fcda2ad320620f782d9173",
+        "android_client_info": {
+          "package_name": "com.example.mentorbridge"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "118238915722-pq1s5qigcppfr4ki5u22fo33e4b74g4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7FcRIPbpSWmv_SwzGN_XMoRA7rVDf8pY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "118238915722-pq1s5qigcppfr4ki5u22fo33e4b74g4k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "118238915722-qm6k9ki9k39orm2c1sgk1pm8sq7uv434.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mentorbridge"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:118238915722:android:2fd041a38ace27c42d9173",
+        "android_client_info": {
+          "package_name": "com.taha.mentorbridge"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "118238915722-pq1s5qigcppfr4ki5u22fo33e4b74g4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7FcRIPbpSWmv_SwzGN_XMoRA7rVDf8pY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "118238915722-pq1s5qigcppfr4ki5u22fo33e4b74g4k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "118238915722-qm6k9ki9k39orm2c1sgk1pm8sq7uv434.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mentorbridge"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,72 @@
+name: mentorbridge
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.13.1
+  cloud_firestore: ^5.6.8
+  firebase_auth: ^5.5.4
+  firebase_storage: ^12.4.6
+  google_sign_in: ^6.3.0
+  image_picker: ^1.0.0
+  fl_chart: ^1.0.0
+  device_preview: ^1.1.0
+  cupertino_icons: ^1.0.8
+  flutter_launcher_icons: ^0.14.3
+  introduction_screen: ^3.1.17
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.3.1
+  flutter_native_splash: ^2.0.5
+  excel: ^2.1.0
+  path_provider: ^2.1.2
+  share_plus: ^7.2.1
+  image_cropper: ^9.1.0
+  package_info_plus: ^4.2.0
+  go_router: ^13.2.0
+  google_fonts: ^6.2.1
+  flutter_neumorphic: ^3.2.0
+  glassmorphism: ^3.0.0
+  dropdown_button2: ^2.3.9
+  syncfusion_flutter_xlsio: 29.2.11
+  open_file: ^3.3.2
+  csv: ^5.1.1
+  pdf: ^3.10.7
+  file_picker: ^10.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo.png
+    - assets/google_logo.png
+    - assets/avatars/avatar1.png
+    - assets/avatars/avatar2.png
+    - assets/avatars/avatar3.png
+    - assets/avatars/avatar4.png
+    - assets/avatars/avatar5.png
+    - assets/fonts/NotoSans-Regular.ttf
+    - assets/fonts/NotoSans-Bold.ttf
+
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/logo.png
+  android: true
+  ios: true
+  web: true
