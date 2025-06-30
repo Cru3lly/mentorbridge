@@ -45,9 +45,5 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-
-	<!-- 🔐 Konum (GPS) kullanımı için açıklama -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to confirm your country for security reasons.</string>
 </dict>
 </plist>
