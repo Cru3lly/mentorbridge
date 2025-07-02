@@ -7,9 +7,7 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/services.dart';
@@ -137,10 +135,17 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
           final activityType = isNoActivity ? 'No Activity' : (data['activity'] ?? '');
           // Tarih filtresi: önce startdate, yoksa doc.id
           String? dateStr = data['startdate'];
-          if (dateStr == null || dateStr.isEmpty) dateStr = doc.id;
+          if (dateStr == null || dateStr.isEmpty) {
+            final reportId = doc.id;
+            if (reportId.length >= 10) {
+              dateStr = reportId.substring(0, 10);
+            } else {
+              dateStr = '';
+            }
+          }
           DateTime? reportDate;
           try {
-            reportDate = DateTime.parse(dateStr);
+            reportDate = DateTime.parse(dateStr ?? '');
           } catch (e) {
             continue;
           }
@@ -656,21 +661,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
     final List<int> bytes = workbook.saveAsStream();
     workbook.dispose();
 
-    if (kIsWeb) {
-      final content = Uint8List.fromList(bytes);
-      final blob = html.Blob([content]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute("download", "Activity Counts By Mentor.xlsx")
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts By Mentor.xlsx';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts By Mentor.xlsx';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
 
     setState(() => _isExporting = false);
   }
@@ -841,22 +837,13 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
       ),
     );
     final bytes = await pdf.save();
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts By Mentor.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts By Mentor.pdf';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts By Mentor.pdf';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToCsvCrosstab() async {
@@ -893,20 +880,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
     // Write CSV
     String csvData = const ListToCsvConverter().convert(rows);
     final bytes = utf8.encode(csvData);
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'MentorActivityCounts.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/MentorActivityCounts.csv';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/MentorActivityCounts.csv';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToTextCrosstab() async {
@@ -940,20 +919,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
     totalRow.add(grandTotal.toString());
     lines.add(totalRow.join(' | '));
     final bytes = utf8.encode(lines.join('\n'));
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'MentorActivityCounts.txt')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/MentorActivityCounts.txt';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/MentorActivityCounts.txt';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToHtmlCrosstab() async {
@@ -1058,20 +1029,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsByMentorPageState extends Sta
     htmlBuffer.writeln('</table>');
     htmlBuffer.writeln('</body></html>');
     final bytes = utf8.encode(htmlBuffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'MentorActivityCounts.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/MentorActivityCounts.html';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/MentorActivityCounts.html';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 }
 

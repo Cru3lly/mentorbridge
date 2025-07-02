@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:glassmorphism/glassmorphism.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HighSchoolRegionCoordinatorDashboard extends StatefulWidget {
   const HighSchoolRegionCoordinatorDashboard({super.key});
@@ -12,16 +12,18 @@ class HighSchoolRegionCoordinatorDashboard extends StatefulWidget {
 
 class _HighSchoolRegionCoordinatorDashboardState extends State<HighSchoolRegionCoordinatorDashboard> {
   // Dashboard items
-  static const List<Map<String, dynamic>> items = [
+  static final List<Map<String, dynamic>> items = [
     {
       'label': 'Assign Role',
       'icon': Icons.person_add,
       'route': '/highSchoolRegionCoordinatorIdAuthPage',
+      'color': Colors.deepPurple,
     },
     {
       'label': 'Stats',
       'icon': Icons.bar_chart,
       'route': '/highSchoolRegionCoordinatorStats',
+      'color': Colors.teal,
     },
   ];
 
@@ -30,114 +32,118 @@ class _HighSchoolRegionCoordinatorDashboardState extends State<HighSchoolRegionC
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFFFFF),
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
+          centerTitle: true,
           automaticallyImplyLeading: false,
-          title: const Text(
-            'High School Region Coordinator',
-            style: TextStyle(fontSize: 24),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(
+            'High School\nRegion Coordinator',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Colors.white,
+            ),
           ),
           actions: [
             IconButton(
               icon: const Icon(
                 Icons.settings,
                 size: 30,
+                color: Colors.white,
               ),
               tooltip: 'Settings',
               onPressed: () => context.push('/settings'),
             ),
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Atanan kullanıcılar listesi
-              Expanded(
-                child: FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).get(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final data = snapshot.data?.data() as Map<String, dynamic>?;
-                    final assignedTo = (data?['assignedTo'] as List<dynamic>? ?? []).cast<String>();
-                    if (assignedTo.isEmpty) {
-                      return const Center(child: Text('No assigned users yet.'));
-                    }
-                    return FutureBuilder<QuerySnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('users')
-                          .where(FieldPath.documentId, whereIn: assignedTo)
-                          .get(),
-                      builder: (context, userSnap) {
-                        if (userSnap.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        final users = userSnap.data?.docs ?? [];
-                        return ListView.builder(
-                          itemCount: users.length,
-                          itemBuilder: (context, i) {
-                            final user = users[i].data() as Map<String, dynamic>;
-                            return Card(
-                              child: ListTile(
-                                title: Text(user['username'] ?? users[i].id),
-                                subtitle: Text(user['role'] ?? ''),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: GlassmorphicContainer(
+                width: double.infinity,
+                height: 500, // Adjusted height for 2 items
+                borderRadius: 28,
+                blur: 18,
+                alignment: Alignment.center,
+                border: 2,
+                linearGradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.25),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Dashboard butonları
-              Container(
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white, width: 3),
-                  color: Colors.white,
+                borderGradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.60),
+                    Colors.white.withOpacity(0.10),
+                  ],
                 ),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1.2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: items.map((item) {
-                    return Card(
-                      child: InkWell(
-                        onTap: item['route'] != ''
-                            ? () => Navigator.pushNamed(context, item['route'] as String)
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(item['icon'] as IconData, size: 30),
-                              const SizedBox(height: 8),
-                              Text(
-                                item['label'] as String,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    runAlignment: WrapAlignment.center,
+                    spacing: 20,
+                    runSpacing: 20,
+                    children: items.map((item) {
+                      return SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.35,
+                        height: MediaQuery.of(context).size.width * 0.35,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () => context.push(item['route'] as String),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: (item['color'] as Color).withOpacity(0.13),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (item['color'] as Color)
+                                      .withOpacity(0.18),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(item['icon'] as IconData,
+                                    size: 38, color: item['color'] as Color),
+                                const SizedBox(height: 12),
+                                Text(
+                                  item['label'] as String,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: item['color'] as Color,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

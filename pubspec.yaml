@@ -38,6 +38,7 @@ dependencies:
   csv: ^5.1.1
   pdf: ^3.10.7
   file_picker: ^10.2.0
+  graphview: ^1.2.0
 
 dev_dependencies:
   flutter_test:

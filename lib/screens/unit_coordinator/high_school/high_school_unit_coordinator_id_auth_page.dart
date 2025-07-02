@@ -5,16 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'dart:ui';
 
 class HighSchoolUnitCoordinatorIdAuthPage extends StatefulWidget {
   const HighSchoolUnitCoordinatorIdAuthPage({super.key});
 
   @override
-  State<HighSchoolUnitCoordinatorIdAuthPage> createState() => _HighSchoolUnitCoordinatorIdAuthPageState();
+  State<HighSchoolUnitCoordinatorIdAuthPage> createState() =>
+      _HighSchoolUnitCoordinatorIdAuthPageState();
 }
 
-class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoordinatorIdAuthPage> {
+class _HighSchoolUnitCoordinatorIdAuthPageState
+    extends State<HighSchoolUnitCoordinatorIdAuthPage> {
   final TextEditingController _idController = TextEditingController();
   String? _selectedRole;
   bool _isLoading = false;
@@ -25,19 +26,142 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
   bool _isCheckingUserRole = false;
   String? _currentUserName;
 
-  final List<String> _roles = [
-    'mentor',
-    'user',
-  ];
+  // New state variables for the new architecture
+  List<Map<String, dynamic>> _mentorshipGroups = [];
+  String? _selectedMentorshipGroupId;
+  bool _isLoadingGroups = true;
+  String? _unitPath; // Path of the unit this coordinator manages
+  String? _unitGenderType; // e.g., 'Male', 'Female', 'Mixed'
 
-  Future<void> assignRole(String role, String id) async {
+  final List<String> _roles = ['mentor', 'user'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnitAndGroups();
+    _idController.addListener(_onIdChanged);
+  }
+
+  @override
+  void dispose() {
+    _idController.removeListener(_onIdChanged);
+    _idController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchUnitAndGroups() async {
+    setState(() {
+      _isLoadingGroups = true;
+      _mentorshipGroups = []; // Reset
+      _unitPath = null; // Reset
+    });
+    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserUid == null) {
+      setState(() {
+        _isLoadingGroups = false;
+        _message = "Authentication error. Please login again.";
+      });
+      return;
+    }
+
+    try {
+      final userDoc =
+          await _firestore.collection('users').doc(currentUserUid).get();
+      final entityPath = userDoc.data()?['managesEntity'] as String?;
+
+      if (entityPath == null || !entityPath.startsWith('organizationalUnits/')) {
+        setState(() {
+          _isLoadingGroups = false;
+          _message = "Error: Your account is not configured to manage a unit.";
+        });
+        return;
+      }
+      
+      final unitDoc = await _firestore.doc(entityPath).get();
+      if (!unitDoc.exists) {
+        setState(() {
+          _isLoadingGroups = false;
+          _message = "Error: Managed unit not found in the database.";
+        });
+        return;
+      }
+
+      // If we've reached here, the path is valid. Let's set it.
+      setState(() {
+        _unitPath = entityPath;
+        _unitGenderType = unitDoc.data()?['gender'] as String? ?? 'Mixed';
+      });
+
+      // Now, fetch groups using the now-guaranteed-to-be-non-null _unitPath
+      final groupsSnapshot = await _firestore
+          .collection('organizationalUnits')
+          .where('parentUnit', isEqualTo: _firestore.doc(_unitPath!)) // Use parentUnit reference
+          .where('type', isEqualTo: 'mentorshipGroup')
+          .get();
+
+      Map<String, String> mentorNames = {};
+      List<String> mentorIds = groupsSnapshot.docs
+          .map((doc) => doc.data()['currentMentorId'] as String?)
+          .where((id) => id != null)
+          .cast<String>()
+          .toList();
+
+      if (mentorIds.isNotEmpty) {
+        final mentorDocs = await _firestore
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: mentorIds)
+            .get();
+        for (var doc in mentorDocs.docs) {
+          mentorNames[doc.id] =
+              _getFullNameFromFields(doc.data()['firstName'], doc.data()['lastName']);
+        }
+      }
+
+      final List<Map<String, dynamic>> groups = groupsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final currentMentorId = data['currentMentorId'] as String?;
+        return {
+          'id': doc.id,
+          'name': data['name'] ?? 'Unnamed Group',
+          'currentMentorId': currentMentorId,
+          'mentorName':
+              currentMentorId != null ? mentorNames[currentMentorId] : null,
+        };
+      }).toList();
+
+      setState(() {
+        _mentorshipGroups = groups;
+        _isLoadingGroups = false;
+      });
+
+    } catch (e) {
+      setState(() {
+        _isLoadingGroups = false;
+        _message = "An error occurred while fetching data: $e";
+      });
+    }
+  }
+
+  Future<void> _updateRole() async {
+    if (_selectedRole == null || _idController.text.trim().isEmpty) {
+      setState(() => _message = 'Please select a role and enter a User ID.');
+      return;
+    }
+    if (_selectedRole == 'mentor' && _selectedMentorshipGroupId == null) {
+      setState(
+          () => _message = 'Please select a class for the mentor.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _message = '';
     });
 
+    final targetUserId = _idController.text.trim();
     final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-    if (id == currentUserUid) {
+
+    if (targetUserId == currentUserUid) {
       setState(() {
         _message = 'You cannot assign a role to yourself.';
         _isLoading = false;
@@ -45,16 +169,8 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
       return;
     }
 
-    if (id.isEmpty) {
-      setState(() {
-        _message = 'Please enter a valid User ID!';
-        _isLoading = false;
-      });
-      return;
-    }
-
     try {
-      final userDoc = await _firestore.collection('users').doc(id).get();
+      final userDoc = await _firestore.collection('users').doc(targetUserId).get();
       if (!userDoc.exists) {
         setState(() {
           _message = 'User ID does not exist!';
@@ -62,53 +178,104 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
         });
         return;
       }
-
+      
       final targetUserRole = userDoc.data()?['role'] as String? ?? '';
-      if (targetUserRole == 'admin' || targetUserRole == 'countryCoordinator' || (targetUserRole.contains('regionCoordinator')) || (targetUserRole.contains('unitCoordinator')) || (targetUserRole.contains('student'))) {
-        setState(() {
-          _message = 'You are not allowed to change this user\'s role.';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final targetFirstName = userDoc.data()?['firstName'] as String? ?? '';
       final targetLastName = userDoc.data()?['lastName'] as String? ?? '';
       final targetFullName = ('$targetFirstName $targetLastName').trim();
+      
+      if (targetUserRole == _selectedRole) {
+        if (_selectedRole == 'mentor') {
+          final managesEntity = userDoc.data()?['managesEntity'] as String?;
+          if (managesEntity == 'organizationalUnits/$_selectedMentorshipGroupId') {
+            setState(() {
+              _message = '${targetFullName.isNotEmpty ? targetFullName : 'User'} is already the mentor of this class!';
+              _isLoading = false;
+            });
+            return;
+          }
+        } else {
+            setState(() {
+              _message = '${targetFullName.isNotEmpty ? targetFullName : 'User'} already has this role!';
+              _isLoading = false;
+            });
+            return;
+        }
+      }
 
-      if (targetUserRole == role) {
-        setState(() {
-          _message = '${targetFullName.isNotEmpty ? targetFullName : 'User'} already has the ${_getRoleTitle(role)} role!';
-          _isLoading = false;
+      final batch = _firestore.batch();
+      final targetUserRef = userDoc.reference;
+      final unitCoordinatorRef = _firestore.collection('users').doc(currentUserUid);
+
+      if (_selectedRole == 'mentor') {
+        if (_selectedMentorshipGroupId == null) {
+          setState(() { _message = 'Please select a class for the mentor.'; _isLoading = false; });
+          return;
+        }
+
+        final selectedGroupData = _mentorshipGroups.firstWhere((g) => g['id'] == _selectedMentorshipGroupId);
+
+        if (selectedGroupData['isPending'] == true) {
+          final newGroupRef = _firestore.collection('organizationalUnits').doc();
+          
+          batch.set(newGroupRef, {
+            'name': selectedGroupData['name'],
+            'type': 'mentorshipGroup',
+            'parentUnit': _firestore.doc(_unitPath!),
+            'createdAt': FieldValue.serverTimestamp(),
+            'gender': _unitGenderType,
+            'currentMentorId': targetUserId,
+          });
+
+          batch.update(targetUserRef, {
+            'role': 'mentor',
+            'managesEntity': newGroupRef.path,
+          });
+
+        } else {
+          final groupPath = 'organizationalUnits/${selectedGroupData['id']}';
+          final groupRef = _firestore.doc(groupPath);
+
+          final groupDoc = await groupRef.get();
+          if(groupDoc.exists && groupDoc.data()?['currentMentorId'] != null) {
+            setState(() { _message = 'This class is already assigned to another mentor.'; _isLoading = false; });
+            return;
+          }
+
+          batch.update(groupRef, {'currentMentorId': targetUserId});
+          batch.update(targetUserRef, { 'role': 'mentor', 'managesEntity': groupRef.path });
+        }
+      } else if (_selectedRole == 'user') {
+        final previousManagedEntity = userDoc.data()?['managesEntity'] as String?;
+        if (previousManagedEntity != null && previousManagedEntity.startsWith('organizationalUnits/')) {
+            final oldGroupDoc = await _firestore.doc(previousManagedEntity).get();
+            if(oldGroupDoc.exists && oldGroupDoc.data()?['type'] == 'mentorshipGroup') {
+                batch.update(oldGroupDoc.reference, {'currentMentorId': FieldValue.delete()});
+            }
+        }
+        
+        batch.update(targetUserRef, {
+          'role': 'user',
+          'managesEntity': FieldValue.delete(),
+          'parentId': FieldValue.delete(), 
         });
-        return;
+        
+        batch.update(unitCoordinatorRef, {'assignedTo': FieldValue.arrayRemove([targetUserId])});
       }
 
-      final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-      final updateData = {
-        'role': role,
-        'assignedBy': currentUserUid,
-      };
-      if (role == 'mentor') {
-        updateData['parentId'] = currentUserUid;
-        await _firestore.collection('users').doc(id).update(updateData);
-      } else if (role == 'user') {
-        await _firestore.collection('users').doc(id).update(updateData);
-        await _firestore.collection('users').doc(id).update({'parentId': FieldValue.delete()});
-      } else {
-        await _firestore.collection('users').doc(id).update(updateData);
-      }
-      final assignedToRef = _firestore.collection('users').doc(currentUserUid);
-      await assignedToRef.set({
-        'assignedTo': FieldValue.arrayUnion([id])
-      }, SetOptions(merge: true));
+      await batch.commit();
 
       setState(() {
-        _message = '${_getRoleTitle(role)} successfully assigned to $targetFullName!';
+        _message = 'Role successfully updated for $targetFullName!';
         _isLoading = false;
+        _idController.clear();
+        _selectedRole = null;
+        _selectedMentorshipGroupId = null;
+        _currentUserName = null;
+        _currentUserRoleText = null;
+        _fetchUnitAndGroups(); 
       });
-      _idController.clear();
-      setState(() => _selectedRole = null);
+
     } catch (e) {
       setState(() {
         _message = 'An error occurred: $e';
@@ -181,6 +348,14 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
 
   String _getRoleTitle(String role) {
     switch (role) {
+      case 'admin':
+        return 'Admin';
+      case 'country-coordinator':
+        return 'Country Coordinator';
+      case 'region-coordinator':
+        return 'Region Coordinator';
+      case 'unit-coordinator':
+        return 'Unit Coordinator';
       case 'mentor':
         return 'Mentor';
       case 'user':
@@ -190,12 +365,89 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
     }
   }
 
-  String _getFullNameFromFields(String? first, String? last, {String? id}) {
-    final f = (first ?? '').trim();
-    final l = (last ?? '').trim();
-    if (f.isNotEmpty && l.isNotEmpty) return '$f $l';
-    if (f.isNotEmpty) return f;
-    return id ?? '';
+  String _getFullNameFromFields(String? name, String? lastName, {String id = ''}) {
+    if ((name == null || name.isEmpty) && (lastName == null || lastName.isEmpty)) {
+      return id;
+    }
+    return '${name ?? ''} ${lastName ?? ''}'.trim();
+  }
+
+  String _getOrdinalSuffix(int number) {
+    if (number % 100 >= 11 && number % 100 <= 13) {
+      return 'th';
+    }
+    switch (number % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
+
+  String _getBaseGradeName(int grade) {
+    final suffix = _getOrdinalSuffix(grade);
+    return '$grade$suffix Grade';
+  }
+
+  void _createMentorshipGroup(int grade) {
+    if (_unitPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Cannot create class: Unit path not found.")),
+      );
+      return;
+    }
+
+    final gradeNameBase = _getBaseGradeName(grade);
+    
+    final allGroupsForGrade = _mentorshipGroups
+        .where((doc) => (doc['name'] as String).startsWith(gradeNameBase))
+        .toList();
+
+    final newSuffix = String.fromCharCode('A'.codeUnitAt(0) + allGroupsForGrade.length);
+    final newGroupName = '$gradeNameBase - $newSuffix';
+
+    final tempId = 'pending_${DateTime.now().millisecondsSinceEpoch}';
+
+    final newGroupData = {
+      'id': tempId,
+      'name': newGroupName,
+      'currentMentorId': null,
+      'mentorName': null,
+      'isPending': true,
+    };
+
+    setState(() {
+      _mentorshipGroups.add(newGroupData);
+      _selectedMentorshipGroupId = tempId;
+      _message = '';
+    });
+  }
+
+  void _showCreateGroupDialog() async {
+    // For high school, grades are 9, 10, 11, 12.
+    const List<int> allGrades = [9, 10, 11, 12];
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text('Create New Class'),
+          children: allGrades.map((grade) {
+            return SimpleDialogOption(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _createMentorshipGroup(grade);
+              },
+              child: Center(child: Text(_getBaseGradeName(grade))),
+            );
+          }).toList(),
+        );
+      },
+    );
   }
 
   @override
@@ -212,15 +464,6 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
         ),
         title: const Text('Assign Role'),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () {
-              context.push('/settings');
-            },
-          ),
-        ],
       ),
       body: Container(
         width: double.infinity,
@@ -233,424 +476,253 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
           ),
         ),
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight - 8.0, bottom: 0.0),
-            child: GlassmorphicContainer(
-              width: MediaQuery.of(context).size.width * 0.95 > 500 ? 500 : MediaQuery.of(context).size.width * 0.95,
-              height: MediaQuery.of(context).size.height * 0.78,
-              constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.65),
-              borderRadius: 32,
-              blur: 18,
-              alignment: Alignment.center,
-              border: 2,
-              linearGradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.25),
-                  Colors.white.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderGradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.60),
-                  Colors.white.withOpacity(0.10),
-                ],
-              ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      // User ID
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                            child: Container(
-                              constraints: const BoxConstraints(minHeight: 120),
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withOpacity(0.18),
-                                    Colors.white.withOpacity(0.04),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('User ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
-                                    const SizedBox(height: 8),
-                                    TextField(
-                                      controller: _idController,
-                                      maxLength: 40,
-                                      style: const TextStyle(fontSize: 16, color: Colors.black87),
-                                      decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: Colors.white.withOpacity(0.18),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.white),
-                                        ),
-                                        isDense: true,
-                                        suffixIcon: IconButton(
-                                          icon: const Icon(Icons.paste),
-                                          tooltip: 'Paste',
-                                          onPressed: () async {
-                                            final data = await Clipboard.getData('text/plain');
-                                            if (data?.text != null) {
-                                              _idController.text = data!.text!;
-                                              _idController.selection = TextSelection.fromPosition(
-                                                TextPosition(offset: _idController.text.length),
-                                              );
-                                              setState(() => _message = '');
-                                              _onIdChanged();
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                      onChanged: (val) {
-                                        setState(() => _message = '');
-                                        _onIdChanged();
-                                      },
-                                    ),
-                                    if (_idController.text.trim().isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: _isCheckingUserRole
-                                            ? const Text('Checking user...', style: TextStyle(fontSize: 13, color: Colors.grey))
-                                            : Row(
-                                                children: [
-                                                  Icon(
-                                                    _currentUserRoleText?.contains('current role is:') == true
-                                                        ? Icons.check_circle
-                                                        : Icons.error,
-                                                    color: _currentUserRoleText?.contains('current role is:') == true
-                                                        ? Colors.green
-                                                        : Colors.red,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Flexible(
-                                                    child: Text(
-                                                      _currentUserName != null && _currentUserRoleText?.contains('current role is:') == true
-                                                          ? '${_currentUserName!} (${_currentUserRoleText!.split(": ").last})'
-                                                          : _currentUserRoleText ?? '',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        color: _currentUserRoleText?.contains('current role is:') == true
-                                                            ? Colors.green
-                                                            : Colors.red,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Role Dropdown Glass Field
-                      GlassmorphicContainer(
-                        width: double.infinity,
-                        height: 120,
-                        borderRadius: 18,
-                        blur: 12,
-                        border: 1.5,
-                        linearGradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.18),
-                            Colors.white.withOpacity(0.04),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderGradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.40),
-                            Colors.white.withOpacity(0.10),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField2<String>(
-                                value: _selectedRole,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white.withOpacity(0.18),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                                ),
-                                style: const TextStyle(fontSize: 16, color: Colors.black87),
-                                hint: const Text("Select role", style: TextStyle(color: Colors.black54)),
-                                items: _roles.map((role) {
-                                  Color bgColor;
-                                  if (role == 'mentor') {
-                                    bgColor = const Color(0xFFFFF3E0); // Turuncu
-                                  } else if (role == 'user') {
-                                    bgColor = const Color(0xFFF3E5F5); // Mor
-                                  } else {
-                                    bgColor = Colors.white;
-                                  }
-                                  return DropdownMenuItem<String>(
-                                    value: role,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: bgColor,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                                      child: Text(_getRoleTitle(role), style: const TextStyle(fontSize: 16, color: Colors.black87)),
-                                    ),
-                                  );
-                                }).toList(),
-                                selectedItemBuilder: (context) {
-                                  return _roles.map((role) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                                      child: Text(
-                                        _getRoleTitle(role),
-                                        style: const TextStyle(fontSize: 15, color: Colors.black87),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    );
-                                  }).toList();
-                                },
-                                onChanged: (value) => setState(() => _selectedRole = value),
-                                dropdownStyleData: DropdownStyleData(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  elevation: 4,
-                                  offset: const Offset(0, 4),
-                                ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(top: kToolbarHeight - 8.0, bottom: 0.0),
+              child: GlassmorphicContainer(
+                width: MediaQuery.of(context).size.width * 0.95 > 500
+                    ? 500
+                    : MediaQuery.of(context).size.width * 0.95,
+                height: MediaQuery.of(context).size.height * 0.85,
+                constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.7),
+                borderRadius: 32,
+                blur: 18,
+                alignment: Alignment.center,
+                border: 2,
+                linearGradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.25),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderGradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.3),
+                    Colors.white.withOpacity(0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Authorize User',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 10.0,
+                                color: Colors.black26,
+                                offset: Offset(2.0, 2.0),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Summary Glass Card
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                            child: Container(
-                              constraints: const BoxConstraints(minHeight: 120),
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withOpacity(0.18),
-                                    Colors.white.withOpacity(0.04),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Wrap(
-                                      crossAxisAlignment: WrapCrossAlignment.center,
-                                      spacing: 6,
-                                      children: [
-                                        const Icon(Icons.info_outline, color: Colors.blueGrey, size: 18),
-                                        Text('Summary:', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-                                      ],
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Enter a User ID and assign a role within your unit.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                        const SizedBox(height: 24),
+                        TextField(
+                          controller: _idController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'User ID',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              borderSide: const BorderSide(color: Colors.white),
+                            ),
+                            prefixIcon: const Icon(Icons.person, color: Colors.white70),
+                             suffix: _isCheckingUserRole
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : null,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                          ],
+                        ),
+                         if (_currentUserName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              _currentUserRoleText ?? '',
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField2<String>(
+                          value: _selectedRole,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.8),
+                          ),
+                          hint: const Text(
+                            'Select Role to Assign',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedRole = value;
+                              if (value != 'mentor') {
+                                _selectedMentorshipGroupId = null;
+                              }
+                            });
+                          },
+                          items: _roles
+                              .map((item) => DropdownMenuItem<String>(
+                                    value: item,
+                                    child: Text(
+                                      _getRoleTitle(item),
+                                      style: const TextStyle(fontSize: 14),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Wrap(
-                                      crossAxisAlignment: WrapCrossAlignment.center,
-                                      spacing: 6,
-                                      children: [
-                                        const Icon(Icons.person, size: 18, color: Colors.grey),
-                                        Text('User: ', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-                                        Text(
-                                          (_idController.text.trim() == FirebaseAuth.instance.currentUser?.uid)
-                                              ? (_currentUserName != null
-                                                  ? (_getRoleTitle((FirebaseAuth.instance.currentUser)?.uid == _idController.text.trim() ? (FirebaseAuth.instance.currentUser)?.displayName ?? '-' : '-') == '-'
-                                                      ? '$_currentUserName (You)'
-                                                      : '$_currentUserName (You) (${_getRoleTitle((FirebaseAuth.instance.currentUser)?.uid == _idController.text.trim() ? (FirebaseAuth.instance.currentUser)?.displayName ?? '-' : '-')})')
-                                                  : _idController.text.trim())
-                                              : _currentUserName ?? _idController.text.trim(),
-                                          style: TextStyle(
-                                            color: _currentUserRoleText?.contains('current role is:') == true
-                                                ? Colors.green
-                                                : (_currentUserRoleText == 'User not found.' || _currentUserRoleText == 'You are not allowed to view the information of this user.')
-                                                    ? Colors.red
-                                                    : Colors.black87,
+                                  ))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        if (_selectedRole == 'mentor')
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_isLoadingGroups)
+                              const Center(child: CircularProgressIndicator(color: Colors.white,))
+                            else if (_mentorshipGroups.isEmpty)
+                               Center(
+                                 child: Column(
+                                   children: [
+                                     const Text('You need to create a class first.', style: TextStyle(color: Colors.white70)),
+                                     const SizedBox(height: 10),
+                                     if (_unitPath != null)
+                                      ElevatedButton.icon(
+                                          icon: const Icon(Icons.add),
+                                          label: const Text('Create New Class'),
+                                          onPressed: _showCreateGroupDialog,
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.deepPurple, 
+                                            backgroundColor: Colors.white,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text.rich(
-                                      TextSpan(
-                                        children: [
-                                          const WidgetSpan(
-                                            child: Icon(Icons.assignment_ind, size: 18, color: Colors.grey),
-                                          ),
-                                          const WidgetSpan(child: SizedBox(width: 6)),
-                                          const TextSpan(text: 'Role to assign: ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-                                          TextSpan(
-                                            text: _selectedRole != null ? _getRoleTitle(_selectedRole!) : '',
-                                            style: const TextStyle(color: Colors.black87),
-                                          ),
-                                        ],
+                                   ],
+                                 ),
+                               )
+                            else
+                              DropdownButtonFormField2<String>(
+                                isExpanded: true,
+                                value: _selectedMentorshipGroupId,
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.8),
+                                ),
+                                hint: const Text(
+                                  'Select a class',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedMentorshipGroupId = value;
+                                  });
+                                },
+                                items: [
+                                  ..._mentorshipGroups.map((group) {
+                                    final mentorText = group['mentorName'] != null
+                                        ? ' (Mentor: ${group['mentorName']})'
+                                        : ' (Empty)';
+                                    final isAssigned = group['currentMentorId'] != null;
+                                    return DropdownMenuItem<String>(
+                                      value: group['id'],
+                                      enabled: !isAssigned,
+                                      child: Text(
+                                        '${group['name']}$mentorText',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isAssigned ? Colors.grey : Colors.black,
+                                        ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (_message.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                              child: Container(
-                                constraints: const BoxConstraints(minHeight: 48, maxHeight: 120),
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.white.withOpacity(0.18),
-                                      Colors.white.withOpacity(0.04),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                                    );
+                                  }),
+                                  const DropdownMenuItem<String>(
+                                    enabled: false,
+                                    child: Divider(),
                                   ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                                  child: Text(
-                                    _message,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  DropdownMenuItem<String>(
+                                    enabled: false,
+                                    child: Center(
+                                      child: TextButton.icon(
+                                        icon: const Icon(Icons.add),
+                                        label: const Text('Create New Class'),
+                                        onPressed: _showCreateGroupDialog,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                          ],
+                        ),
+                        
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _updateRole,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              elevation: 8,
+                              shadowColor: Colors.deepPurple.shade300,
+                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
+                                    'Update Role',
                                     style: TextStyle(
-                                      fontSize: 14,
-                                      color: _message.contains('successfully')
-                                          ? Colors.green
-                                          : Colors.red,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
                           ),
                         ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                            child: Container(
-                              width: 200,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withOpacity(0.25),
-                                    Colors.white.withOpacity(0.05),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: OutlinedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () {
-                                        if (_idController.text.isNotEmpty && _selectedRole != null) {
-                                          assignRole(
-                                            _selectedRole!,
-                                            _idController.text.trim(),
-                                          );
-                                        } else {
-                                          setState(() {
-                                            _message =
-                                            'Please enter a User ID and select a role!';
-                                          });
-                                        }
-                                      },
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(180, 52),
-                                  side: BorderSide(color: Colors.white.withOpacity(0.8), width: 2),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                                ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                    : Text('Assign Role', style: TextStyle(color: const Color.fromARGB(255, 75, 96, 232), fontWeight: FontWeight.w600, fontSize: 18)),
-                              ),
-                            ),
+                        const SizedBox(height: 10),
+                        if (_message.isNotEmpty)
+                          Text(
+                            _message,
+                            style: TextStyle(
+                                color: _message.contains('success')
+                                    ? Colors.greenAccent
+                                    : Colors.redAccent,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -659,11 +731,5 @@ class _HighSchoolUnitCoordinatorIdAuthPageState extends State<HighSchoolUnitCoor
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _idController.dispose();
-    super.dispose();
   }
 } 

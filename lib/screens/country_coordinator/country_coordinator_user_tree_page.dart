@@ -2,362 +2,185 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:graphview/graphview.dart';
 
 class CountryCoordinatorUserTreePage extends StatefulWidget {
   const CountryCoordinatorUserTreePage({super.key});
 
   @override
-  State<CountryCoordinatorUserTreePage> createState() => _CountryCoordinatorUserTreePageState();
+  State<CountryCoordinatorUserTreePage> createState() =>
+      _CountryCoordinatorUserTreePageState();
 }
 
-class _CountryCoordinatorUserTreePageState extends State<CountryCoordinatorUserTreePage> {
-  late final String currentUserId;
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _regionCoordinators = [];
-
-  // Current user info
-  String? _currentUserName;
-  String? _currentUserSurname;
-  String? _currentUsername;
+class _CountryCoordinatorUserTreePageState
+    extends State<CountryCoordinatorUserTreePage> {
+  final Graph graph = Graph();
+  final Set<String> _nodeIds = {};
+  final Map<String, Map<String, dynamic>> _userCache = {};
+  late BuchheimWalkerAlgorithm algorithm;
+  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  Map<String, dynamic>? currentUserData;
 
   @override
   void initState() {
     super.initState();
-    currentUserId = FirebaseAuth.instance.currentUser!.uid;
-    _fetchCurrentUser();
-    _fetchRegionCoordinators();
+    final builder = BuchheimWalkerConfiguration()
+      ..siblingSeparation = (100)
+      ..levelSeparation = (100)
+      ..subtreeSeparation = (100)
+      ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM);
+
+    algorithm = BuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder));
+
+    _initializeGraph();
+  }
+
+  String _formatRoleName(String role) {
+    if (role.isEmpty) return 'N/A';
+    // Add space before capital letters, then capitalize the first letter of the resulting string.
+    var formatted =
+        role.replaceAllMapped(RegExp(r'(?<!^)[A-Z]'), (match) => ' ${match[0]}');
+    return formatted[0].toUpperCase() + formatted.substring(1);
+  }
+
+  Future<void> _initializeGraph() async {
+    await _fetchCurrentUser();
+    if (currentUserData != null) {
+      _userCache[currentUserId] = currentUserData!;
+      final userNode = Node.Id(currentUserId);
+      if (_nodeIds.add(currentUserId)) {
+        graph.addNode(userNode);
+      }
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _fetchChildrenAndAddNodes(Node parentNode) async {
+    final parentId = parentNode.key?.value as String;
+
+    final parentData = _userCache[parentId];
+    if (parentData == null) {
+      // Parent data should be in the cache if the node exists.
+      // Fetching it just in case of an unexpected scenario.
+      final parentDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(parentId)
+          .get();
+      if (!parentDoc.exists) return;
+      _userCache[parentId] = {'id': parentId, ...parentDoc.data()!};
+    }
+
+    final parentRole = _userCache[parentId]!['role'] as String?;
+    QuerySnapshot<Map<String, dynamic>> childrenSnapshot;
+
+    if (parentRole == 'mentor') {
+      final assignedTo =
+          List<String>.from(_userCache[parentId]!['assignedTo'] ?? []);
+      if (assignedTo.isEmpty) return;
+
+      // Note: Firestore 'whereIn' queries are limited to 30 items.
+      final Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: assignedTo);
+      childrenSnapshot = await query.get();
+    } else {
+      Query<Map<String, dynamic>> childrenQuery = FirebaseFirestore.instance
+          .collection('users')
+          .where('parentId', isEqualTo: parentId);
+
+      if (parentRole != null && parentRole.contains('UnitCoordinator')) {
+        childrenQuery = childrenQuery.where('role', isEqualTo: 'mentor');
+      }
+
+      childrenSnapshot = await childrenQuery.get();
+    }
+
+    for (var doc in childrenSnapshot.docs) {
+      final childId = doc.id;
+      final childData = doc.data();
+      _userCache[childId] = {'id': childId, ...childData};
+
+      final childNode = Node.Id(childId);
+      if (_nodeIds.add(childId)) {
+        graph.addNode(childNode);
+      }
+      graph.addEdge(parentNode, childNode);
+    }
   }
 
   Future<void> _fetchCurrentUser() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
-    final data = doc.data();
-    setState(() {
-      _currentUserName = data?['firstName'] as String?;
-      _currentUserSurname = data?['lastName'] as String?;
-      _currentUsername = data?['username'] as String?;
-    });
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+    if (doc.exists) {
+      currentUserData = {'id': doc.id, ...doc.data()!};
+    }
   }
 
-  Future<void> _fetchRegionCoordinators() async {
-    setState(() => _isLoading = true);
-    final regionRoles = [
-      'middleSchoolRegionCoordinator',
-      'highSchoolRegionCoordinator',
-      'universityRegionCoordinator',
-    ];
-    final regionQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', whereIn: regionRoles)
-        .where('parentId', isEqualTo: currentUserId)
-        .get();
-    final regionCoordinators = regionQuery.docs.map((doc) => {
-      'id': doc.id,
-      ...doc.data(),
-    }).toList();
-    setState(() {
-      _regionCoordinators = regionCoordinators;
-      _isLoading = false;
-    });
+  void _collapseNode(Node node) {
+    final children = graph.successorsOf(node).toList();
+    for (final child in children) {
+      _collapseNode(child); // Recursively collapse children
+      graph.removeNode(child);
+      _nodeIds.remove(child.key?.value);
+      _userCache.remove(child.key?.value);
+    }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchUnitCoordinators(String regionId) async {
-    final unitRoles = [
-      'middleSchoolUnitCoordinator',
-      'highSchoolUnitCoordinator',
-      'universityUnitCoordinator',
-    ];
-    final unitQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', whereIn: unitRoles)
-        .where('parentId', isEqualTo: regionId)
-        .get();
-    return unitQuery.docs.map((doc) => {
-      'id': doc.id,
-      ...doc.data(),
-    }).toList();
+  Future<void> _onNodeTap(Node node) async {
+    if (graph.successorsOf(node).isNotEmpty) {
+      _collapseNode(node);
+    } else {
+      await _fetchChildrenAndAddNodes(node);
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchMentors(String unitId) async {
-    final mentorQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'mentor')
-        .where('parentId', isEqualTo: unitId)
-        .get();
-    return mentorQuery.docs.map((doc) => {
-      'id': doc.id,
-      ...doc.data(),
-    }).toList();
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchStudents(String mentorId) async {
-    final studentQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'student')
-        .where('parentId', isEqualTo: mentorId)
-        .get();
-    return studentQuery.docs.map((doc) => {
-      'id': doc.id,
-      ...doc.data(),
-    }).toList();
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchMenteesForMentor(String mentorId) async {
-    final mentorDoc = await FirebaseFirestore.instance.collection('users').doc(mentorId).get();
-    final assignedTo = (mentorDoc.data()?['assignedTo'] as List?)?.cast<String>() ?? [];
-    if (assignedTo.isEmpty) return [];
-    final menteeDocs = await Future.wait(
-      assignedTo.map((menteeId) => FirebaseFirestore.instance.collection('users').doc(menteeId).get())
-    );
-    return menteeDocs
-        .where((doc) => doc.exists)
-        .map((doc) => {'id': doc.id, ...doc.data()!})
-        .toList();
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchStudentsForUnitCoordinator(String unitId) async {
-    final studentQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'student')
-        .where('parentId', isEqualTo: unitId)
-        .get();
-    return studentQuery.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchNothing(String id) async => [];
-
-  String _getRoleTitle(String role) {
+  Color _getRoleColor(String role) {
     switch (role) {
-      case 'middleSchoolRegionCoordinator':
-        return 'Middle School Region Coordinator';
+      case 'countryCoordinator':
+        return const Color(0xFFD1C4E9); // Light Purple
       case 'highSchoolRegionCoordinator':
-        return 'High School Region Coordinator';
+      case 'middleSchoolRegionCoordinator':
       case 'universityRegionCoordinator':
-        return 'University Region Coordinator';
-      case 'middleSchoolUnitCoordinator':
-        return 'Middle School Unit Coordinator';
+        return const Color(0xFFC5CAE9); // Light Indigo
       case 'highSchoolUnitCoordinator':
-        return 'High School Unit Coordinator';
+      case 'middleSchoolUnitCoordinator':
       case 'universityUnitCoordinator':
-        return 'University Unit Coordinator';
+        return const Color(0xFFB2DFDB); // Light Teal
       case 'mentor':
-        return 'Mentor';
+        return const Color(0xFFFFECB3); // Light Amber
       case 'student':
-        return 'Student';
+      case 'mentee':
+        return const Color(0xFFF8BBD0); // Light Pink
       default:
-        return role;
+        return Colors.grey.shade200;
     }
-  }
-
-  Icon _getRoleIcon(String role) {
-    switch (role) {
-      case 'middleSchoolRegionCoordinator':
-      case 'highSchoolRegionCoordinator':
-      case 'universityRegionCoordinator':
-        return const Icon(Icons.account_tree, color: Colors.blueAccent);
-      case 'middleSchoolUnitCoordinator':
-      case 'highSchoolUnitCoordinator':
-      case 'universityUnitCoordinator':
-        return const Icon(Icons.group, color: Colors.teal);
-      case 'mentor':
-        return const Icon(Icons.person, color: Colors.deepPurple);
-      case 'student':
-        return const Icon(Icons.school, color: Colors.orange);
-      default:
-        return const Icon(Icons.person_outline, color: Colors.grey);
-    }
-  }
-
-  String _getFullName(Map<String, dynamic> user) {
-    final first = (user['firstName'] ?? '').toString().trim();
-    final last = (user['lastName'] ?? '').toString().trim();
-    if (first.isNotEmpty && last.isNotEmpty) return '$first $last';
-    if (first.isNotEmpty) return first;
-    return user['id'] ?? '';
-  }
-
-  Color _getCountColor(String role) {
-    switch (role) {
-      case 'middleSchoolRegionCoordinator':
-      case 'highSchoolRegionCoordinator':
-      case 'universityRegionCoordinator':
-        return Colors.blue;
-      case 'middleSchoolUnitCoordinator':
-      case 'highSchoolUnitCoordinator':
-      case 'universityUnitCoordinator':
-        return Colors.teal;
-      case 'mentor':
-        return Colors.deepPurple;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  Future<Widget> _buildUserTree({
-    required Map<String, dynamic> user,
-    required String role,
-    int level = 0,
-  }) async {
-    final id = user['id'] ?? '';
-    final name = _getFullName(user);
-    int count = 0;
-    if (role == 'middleSchoolRegionCoordinator' || role == 'highSchoolRegionCoordinator' || role == 'universityRegionCoordinator') {
-      final unitRoles = [
-        if (role == 'middleSchoolRegionCoordinator') 'middleSchoolUnitCoordinator',
-        if (role == 'highSchoolRegionCoordinator') 'highSchoolUnitCoordinator',
-        if (role == 'universityRegionCoordinator') 'universityUnitCoordinator',
-      ];
-      final query = await FirebaseFirestore.instance
-          .collection('users')
-          .where('role', whereIn: unitRoles)
-          .where('parentId', isEqualTo: id)
-          .get();
-      count = query.docs.length;
-    } else if (role == 'middleSchoolUnitCoordinator' || role == 'highSchoolUnitCoordinator' || role == 'universityUnitCoordinator') {
-      if (role == 'universityUnitCoordinator') {
-        final query = await FirebaseFirestore.instance
-            .collection('users')
-            .where('role', isEqualTo: 'student')
-            .where('parentId', isEqualTo: id)
-            .get();
-        count = query.docs.length;
-      } else {
-        final query = await FirebaseFirestore.instance
-            .collection('users')
-            .where('role', isEqualTo: 'mentor')
-            .where('parentId', isEqualTo: id)
-            .get();
-        count = query.docs.length;
-      }
-    } else if (role == 'mentor') {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(id).get();
-      final assignedTo = (doc.data()?['assignedTo'] as List?)?.cast<String>() ?? [];
-      count = assignedTo.length;
-    }
-    List<Map<String, dynamic>> children = [];
-    Future<List<Map<String, dynamic>>> Function(String)? fetchChildren;
-    if (role == 'countryCoordinator') {
-      fetchChildren = (parentId) async {
-        final regionRoles = [
-          'middleSchoolRegionCoordinator',
-          'highSchoolRegionCoordinator',
-          'universityRegionCoordinator',
-        ];
-        final query = await FirebaseFirestore.instance
-            .collection('users')
-            .where('role', whereIn: regionRoles)
-            .where('parentId', isEqualTo: parentId)
-            .get();
-        return query.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-      };
-    } else if (role == 'middleSchoolRegionCoordinator' || role == 'highSchoolRegionCoordinator' || role == 'universityRegionCoordinator') {
-      fetchChildren = (parentId) async {
-        final unitRoles = [
-          if (role == 'middleSchoolRegionCoordinator') 'middleSchoolUnitCoordinator',
-          if (role == 'highSchoolRegionCoordinator') 'highSchoolUnitCoordinator',
-          if (role == 'universityRegionCoordinator') 'universityUnitCoordinator',
-        ];
-        final query = await FirebaseFirestore.instance
-            .collection('users')
-            .where('role', whereIn: unitRoles)
-            .where('parentId', isEqualTo: parentId)
-            .get();
-        return query.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-      };
-    } else if (role == 'middleSchoolUnitCoordinator' || role == 'highSchoolUnitCoordinator') {
-      fetchChildren = (parentId) async {
-        final query = await FirebaseFirestore.instance
-            .collection('users')
-            .where('role', isEqualTo: 'mentor')
-            .where('parentId', isEqualTo: parentId)
-            .get();
-        return query.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-      };
-    } else if (role == 'mentor') {
-      fetchChildren = _fetchMenteesForMentor;
-    } else if (role == 'universityUnitCoordinator') {
-      fetchChildren = _fetchStudentsForUnitCoordinator;
-    } else if (role == 'student' || role == 'mentee') {
-      fetchChildren = _fetchNothing;
-    }
-    if (fetchChildren != null) {
-      children = await fetchChildren(id);
-    }
-    if (children.isEmpty) {
-      return ListTile(
-        key: ValueKey('leaf-$id'),
-        leading: _getRoleIcon(role),
-        title: count > 0
-            ? Text.rich(
-                TextSpan(
-                  text: name,
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                  children: [
-                    TextSpan(
-                      text: ' ($count)',
-                      style: TextStyle(color: _getCountColor(role), fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              )
-            : Text(name, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        subtitle: Text(_getRoleTitle(role)),
-        dense: true,
-      );
-    }
-    return _LazyExpansionTile(
-      key: ValueKey('exp-$id'),
-      title: count > 0
-          ? Text.rich(
-              TextSpan(
-                text: name,
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                children: [
-                  TextSpan(
-                    text: ' ($count)',
-                    style: TextStyle(color: _getCountColor(role), fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            )
-          : Text(name, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      subtitle: Text(_getRoleTitle(role)),
-      leading: _getRoleIcon(role),
-      fetchChildren: () async {
-        return await Future.wait(children.map((child) => _buildUserTree(
-          user: child,
-          role: child['role'] ?? '',
-          level: level + 1,
-        )));
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         title: const Text('Relationship Map'),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
-            tooltip: 'Settings',
           ),
         ],
       ),
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
@@ -365,194 +188,92 @@ class _CountryCoordinatorUserTreePageState extends State<CountryCoordinatorUserT
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.only(top: kToolbarHeight + 64,),
-            child: GlassmorphicContainer(
-              width: MediaQuery.of(context).size.width * 0.95 > 500 ? 500 : MediaQuery.of(context).size.width * 0.95,
-              height: MediaQuery.of(context).size.height * 0.92,
-              borderRadius: 32,
-              blur: 18,
-              alignment: Alignment.center,
-              border: 2,
-              linearGradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.25),
-                  Colors.white.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderGradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.60),
-                  Colors.white.withOpacity(0.10),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 18.0),
-                child: Column(
-                  children: [
-                    // User card (You)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      child: GlassmorphicContainer(
-                        width: double.infinity,
-                        height: 90,
-                        borderRadius: 18,
-                        blur: 12,
-                        border: 1.5,
-                        linearGradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.18),
-                            Colors.white.withOpacity(0.04),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderGradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.40),
-                            Colors.white.withOpacity(0.10),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.flag, color: Colors.indigo, size: 36),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          _currentUserName != null
-                                            ? (_currentUserSurname != null
-                                                ? '${_currentUserName!} ${_currentUserSurname!}'
-                                                : _currentUserName!)
-                                            : 'You',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.indigo.shade50,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: const Text(
-                                            '(You)',
-                                            style: TextStyle(fontSize: 13, color: Colors.indigo, fontWeight: FontWeight.w600),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Country Coordinator',
-                                      style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+        child: SafeArea(
+          child: currentUserData == null
+              ? const Center(child: CircularProgressIndicator())
+              : InteractiveViewer(
+                  constrained: false,
+                  boundaryMargin: const EdgeInsets.all(200),
+                  minScale: 0.1,
+                  maxScale: 2.0,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      minWidth: screenSize.width,
+                      minHeight: screenSize.height,
+                    ),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 80.0),
+                        child: GraphView(
+                          graph: graph,
+                          algorithm: algorithm,
+                          paint: Paint()
+                            ..color = Colors.white
+                            ..strokeWidth = 2
+                            ..style = PaintingStyle.stroke,
+                          builder: (Node node) {
+                            return _buildNodeWidget(node);
+                          },
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: _isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : _regionCoordinators.isEmpty
-                                ? const Center(child: Text('No users found'))
-                                : FutureBuilder<List<Widget>>(
-                                    future: () async {
-                                      // Her region coordinator için ayrı bir tree dalı oluştur
-                                      return await Future.wait(_regionCoordinators.map((region) => _buildUserTree(
-                                        user: region,
-                                        role: region['role'] ?? '',
-                                      )));
-                                    }(),
-                                    builder: (context, snapshot) {
-                                      if (!snapshot.hasData) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      }
-                                      return ListView(
-                                        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                                        children: snapshot.data!,
-                                      );
-                                    },
-                                  ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );
   }
-}
 
-// Lazy loading ExpansionTile
-class _LazyExpansionTile extends StatefulWidget {
-  final Widget title;
-  final Widget? subtitle;
-  final Widget? leading;
-  final Future<List<Widget>> Function() fetchChildren;
+  Widget _buildNodeWidget(Node node) {
+    final nodeId = node.key?.value as String;
+    final userData = _userCache[nodeId];
 
-  const _LazyExpansionTile({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.leading,
-    required this.fetchChildren,
-  });
-
-  @override
-  State<_LazyExpansionTile> createState() => _LazyExpansionTileState();
-}
-
-class _LazyExpansionTileState extends State<_LazyExpansionTile> {
-  bool _expanded = false;
-  bool _loading = false;
-  List<Widget>? _children;
-
-  void _onExpand(bool expanded) async {
-    if (expanded && _children == null) {
-      setState(() => _loading = true);
-      final children = await widget.fetchChildren();
-      setState(() {
-        _children = children;
-        _loading = false;
-      });
+    if (userData == null) {
+      // This might happen briefly if the data isn't cached yet.
+      // A placeholder or loading indicator is appropriate.
+      return const SizedBox(
+        width: 150,
+        child: Center(child: CircularProgressIndicator.adaptive()),
+      );
     }
-    setState(() => _expanded = expanded);
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      key: widget.key,
-      title: widget.title,
-      subtitle: widget.subtitle,
-      leading: widget.leading,
-      onExpansionChanged: _onExpand,
-      initiallyExpanded: _expanded,
-      children: _loading
-          ? [const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator())]
-          : (_children ?? []),
+    final name =
+        "${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}".trim();
+    final role = userData['role'] ?? 'N/A';
+    final formattedRole = _formatRoleName(role);
+
+    return InkWell(
+      onTap: () => _onNodeTap(node),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: _getRoleColor(role),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              name.isEmpty ? nodeId : name,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              formattedRole,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
     );
   }
 } 

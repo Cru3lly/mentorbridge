@@ -1,29 +1,29 @@
 buildscript {
+    val kotlin_version by extra("1.9.22")
     repositories {
         google()
         mavenCentral()
     }
+
     dependencies {
-        classpath("com.android.tools.build:gradle:8.1.0") // Android Gradle plugin
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0") // Kotlin plugin
-        classpath("com.google.gms:google-services:4.3.15") // Google Services plugin, güncel sürümü kontrol et
+        classpath("com.android.tools.build:gradle:8.4.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 
-val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
-rootProject.layout.buildDirectory.value(newBuildDir)
-
-subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
 }
 
+rootProject.layout.buildDirectory = file("../build")
 subprojects {
-    project.evaluationDependsOn(":app")
+    project.layout.buildDirectory = file("${rootProject.layout.buildDirectory.get()}/${project.name}")
 }
 
-tasks.register<Delete>("clean") {
+tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }
-
-includeBuild("${System.getenv("FLUTTER_ROOT")}/packages/flutter_tools/gradle")
