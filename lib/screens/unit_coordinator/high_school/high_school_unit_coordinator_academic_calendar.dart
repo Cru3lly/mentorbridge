@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:glassmorphism/glassmorphism.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -8,12 +7,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
-// Web fallback için ekle
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:ui';
+import 'package:go_router/go_router.dart';
 
 class HighSchoolUnitCoordinatorAcademicCalendar extends StatefulWidget {
   const HighSchoolUnitCoordinatorAcademicCalendar({super.key});
@@ -24,38 +21,58 @@ class HighSchoolUnitCoordinatorAcademicCalendar extends StatefulWidget {
 
 class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUnitCoordinatorAcademicCalendar> {
   final List<String> months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'September', 'October', 'November', 'December', 'January', 'February', 
+    'March', 'April', 'May', 'June', 'July', 'August'
   ];
   final List<String> monthShort = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+    'Jul', 'Aug'
   ];
-  String selectedYear = '2025';
-  String? expandedMonth;
-  int? expandedWeek;
+  String selectedAcademicYear = '2025-2026';
+  String? _selectedMonth;
+  
   String get unitCoordinatorId => FirebaseAuth.instance.currentUser?.uid ?? '';
-  static const String youtubeApiKey = 'AIzaSyC7FcRIPbpSWmv_SwzGN_XMoRA7rVDf8pY';
-  bool editMode = false;
-  bool hasChanges = false;
+  
   Map<String, TextEditingController> titleControllers = {};
   Map<String, TextEditingController> descControllers = {};
   Map<String, List<Map<String, dynamic>>> linkControllers = {};
   Map<String, List<Map<String, dynamic>>> attachmentControllers = {};
-  Map<String, bool> dirtyWeeks = {};
   Map<String, List<dynamic>> pendingUploads = {};
   Map<String, List<String>> pendingUploadNames = {};
   Map<String, List<String>> pendingDeleteUrls = {};
 
   // Holds all week data for the selected year, loaded once.
   // Key: "month-weekNumber", Value: week data map
-  Map<String, Map<String, dynamic>> _calendarDataForYear = {};
+  final Map<String, Map<String, dynamic>> _calendarDataForYear = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initializeToCurrentDate();
     _loadAllWeeksForYear();
+  }
+
+  void _initializeToCurrentDate() {
+    final now = DateTime.now();
+    const monthNumToName = {
+        1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 
+        7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+    };
+    final currentMonthName = monthNumToName[now.month]!;
+
+    int startYear;
+    // Academic year is Sep-Aug.
+    if (now.month >= 9) { // September to December
+      startYear = now.year;
+    } else { // January to August
+      startYear = now.year - 1;
+    }
+    final endYear = startYear + 1;
+    
+    // Set the initial state. No need for setState as it's in initState.
+    selectedAcademicYear = '$startYear-$endYear';
+    _selectedMonth = currentMonthName;
   }
 
   // Loads all week data for the selected year from Firestore.
@@ -71,18 +88,21 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
     try {
       final baseRef = FirebaseFirestore.instance.collection('academicCalendars').doc(unitCoordinatorId);
       
-      // Create a list of futures to fetch all months in parallel
-      final List<Future<QuerySnapshot<Map<String, dynamic>>>> monthFutures = months.map((month) {
-        return baseRef.collection(selectedYear).doc(month).collection('weeks').get();
-      }).toList();
-      
-      // Wait for all futures to complete
-      final List<QuerySnapshot<Map<String, dynamic>>> results = await Future.wait(monthFutures);
-      
+      final Map<String, Future<QuerySnapshot<Map<String, dynamic>>>> monthFutures = {};
+
+      for (final month in months) {
+        final calendarYear = getCalendarYearForMonth(month);
+        monthFutures[month] = baseRef.collection(calendarYear.toString()).doc(month).collection('weeks').get();
+      }
+
+      // Wait for all futures
+      final allSnapshots = await Future.wait(monthFutures.values);
+
       // Process the results
-      for (var i = 0; i < results.length; i++) {
-        final month = months[i];
-        final weeksSnapshot = results[i];
+      final monthKeys = monthFutures.keys.toList();
+      for (var i = 0; i < allSnapshots.length; i++) {
+        final month = monthKeys[i];
+        final weeksSnapshot = allSnapshots[i];
         for (final weekDoc in weeksSnapshot.docs) {
           final weekNumber = int.tryParse(weekDoc.id.split('_').last) ?? 0;
           if (weekNumber > 0) {
@@ -102,52 +122,79 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
   // Helper to get week key
   String weekKey(String month, int weekNumber) => '$month-$weekNumber';
 
-  List<Map<String, dynamic>> getWeeksForMonth(String month) {
-    int year = int.parse(selectedYear);
-    int monthIndex = months.indexOf(month);
-    DateTime firstDayOfYear = DateTime(year, 1, 1);
-    // İlk Pazartesi'yi bul
-    DateTime firstMonday = firstDayOfYear.weekday == DateTime.monday
-        ? firstDayOfYear
-        : firstDayOfYear.add(Duration(days: (8 - firstDayOfYear.weekday) % 7));
-    DateTime lastDayOfYear = DateTime(year, 12, 31);
-    List<Map<String, dynamic>> allWeeks = [];
-    DateTime weekStart = firstMonday;
-    int weekNum = 1;
-    while (weekStart.isBefore(lastDayOfYear) || weekStart.isAtSameMomentAs(lastDayOfYear)) {
-      DateTime weekEnd = weekStart.add(const Duration(days: 6));
-      allWeeks.add({
-        'weekNumber': weekNum,
-        'start': weekStart,
-        'end': weekEnd,
-      });
-      weekStart = weekEnd.add(const Duration(days: 1));
-      weekNum++;
+  // Helper to get calendar year for a given academic month
+  int getCalendarYearForMonth(String month) {
+    final parts = selectedAcademicYear.split('-');
+    final startYear = int.parse(parts[0]);
+    final endYear = int.parse(parts[1]);
+    
+    if (['September', 'October', 'November', 'December'].contains(month)) {
+      return startYear;
     }
-    // Şimdi bu ayda en az bir günü olan haftaları filtrele
-    DateTime firstDayOfMonth = DateTime(year, monthIndex + 1, 1);
-    DateTime lastDayOfMonth = DateTime(year, monthIndex + 2, 0);
+    return endYear;
+  }
+
+  // Helper to get month number (1-12)
+  int getMonthNumber(String month) {
+    const monthMap = {
+        'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 
+        'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12
+    };
+    return monthMap[month]!;
+  }
+
+  List<Map<String, dynamic>> getWeeksForMonth(String month) {
+    final parts = selectedAcademicYear.split('-');
+    final startYear = int.parse(parts[0]);
+    final endYear = int.parse(parts[1]);
+
+    final targetMonthNumber = getMonthNumber(month);
+    final targetCalendarYear = getCalendarYearForMonth(month);
+    DateTime firstDayOfMonth = DateTime(targetCalendarYear, targetMonthNumber, 1);
+
+    // 1. Find the first Monday of the current month.
+    DateTime firstMonday = firstDayOfMonth;
+    while (firstMonday.weekday != DateTime.monday) {
+      firstMonday = firstMonday.add(const Duration(days: 1));
+    }
+
+    // 2. Find the first Monday of the NEXT month to know where to stop.
+    int nextMonthNumber = targetMonthNumber == 12 ? 1 : targetMonthNumber + 1;
+    int nextMonthYear = targetMonthNumber == 12 ? targetCalendarYear + 1 : targetCalendarYear;
+    DateTime nextMonthFirstDay = DateTime(nextMonthYear, nextMonthNumber, 1);
+    DateTime nextMonthFirstMonday = nextMonthFirstDay;
+    while (nextMonthFirstMonday.weekday != DateTime.monday) {
+      nextMonthFirstMonday = nextMonthFirstMonday.add(const Duration(days: 1));
+    }
+
     List<Map<String, dynamic>> monthWeeks = [];
-    for (var week in allWeeks) {
-      if (!(week['end'].isBefore(firstDayOfMonth) || week['start'].isAfter(lastDayOfMonth))) {
-        // Tarih formatı: May 05 to May 11
-        String startMonth = months[week['start'].month - 1];
-        String endMonth = months[week['end'].month - 1];
-        String range =
-            '$startMonth '
-            '${week['start'].day.toString().padLeft(2, '0')}'
-            ' to '
-            '$endMonth '
-            '${week['end'].day.toString().padLeft(2, '0')}';
+    int localWeekCounter = 1;
+    const globalMonthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    DateTime weekStart = firstMonday;
+    while (weekStart.isBefore(nextMonthFirstMonday)) {
+      // Only include weeks that START in the current month
+      if (weekStart.month == targetMonthNumber && weekStart.year == targetCalendarYear) {
+        DateTime weekEnd = weekStart.add(const Duration(days: 6));
+        
+        final start = weekStart;
+        final end = weekEnd;
+        final startMonthStr = globalMonthShort[start.month - 1];
+        final endMonthStr = globalMonthShort[end.month - 1];
+        String range;
+        if (start.year == end.year) {
+          range = '$startMonthStr ${start.day} - $endMonthStr ${end.day}, ${end.year}';
+        } else {
+          range = '$startMonthStr ${start.day}, ${start.year} - $endMonthStr ${end.day}, ${end.year}';
+        }
         monthWeeks.add({
-          'weekNumber': week['weekNumber'],
+          'localWeekNumber': localWeekCounter++,
           'dateRange': range,
-          'title': '',
-          'description': '',
-          'links': [],
-          'attachments': [],
+          'start': start,
+          'end': end,
         });
       }
+      weekStart = weekStart.add(const Duration(days: 7));
     }
     return monthWeeks;
   }
@@ -156,18 +203,19 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
   // Future<Map<String, dynamic>?> fetchWeekData(String month, int weekNumber) async ...
 
   // Saves a single week's data to Firestore.
-  Future<void> saveWeekData(String month, int weekNumber, Map<String, dynamic> data) async {
+  Future<void> saveWeekData(String month, int localWeekNumber, Map<String, dynamic> data) async {
     if (unitCoordinatorId.isEmpty) {
       print('ERROR: unitCoordinatorId is empty! Cannot save to Firestore.');
       return;
     }
+    final calendarYear = getCalendarYearForMonth(month);
     final ref = FirebaseFirestore.instance
         .collection('academicCalendars')
         .doc(unitCoordinatorId)
-        .collection(selectedYear)
+        .collection(calendarYear.toString())
         .doc(month)
         .collection('weeks')
-        .doc('week_$weekNumber');
+        .doc('week_$localWeekNumber');
     print('Saving week data to Firestore: ${ref.path}');
     await ref.set(data, SetOptions(merge: true));
   }
@@ -175,40 +223,41 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
   Future<String> fetchPageTitle(String url) async {
     try {
       if (url.contains('youtube.com') || url.contains('youtu.be')) {
-        // YouTube video ID bul
-        String? videoId;
-        if (url.contains('v=')) {
-          videoId = Uri.parse(url).queryParameters['v'];
-        } else if (url.contains('youtu.be/')) {
-          videoId = url.split('youtu.be/').last.split('?').first;
-        }
-        if (videoId != null) {
-          // YouTube Data API ile başlık çek
-          final apiUrl = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=$videoId&key=$youtubeApiKey';
-          final response = await http.get(Uri.parse(apiUrl));
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            if (data['items'] != null && data['items'].isNotEmpty) {
-              return data['items'][0]['snippet']['title'];
-            }
+        // Use oEmbed for YouTube: simpler, no API key needed.
+        final oembedUrl = 'https://www.youtube.com/oembed?url=${Uri.encodeComponent(url)}&format=json';
+        final response = await http.get(Uri.parse(oembedUrl));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body); // http package handles charset
+          if (data['title'] != null) {
+            return data['title'];
           }
         }
       } else {
-        // Diğer web siteleri için
+        // For other websites, try to fetch the HTML title.
         final response = await http.get(
           Uri.parse(url),
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
           },
         );
+        // Explicitly decode as UTF-8 for robustness, as some sites don't set charset header.
+        final body = utf8.decode(response.bodyBytes, allowMalformed: true);
         final reg = RegExp(r'<title>(.*?)</title>', caseSensitive: false, dotAll: true);
-        final match = reg.firstMatch(response.body);
+        final match = reg.firstMatch(body);
         if (match != null) {
-          return match.group(1) ?? url;
+          var title = match.group(1) ?? url;
+          // Basic unescaping for common HTML entities without adding a dependency.
+          return title
+              .replaceAll('&quot;', '"')
+              .replaceAll('&amp;', '&')
+              .replaceAll('&#39;', "'")
+              .trim();
         }
       }
-    } catch (_) {}
-    return url;
+    } catch (e) {
+      print("Error fetching page title for $url: $e");
+    }
+    return url; // Fallback to the original URL if everything fails.
   }
 
   @override
@@ -216,10 +265,30 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('High School Academic Calendar'),
+        leading: _selectedMonth != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () => setState(() => _selectedMonth = null),
+              )
+            : null,
+        title: Text(
+          _selectedMonth != null 
+              ? '$_selectedMonth ${getCalendarYearForMonth(_selectedMonth!)}'
+              : 'Academic Calendar',
+          style: const TextStyle(fontFamily: 'NotoSans', fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: 'Settings',
+            onPressed: () {
+              context.push('/settings');
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -234,359 +303,223 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.white))
                 : SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          _buildYearSelector(),
-                          const SizedBox(height: 20),
-                          Expanded(
-                            child: GlassmorphicContainer(
-                              width: double.infinity,
-                              height: double.infinity,
-                              borderRadius: 28,
-                              blur: 18,
-                              alignment: Alignment.topCenter,
-                              border: 2,
-                              linearGradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.25),
-                                  Colors.white.withOpacity(0.05),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderGradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.60),
-                                  Colors.white.withOpacity(0.10),
-                                ],
-                              ),
-                              child: ListView(
-                                padding: const EdgeInsets.all(20),
-                                children: [
-                                  ...months.map((month) => _buildMonthTile(month)).toList(),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 80), // FAB'lar için boşluk
-                        ],
-                      ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: _selectedMonth == null
+                          ? _buildYearView()
+                          : _buildMonthView(_selectedMonth!),
                     ),
                   ),
           ),
-          // Global floating buttons
-          if (!_isLoading) _buildFloatingButtons(),
         ],
       ),
     );
   }
 
-  Widget _buildYearSelector() {
-    return GlassmorphicContainer(
-      width: 160,
-      height: 50,
-      borderRadius: 15,
-      blur: 10,
-      border: 1.5,
-      linearGradient: LinearGradient(
-        colors: [Colors.white.withOpacity(0.3), Colors.white.withOpacity(0.2)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderGradient: LinearGradient(
-        colors: [Colors.white.withOpacity(0.6), Colors.white.withOpacity(0.3)],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Year:', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white.withOpacity(0.8))),
-            const SizedBox(width: 12),
-            DropdownButton<String>(
-              value: selectedYear,
-              items: [
-                DropdownMenuItem(
-                  value: '2025',
-                  child: Text('2025', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
-                )
-              ],
-              onChanged: (val) {}, // Only 2025 for now
-              underline: Container(),
-              icon: Icon(Icons.keyboard_arrow_down, color: Colors.white.withOpacity(0.8)),
-              dropdownColor: Colors.white.withOpacity(0.9),
+  Widget _buildYearView() {
+    return Column(
+      key: const ValueKey('yearView'),
+      children: [
+        const SizedBox(height: 11),
+        _buildYearSelector(),
+        const SizedBox(height: 11),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingButtons() {
-    if (editMode) {
-      return Positioned(
-        bottom: 24,
-        left: 24,
-        right: 24,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _TextGlassButton(
-              label: 'Cancel',
-              textColor: const Color.fromARGB(255, 242, 56, 56).withOpacity(0.9),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              onTap: () async {
-                if (hasChanges) {
-                  await showDiscardDialogWithDetails();
-                } else {
-                  setState(() {
-                    editMode = false;
-                  });
-                }
-              },
-            ),
-            _TextGlassButton(
-              label: 'Save',
-              textColor: const Color.fromARGB(255, 118, 165, 246).withOpacity(0.9),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              onTap: () async {
-                await saveAllDirtyWeeks();
-                setState(() {
-                  hasChanges = false;
-                  editMode = false;
-                });
-              },
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Positioned(
-        bottom: 24,
-        right: 24,
-        child: _IconGlassButton(
-          icon: Icons.edit,
-          onTap: () => setState(() {
-            editMode = true;
-          }),
-        ),
-      );
-    }
-  }
-
-  Widget _buildMonthTile(String month) {
-    final isExpanded = expandedMonth == month;
-    final weeks = getWeeksForMonth(month);
-    return Card(
-      elevation: isExpanded ? 4 : 2,
-      color: Colors.white.withOpacity(isExpanded ? 0.4 : 0.25), // mimic glass
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          title: Text(month, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black87)),
-          trailing: Icon(
-            isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-            size: 30,
-            color: Colors.black54,
+            itemCount: months.length,
+            itemBuilder: (context, index) {
+              final month = months[index];
+              return _buildMonthCell(month);
+            },
           ),
-          initiallyExpanded: isExpanded,
-          onExpansionChanged: (expanded) {
-            setState(() {
-              expandedMonth = expanded ? month : null;
-              expandedWeek = null;
-            });
-          },
-          children: weeks.map((week) => _buildWeekTile(month, week)).toList(),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildWeekTile(String month, Map<String, dynamic> week) {
-    final isExpanded = expandedWeek == week['weekNumber'];
-    final key = weekKey(month, week['weekNumber']);
+  Widget _buildMonthCell(String month) {
+    final year = getCalendarYearForMonth(month);
+    final monthNumber = getMonthNumber(month);
+    final firstDayOfMonth = DateTime(year, monthNumber, 1);
+    // DateTime.monday is 1, ..., DateTime.sunday is 7.
+    // The number of empty cells before the 1st day.
+    final startOffset = firstDayOfMonth.weekday - 1; 
+    final daysInMonth = DateTime(year, monthNumber + 1, 0).day;
 
-    // Initialize controllers from the loaded data or with empty values.
-    final initialData = _calendarDataForYear[key];
-    titleControllers.putIfAbsent(key, () => TextEditingController(text: initialData?['title'] ?? ''));
-    descControllers.putIfAbsent(key, () => TextEditingController(text: initialData?['description'] ?? ''));
-    linkControllers.putIfAbsent(key, () => List<Map<String, dynamic>>.from(initialData?['links'] ?? []));
-    attachmentControllers.putIfAbsent(key, () => List<Map<String, dynamic>>.from(initialData?['attachments'] ?? []));
-    
-    pendingUploads.putIfAbsent(key, () => []);
-    pendingUploadNames.putIfAbsent(key, () => []);
-    dirtyWeeks.putIfAbsent(key, () => false);
-    pendingDeleteUrls.putIfAbsent(key, () => []);
+    final now = DateTime.now();
+    final bool isCurrentMonth = now.year == year && now.month == monthNumber;
 
-    Future<void> pickAndAddFileToPending(String key) async {
-      if (kIsWeb) {
-        html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
-        uploadInput.click();
-        uploadInput.onChange.listen((e) async {
-          final file = uploadInput.files?.first;
-          if (file != null) {
-            // Only html.File is added on web
-            pendingUploads[key]!.add(file);
-            pendingUploadNames[key]!.add(file.name);
-            setState(() { dirtyWeeks[key] = true; hasChanges = true; });
-          }
-        });
-      } else {
-        FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
-        if (result != null && result.files.single.path != null) {
-          final file = File(result.files.single.path!);
-          // Only dart:io File is added on mobile/desktop
-          pendingUploads[key]!.add(file);
-          pendingUploadNames[key]!.add(result.files.single.name);
-          setState(() { dirtyWeeks[key] = true; hasChanges = true; });
-        }
-      }
-    }
-
-    return StatefulBuilder(
-      builder: (context, setState) {
-        final TextEditingController linkController = TextEditingController();
-        final TextEditingController linkTitleController = TextEditingController();
-        
-        final currentTitle = titleControllers[key]!.text;
-        final currentDesc = descControllers[key]!.text;
-        final currentLinks = linkControllers[key]!;
-        final currentAttachments = attachmentControllers[key]!;
-
-        Widget content;
-        if (!editMode) {
-          // Read-only mode
-          bool hasAnyContent = currentTitle.isNotEmpty || currentDesc.isNotEmpty || currentLinks.isNotEmpty || currentAttachments.isNotEmpty;
-          content = Padding(
-            padding: const EdgeInsets.all(16.0),
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMonth = month),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isCurrentMonth 
+                  ? Colors.amber.withOpacity(0.4) 
+                  : Colors.black.withOpacity(0.1),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Text(week['dateRange'], style: TextStyle(color: Colors.grey[700], fontStyle: FontStyle.italic, fontSize: 13)),
+                Text(
+                  month,
+                  style: const TextStyle(
+                    fontFamily: 'NotoSans',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
                 ),
-                const Divider(),
                 const SizedBox(height: 8),
-                if (hasAnyContent)
-                  ...[
-                    if (currentTitle.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(currentTitle, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                    if (currentDesc.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(currentDesc, style: TextStyle(color: Colors.grey[800], fontSize: 14, height: 1.5)),
-                      ),
-                    if (currentLinks.isNotEmpty) ..._buildReadOnlyLinks(currentLinks),
-                    if (currentAttachments.isNotEmpty) ..._buildReadOnlyAttachments(currentAttachments),
-                  ]
-                else
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Text('No content added yet.', style: TextStyle(color: Colors.grey)),
+                Expanded(
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      childAspectRatio: 1.0,
+                      mainAxisSpacing: 1,
+                      crossAxisSpacing: 1,
                     ),
-                  ),
-              ],
-            ),
-          );
-        } else {
-          // Edit mode: tüm week'ler editlenebilir
-          content = Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Text(week['dateRange'], style: TextStyle(color: Colors.grey[700], fontStyle: FontStyle.italic, fontSize: 13)),
-                ),
-                const Divider(),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: titleControllers[key],
-                  decoration: _inputDecoration('Title'),
-                  onChanged: (_) {
-                    setState(() {
-                      dirtyWeeks[key] = true;
-                      hasChanges = true;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descControllers[key],
-                  decoration: _inputDecoration('Description'),
-                  maxLines: 3,
-                  onChanged: (_) {
-                    setState(() {
-                      dirtyWeeks[key] = true;
-                      hasChanges = true;
-                    });
-                  },
-                ),
-                const SizedBox(height: 20),
-                const Text("Links", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 8),
-                ..._buildEditableLinks(key, currentLinks, linkController, linkTitleController, setState),
-                const SizedBox(height: 20),
-                const Text("Files", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 8),
-                ..._buildEditableAttachments(key, currentAttachments, setState),
-                
-                // Pending uploads
-                if (pendingUploadNames[key]!.isNotEmpty)
-                  ..._buildPendingUploads(key, setState),
-
-                // Add File butonu
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _buildAddFileButton(
-                    onPressed: () async => await pickAndAddFileToPending(key),
+                    itemCount: daysInMonth + startOffset,
+                    itemBuilder: (context, index) {
+                      if (index < startOffset) {
+                        return Container(); // Empty cell
+                      }
+                      final day = index - startOffset + 1;
+                      return Center(
+                        child: Text(
+                          '$day',
+                          style: TextStyle(
+                            fontFamily: 'NotoSans',
+                            fontSize: 9,
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
-            ),
-          );
-        }
-        return Card(
-          elevation: 0,
-          color: Colors.white.withOpacity(0.5),
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              title: Text(
-                'Week ${week['weekNumber']}',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              initiallyExpanded: isExpanded,
-              onExpansionChanged: (expanded) {
-                setState(() {
-                  expandedWeek = expanded ? week['weekNumber'] : null;
-                });
-              },
-              children: [content],
             ),
           ),
-        );
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthView(String month) {
+    final weeks = getWeeksForMonth(month);
+    return ListView.builder(
+      key: ValueKey(month),
+      padding: const EdgeInsets.all(16),
+      itemCount: weeks.length,
+      itemBuilder: (context, index) {
+        final week = weeks[index];
+        return _buildWeekCard(month, week);
       },
+    );
+  }
+
+  Widget _buildWeekCard(String month, Map<String, dynamic> weekData) {
+    final key = weekKey(month, weekData['localWeekNumber']);
+    final data = _calendarDataForYear[key];
+    final title = data?['title'] ?? '';
+
+    final now = DateTime.now();
+    final weekStart = weekData['start'] as DateTime;
+    final weekEnd = weekData['end'] as DateTime;
+    // Check if today is within the start (inclusive) and end (inclusive) of the week
+    final isCurrentWeek = !now.isBefore(weekStart) && now.isBefore(weekEnd.add(const Duration(days: 1)));
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isCurrentWeek 
+                  ? Colors.amber.withOpacity(0.5)
+                  : Colors.black.withOpacity(0.15),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: InkWell(
+              onTap: () {
+                _showWeekDetailsDialog(month, weekData);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Week ${weekData['localWeekNumber']}',
+                      style: const TextStyle(fontFamily: 'NotoSans', fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      weekData['dateRange'],
+                      style: const TextStyle(fontFamily: 'NotoSans', fontSize: 14, color: Colors.white70),
+                    ),
+                    if (title.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Divider(color: Colors.white54, thickness: 0.8),
+                      const SizedBox(height: 12),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontFamily: 'NotoSans', fontSize: 16, color: Colors.white),
+                      ),
+                    ]
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYearSelector() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: 160,
+          height: 45,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: Center(
+            child: Text(
+              selectedAcademicYear,
+              style: const TextStyle(fontFamily: 'NotoSans', fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -605,6 +538,235 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
         borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
       ),
     );
+  }
+
+  void _initializeControllersForKey(String key) {
+    final initialData = _calendarDataForYear[key];
+    titleControllers[key] = TextEditingController(text: initialData?['title'] ?? '');
+    descControllers[key] = TextEditingController(text: initialData?['description'] ?? '');
+    linkControllers[key] = List<Map<String, dynamic>>.from(initialData?['links'] ?? []);
+    attachmentControllers[key] = List<Map<String, dynamic>>.from(initialData?['attachments'] ?? []);
+    
+    pendingUploads[key] = [];
+    pendingUploadNames[key] = [];
+    pendingDeleteUrls[key] = [];
+  }
+
+  Future<void> _showWeekDetailsDialog(String month, Map<String, dynamic> weekData) async {
+    final String key = weekKey(month, weekData['localWeekNumber']);
+    _initializeControllersForKey(key);
+
+    await showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.2),
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        final TextEditingController linkInputController = TextEditingController();
+        final TextEditingController linkTitleInputController = TextEditingController();
+        bool isEditMode = false;
+        bool isDirty = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            
+            Future<bool> handlePop() async {
+              if (isEditMode && isDirty) {
+                final discard = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Discard Changes?'),
+                    content: const Text('Are you sure you want to discard your changes?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('No')),
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Yes')),
+                    ],
+                  ),
+                ) ?? false;
+                if (discard) {
+                  _initializeControllersForKey(key);
+                }
+                return discard;
+              }
+              return true;
+            }
+
+            Widget buildReadOnlyContent() {
+              final title = titleControllers[key]!.text;
+              final description = descControllers[key]!.text;
+              final links = linkControllers[key]!;
+              final attachments = attachmentControllers[key]!;
+              final hasContent = title.isNotEmpty || description.isNotEmpty || links.isNotEmpty || attachments.isNotEmpty;
+
+              if (!hasContent) {
+                return Container(
+                  height: 150,
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "No content added yet.",
+                    style: TextStyle(fontFamily: 'NotoSans', fontStyle: FontStyle.italic, color: Colors.black54),
+                  ),
+                );
+              }
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (title.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 8.0),
+                        child: Text(title, style: const TextStyle(fontFamily: 'NotoSans', fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
+                      ),
+                    if (description.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Text(description, style: TextStyle(fontFamily: 'NotoSans', fontSize: 14, height: 1.5, color: Colors.black.withOpacity(0.7))),
+                      ),
+                    if (links.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: _buildReadOnlyLinks(links),
+                      ),
+                    if (attachments.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _buildReadOnlyAttachments(attachments),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }
+
+            Widget buildEditableContent() {
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     TextField(
+                      controller: titleControllers[key],
+                      decoration: _inputDecoration('Title'),
+                      onChanged: (_) => setDialogState(() => isDirty = true),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descControllers[key],
+                      decoration: _inputDecoration('Description'),
+                      maxLines: 3,
+                      onChanged: (_) => setDialogState(() => isDirty = true),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text("Links", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 8),
+                    ..._buildEditableLinks(key, linkControllers[key]!, linkInputController, linkTitleInputController, () => setDialogState(() => isDirty = true)),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text("Files", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(Icons.add_circle_outline_rounded, color: Theme.of(context).primaryColorDark, size: 28),
+                          onPressed: () async {
+                            await _pickAndAddFileToPending(key, () {
+                              setDialogState(() => isDirty = true);
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ..._buildEditableAttachments(key, attachmentControllers[key]!, () => setDialogState(() => isDirty = true)),
+                    if (pendingUploadNames[key]!.isNotEmpty) ..._buildPendingUploads(key, () => setDialogState(() {})),
+                  ],
+                ),
+              );
+            }
+
+            return WillPopScope(
+              onWillPop: handlePop,
+              child: AlertDialog(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(color: Colors.white.withOpacity(0.3), width: 1.5)
+                ),
+                backgroundColor: Colors.white.withOpacity(0.4),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Week ${weekData['localWeekNumber']}',
+                      style: const TextStyle(fontFamily: 'NotoSans', fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${weekData['dateRange']}',
+                      style: TextStyle(fontFamily: 'NotoSans', fontStyle: FontStyle.italic, fontSize: 14, color: Colors.grey[800]),
+                    ),
+                  ],
+                ),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: isEditMode ? buildEditableContent() : buildReadOnlyContent(),
+                ),
+                actionsAlignment: isEditMode ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
+                actions: isEditMode
+                    ? [ // Edit mode buttons
+                        TextButton(
+                          child: const Text('Cancel', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                          onPressed: () async {
+                            if (await handlePop()) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
+                        TextButton(
+                          child: Text('Save', style: TextStyle(color: Theme.of(context).primaryColorDark, fontWeight: FontWeight.bold)),
+                          onPressed: () async {
+                            Navigator.of(context).pop(); // Close dialog
+                            await _saveSingleWeek(key, weekData['localWeekNumber']);
+                            setState(() {}); // Rebuild the main screen to show updated dot/title
+                          },
+                        ),
+                      ]
+                    : [ // View mode buttons
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.black.withOpacity(0.7)),
+                          onPressed: () {
+                            setDialogState(() {
+                              isEditMode = true;
+                            });
+                          },
+                        ),
+                      ],
+              ),
+            );
+          },
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 4 * animation.value, sigmaY: 4 * animation.value),
+          child: FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
+          ),
+        );
+      },
+    ).then((_) {
+      // After the dialog is popped, rebuild the main screen.
+      // This is crucial to reflect any changes if save was hit.
+      setState(() {});
+    });
   }
 
   List<Widget> _buildReadOnlyLinks(List<Map<String, dynamic>> links) {
@@ -676,9 +838,8 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
     }).toList();
   }
 
-  List<Widget> _buildEditableLinks(String key, List<Map<String, dynamic>> currentLinks, TextEditingController linkController, TextEditingController linkTitleController, StateSetter setState) {
+  List<Widget> _buildEditableLinks(String key, List<Map<String, dynamic>> currentLinks, TextEditingController linkController, TextEditingController linkTitleController, VoidCallback onStateChange) {
     return [
-      // Add new link fields
       Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -686,6 +847,7 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
             child: TextField(
               controller: linkController,
               decoration: _inputDecoration('Add link URL'),
+              onChanged: (_) => onStateChange(),
             ),
           ),
           const SizedBox(width: 8),
@@ -693,18 +855,15 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
             icon: const Icon(Icons.add_link, color: Colors.green, size: 30),
             onPressed: () async {
               String url = linkController.text.trim();
-              String title = linkTitleController.text.trim();
               if (url.isNotEmpty) {
+                String title = linkTitleController.text.trim();
                 if (title.isEmpty) {
                   title = await fetchPageTitle(url);
                 }
                 currentLinks.add({'url': url, 'title': title});
                 linkController.clear();
                 linkTitleController.clear();
-                setState(() {
-                  dirtyWeeks[key] = true;
-                  hasChanges = true;
-                });
+                onStateChange();
               }
             },
           ),
@@ -714,9 +873,9 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
       TextField(
         controller: linkTitleController,
         decoration: _inputDecoration('Title (optional)'),
+        onChanged: (_) => onStateChange(),
       ),
       const SizedBox(height: 12),
-      // List of existing links
       ...currentLinks.asMap().entries.map((entry) {
         int idx = entry.key;
         String url = entry.value['url'];
@@ -733,19 +892,16 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () {
                 currentLinks.removeAt(idx);
-                setState(() {
-                  dirtyWeeks[key] = true;
-                  hasChanges = true;
-                });
+                onStateChange();
               },
             ),
           ),
         );
-      }).toList(),
+      }),
     ];
   }
 
-  List<Widget> _buildEditableAttachments(String key, List<Map<String, dynamic>> currentAttachments, StateSetter setState) {
+  List<Widget> _buildEditableAttachments(String key, List<Map<String, dynamic>> currentAttachments, VoidCallback onStateChange) {
     return currentAttachments.asMap().entries.map((entry) {
       int idx = entry.key;
       var att = entry.value;
@@ -769,10 +925,7 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
             onPressed: () {
               pendingDeleteUrls[key]!.add(att['url']);
               currentAttachments.removeAt(idx);
-              setState(() {
-                dirtyWeeks[key] = true;
-                hasChanges = true;
-              });
+              onStateChange();
             },
           ),
         ),
@@ -780,7 +933,7 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
     }).toList();
   }
 
-  List<Widget> _buildPendingUploads(String key, StateSetter setState) {
+  List<Widget> _buildPendingUploads(String key, VoidCallback onStateChange) {
     return pendingUploadNames[key]!.asMap().entries.map((entry) {
       final idx = entry.key;
       final name = entry.value;
@@ -797,22 +950,12 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
             onPressed: () {
               pendingUploads[key]!.removeAt(idx);
               pendingUploadNames[key]!.removeAt(idx);
-              setState(() {}); // Re-render this specific week tile
+              onStateChange();
             },
           ),
         ),
       );
     }).toList();
-  }
-
-  Widget _buildAddFileButton({required VoidCallback onPressed}) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(Icons.note_add_outlined, color: Colors.blue[700]),
-      iconSize: 32,
-      tooltip: 'Add File',
-      splashRadius: 24,
-    );
   }
 
   String? _getYoutubeId(String url) {
@@ -826,182 +969,108 @@ class _HighSchoolUnitCoordinatorAcademicCalendarState extends State<HighSchoolUn
     return null;
   }
 
-  Future<void> saveAllDirtyWeeks() async {
+  Future<void> _pickAndAddFileToPending(String key, VoidCallback onStateChange) async {
+    // Web file upload removed - only mobile/desktop support
+      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        pendingUploads[key]!.add(file);
+        pendingUploadNames[key]!.add(result.files.single.name);
+        onStateChange();
+    }
+  }
+
+  Future<void> _saveSingleWeek(String key, int localWeekNumber) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    final dirtyKeys = dirtyWeeks.entries.where((e) => e.value).map((e) => e.key).toList();
 
-    for (final key in dirtyKeys) {
-      final parts = key.split('-');
-      final month = parts[0];
-      final weekNumber = int.parse(parts[1]);
-      
-      List<Map<String, dynamic>> finalAttachments = List<Map<String, dynamic>>.from(attachmentControllers[key] ?? []);
+    final parts = key.split('-');
+    final month = parts[0];
+    // localWeekNumber is already provided
+    
+    List<Map<String, dynamic>> finalAttachments = List<Map<String, dynamic>>.from(attachmentControllers[key] ?? []);
 
-      // 1. Delete files from Storage that were removed from the UI
-      if (pendingDeleteUrls[key] != null && pendingDeleteUrls[key]!.isNotEmpty) {
-        for (final url in pendingDeleteUrls[key]!) {
-          try {
-            final ref = FirebaseStorage.instance.refFromURL(url);
-            await ref.delete();
-          } catch (e) {
-            print('Storage silme hatası: $e');
-          }
-        }
-        pendingDeleteUrls[key]!.clear();
-      }
-
-      // Upload pending files and add them to the attachments list
-      if (pendingUploads.containsKey(key) && pendingUploads[key]!.isNotEmpty) {
-        // Web
-        if (kIsWeb) {
-          for (var i = 0; i < pendingUploads[key]!.length; i++) {
-            final file = pendingUploads[key]![i] as html.File;
-            final reader = html.FileReader();
-            reader.readAsArrayBuffer(file);
-            await reader.onLoad.first;
-            final data = reader.result as Uint8List;
-            String ext = file.name.split('.').last.toLowerCase();
-            String storagePath = 'calendar_files/$unitCoordinatorId/$selectedYear/${month}_${weekNumber}/${file.name}';
-            final ref = FirebaseStorage.instance.ref().child(storagePath);
-            final uploadTask = ref.putData(data, SettableMetadata(contentType: file.type));
-            final snapshot = await uploadTask.whenComplete(() {});
-            String url = await snapshot.ref.getDownloadURL();
-            String type = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext) ? 'image' : (ext == 'pdf' ? 'pdf' : 'file');
-            finalAttachments.add({'type': type, 'url': url, 'name': file.name});
-          }
-        }
-        // Mobile
-        else {
-          for (var i = 0; i < pendingUploads[key]!.length; i++) {
-            final file = pendingUploads[key]![i] as File;
-            String fileName = pendingUploadNames[key]![i];
-            String ext = fileName.split('.').last.toLowerCase();
-            String storagePath = 'calendar_files/$unitCoordinatorId/$selectedYear/${month}_${weekNumber}/$fileName';
-            final ref = FirebaseStorage.instance.ref().child(storagePath);
-            await ref.putFile(file);
-            String url = await ref.getDownloadURL();
-            String type = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext) ? 'image' : (ext == 'pdf' ? 'pdf' : 'file');
-            finalAttachments.add({'type': type, 'url': url, 'name': fileName});
-          }
+    // 1. Delete files from Storage that were removed from the UI
+    if (pendingDeleteUrls[key] != null && pendingDeleteUrls[key]!.isNotEmpty) {
+      for (final url in pendingDeleteUrls[key]!) {
+        try {
+          final ref = FirebaseStorage.instance.refFromURL(url);
+          await ref.delete();
+        } catch (e) {
+          print('Storage silme hatası: $e');
         }
       }
-
-      // Prepare final data for Firestore
-      final Map<String, dynamic> weekDataToSave = {
-        'title': titleControllers[key]?.text ?? '',
-        'description': descControllers[key]?.text ?? '',
-        'links': linkControllers[key] ?? [],
-        'attachments': finalAttachments,
-      };
-
-      // Save to Firestore
-      await saveWeekData(month, weekNumber, weekDataToSave);
-
-      // Update local cache
-      _calendarDataForYear[key] = weekDataToSave;
-      attachmentControllers[key] = finalAttachments;
     }
 
-    // Clear dirty states and pending uploads
-    dirtyWeeks.clear();
-    pendingUploads.clear();
-    pendingUploadNames.clear();
-    pendingDeleteUrls.clear();
+    // 2. Upload pending files and add them to the attachments list (mobile/desktop only)
+    if (pendingUploads.containsKey(key) && pendingUploads[key]!.isNotEmpty) {
+        for (var i = 0; i < pendingUploads[key]!.length; i++) {
+          final file = pendingUploads[key]![i] as File;
+          String fileName = pendingUploadNames[key]![i];
+          String ext = fileName.split('.').last.toLowerCase();
+          final calendarYear = getCalendarYearForMonth(month);
+          String storagePath = 'calendar_files/$unitCoordinatorId/$calendarYear/${month}_$localWeekNumber/$fileName';
+          final ref = FirebaseStorage.instance.ref().child(storagePath);
+          await ref.putFile(file);
+          String url = await ref.getDownloadURL();
+          String type = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(ext) ? 'image' : (ext == 'pdf' ? 'pdf' : 'file');
+          finalAttachments.add({'type': type, 'url': url, 'name': fileName});
+      }
+    }
+
+    // 3. Prepare final data for Firestore
+    final Map<String, dynamic> weekDataToSave = {
+      'title': titleControllers[key]?.text ?? '',
+      'description': descControllers[key]?.text ?? '',
+      'links': linkControllers[key] ?? [],
+      'attachments': finalAttachments,
+    };
+
+    // 4. Save to Firestore
+    await saveWeekData(month, localWeekNumber, weekDataToSave);
+
+    // 5. Update local state
+    _calendarDataForYear[key] = weekDataToSave;
+    attachmentControllers[key] = finalAttachments;
+    pendingUploads[key]!.clear();
+    pendingUploadNames[key]!.clear();
+    pendingDeleteUrls[key]!.clear();
 
     if (mounted) {
       setState(() {
         _isLoading = false;
-        hasChanges = false; // Reset changes state after saving
+      });
+    }
+  }
+
+  Future<void> saveAllDirtyWeeks() async {
+    // This function may no longer be needed if we only save one week at a time.
+    // However, we can keep it for a potential "save all" feature in the future.
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    final dirtyKeys = _calendarDataForYear.keys; // This needs to be smarter if we track dirtiness
+    print("saveAllDirtyWeeks is called, but its logic needs review for the new model.");
+
+    // for (final key in dirtyKeys) {
+    //   await _saveSingleWeek(key);
+    // }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
 
   Future<void> showDiscardDialogWithDetails() async {
-    final changed = dirtyWeeks.entries.where((e) => e.value).toList();
-    if (changed.isEmpty) {
-      setState(() { editMode = false; });
-      return;
-    }
-    final details = changed.map((e) {
-      final parts = e.key.split('-');
-      final month = parts[0];
-      final week = parts[1];
-      return '$selectedYear > $month > Week $week';
-    }).join('\n');
-
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Discard Changes?'),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              const Text('You have unsaved changes in:'),
-              const SizedBox(height: 8),
-              Text(details, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const Text('Are you sure you want to discard them?'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('No')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Yes')),
-        ],
-      ),
-    ) ?? false;
-
-    if (discard) {
-      // Clear all local changes and reload from the original data
-      dirtyWeeks.clear();
-      pendingUploads.clear();
-      pendingUploadNames.clear();
-      pendingDeleteUrls.clear();
-      
-      // We don't need to re-fetch from Firestore.
-      // We just need to reset the controllers to their original state from _calendarDataForYear.
-      // This is automatically handled by the widget rebuild when we exit edit mode.
-
-      setState(() {
-        editMode = false;
-        hasChanges = false;
-      });
-    }
+    // This logic needs to be re-evaluated as we now handle discards per-dialog.
+    print("showDiscardDialogWithDetails is called, but it's likely deprecated.");
   }
-}
 
-class _IconGlassButton extends StatelessWidget {
-  final VoidCallback onTap;
-  final IconData icon;
-
-  const _IconGlassButton({
-    required this.onTap,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassmorphicContainer(
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      blur: 10,
-      border: 1.5,
-      linearGradient: LinearGradient(
-        colors: [Theme.of(context).primaryColor.withOpacity(0.3), Theme.of(context).primaryColor.withOpacity(0.2)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderGradient: LinearGradient(
-        colors: [Colors.white.withOpacity(0.5), Colors.white.withOpacity(0.2)],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: Center(child: Icon(icon, color: Colors.white)),
-      ),
-    );
+  void _discardChanges() {
+    // This logic is now handled inside the dialog's cancel button.
+    print("_discardChanges is called, but it's likely deprecated.");
   }
 }
 
@@ -1016,8 +1085,8 @@ class _TextGlassButton extends StatelessWidget {
     required this.onTap,
     required this.label,
     this.textColor = Colors.white,
-    this.fontSize = 16,
-    this.fontWeight = FontWeight.bold,
+    this.fontSize = 14.0,
+    this.fontWeight = FontWeight.normal,
   });
 
   @override
@@ -1042,7 +1111,8 @@ class _TextGlassButton extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: TextStyle(
+              fontFamily: 'NotoSans',
               color: textColor,
               fontWeight: fontWeight,
               fontSize: fontSize,
@@ -1052,4 +1122,4 @@ class _TextGlassButton extends StatelessWidget {
       ),
     );
   }
-} 
+}

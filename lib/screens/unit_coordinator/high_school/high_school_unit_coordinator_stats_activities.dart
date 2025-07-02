@@ -7,9 +7,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+// HTML import removed for mobile compatibility
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 import 'package:csv/csv.dart';
 import 'dart:convert';
@@ -117,8 +116,16 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
 
       // 2. Filter by date range
       final filteredReports = allReports.where((report) {
-        final reportDateStr = report['startdate'] ?? report['reportId'];
-        final reportDate = DateTime.tryParse(reportDateStr);
+        String? dateStr = report['startdate'];
+        if (dateStr == null || dateStr.isEmpty) {
+          final reportId = report['reportId'] ?? '';
+          if (reportId.length >= 10) {
+            dateStr = reportId.substring(0, 10);
+          } else {
+            dateStr = '';
+          }
+        }
+        final reportDate = DateTime.tryParse(dateStr ?? '');
         if (reportDate == null) return false;
         if (startDate != null && reportDate.isBefore(startDate)) return false;
         if (endDate != null && reportDate.isAfter(endDate)) return false;
@@ -219,13 +226,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
             final mentorName = _mentorNames[report['mentorId']] ?? '';
             final dateRaw = report['startdate'] ?? report['reportId'] ?? '';
             String formattedDate = '';
-            if (dateRaw.isNotEmpty) {
-              try {
-                final dt = DateTime.parse(dateRaw);
-                formattedDate = '${_monthName(dt.month)} ${dt.day}, ${dt.year}';
-              } catch (_) {
-                formattedDate = dateRaw;
+            try {
+              if (dateRaw.isNotEmpty) {
+                final dt = DateTime.parse(dateRaw.substring(0, 10));
+                formattedDate = DateFormat('MMMM d, yyyy').format(dt);
               }
+            } catch (e) {
+              formattedDate = dateRaw;
             }
             // Activity Title
             widgets.add(
@@ -298,22 +305,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
       ),
     );
     final bytes = await pdf.save();
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activities.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isLoading = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activities.pdf';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isLoading = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activities.pdf';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isLoading = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToExcel() async {
@@ -402,13 +400,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
       final mentorName = _mentorNames[report['mentorId']] ?? '';
       final dateRaw = report['startdate'] ?? report['reportId'] ?? '';
       String formattedDate = '';
-      if (dateRaw.isNotEmpty) {
-        try {
-          final dt = DateTime.parse(dateRaw);
-          formattedDate = '${_monthName(dt.month)} ${dt.day}, ${dt.year}';
-        } catch (_) {
-          formattedDate = dateRaw;
+      try {
+        if (dateRaw.isNotEmpty) {
+          final dt = DateTime.parse(dateRaw.substring(0, 10));
+          formattedDate = DateFormat('MMMM d, yyyy').format(dt);
         }
+      } catch (e) {
+        formattedDate = dateRaw;
       }
       String metaText = 'by $mentorName • $formattedDate';
       
@@ -473,23 +471,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
     }
     final List<int> bytes = workbook.saveAsStream();
     workbook.dispose();
-    if (kIsWeb) {
-      final content = Uint8List.fromList(bytes);
-      final blob = html.Blob([content]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activities.xlsx')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isLoading = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activities.xlsx';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isLoading = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activities.xlsx';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isLoading = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToCsv() async {
@@ -550,22 +538,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
     }
     String csvData = const ListToCsvConverter().convert(rows);
     final bytes = utf8.encode(csvData);
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activities.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isLoading = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activities.csv';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isLoading = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activities.csv';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isLoading = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToText() async {
@@ -601,22 +580,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
       buffer.writeln('');
     }
     final bytes = utf8.encode(buffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activities.txt')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isLoading = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activities.txt';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isLoading = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activities.txt';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isLoading = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToHtml() async {
@@ -640,18 +610,14 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
       final activity = report['activity'] ?? (report['noActivityThisWeek'] == true ? 'No Activity' : '');
       final mentorName = _mentorNames[report['mentorId']] ?? '';
       final dateRaw = report['startdate'] ?? report['reportId'] ?? '';
-      String formattedDate = dateRaw;
-      if (dateRaw.isNotEmpty) {
-        try {
-          final dt = DateTime.parse(dateRaw);
-          final months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-          ];
-          formattedDate = '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-        } catch (_) {
-          formattedDate = dateRaw;
+      String formattedDate = '';
+      try {
+        if (dateRaw.isNotEmpty) {
+          final dt = DateTime.parse(dateRaw.substring(0, 10));
+          formattedDate = DateFormat('MMMM d, yyyy').format(dt);
         }
+      } catch (e) {
+        formattedDate = dateRaw;
       }
       final mentees = List<Map<String, dynamic>>.from(report['menteesDetails'] ?? []);
       final notes = report['notes'] ?? '';
@@ -703,22 +669,13 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
     }
     buffer.writeln('</body></html>');
     final bytes = utf8.encode(buffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activities.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isLoading = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activities.html';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isLoading = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activities.html';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isLoading = false);
+    OpenFile.open(path);
   }
 
   String _monthName(int month) {
@@ -734,8 +691,12 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
     // Sort reports by date, newest first
     final sortedReports = List<Map<String, dynamic>>.from(_reports);
     sortedReports.sort((a, b) {
-      final dateA = DateTime.tryParse(a['startdate'] ?? a['reportId'] ?? '');
-      final dateB = DateTime.tryParse(b['startdate'] ?? b['reportId'] ?? '');
+      String getDateStr(Map<String, dynamic> r) {
+        final raw = (r['startdate'] ?? r['reportId'] ?? '').toString();
+        return raw.length >= 10 ? raw.substring(0, 10) : raw;
+      }
+      final dateA = DateTime.tryParse(getDateStr(a));
+      final dateB = DateTime.tryParse(getDateStr(b));
       if (dateA == null && dateB == null) return 0;
       if (dateA == null) return 1;
       if (dateB == null) return -1;
@@ -847,7 +808,7 @@ class _HighSchoolUnitCoordinatorStatsActivitiesPageState extends State<HighSchoo
                             String formattedDate = '';
                             try {
                               if (dateStr.isNotEmpty) {
-                                formattedDate = DateFormat('MMMM d, yyyy').format(DateTime.parse(dateStr));
+                                formattedDate = DateFormat('MMMM d, yyyy').format(DateTime.parse(dateStr.substring(0, 10)));
                               }
                             } catch (e) {
                               formattedDate = dateStr; // fallback to original string

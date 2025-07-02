@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'profile_photo_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -42,6 +43,11 @@ class _ProfileState extends State<Profile> {
   String? _gender;
   String? _originalGender;
   final List<String> _genders = ['Male', 'Female', 'Prefer not to answer'];
+
+  // 🔹 Pending photo/avatar changes
+  File? _pendingPhotoFile;
+  String? _pendingAvatar;
+  bool _hasPendingPhotoChanges = false;
 
   final Map<String, List<String>> _provinceCityMap = {
     'Ontario': ['Toronto', 'Ottawa', 'Mississauga', 'Hamilton', 'London'],
@@ -89,53 +95,64 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _handleProfilePhotoChange() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final croppedFile = await ProfilePhotoHelper.pickAndCropPhoto(context);
-    if (croppedFile == null) return;
+    try {
+      final croppedFile = await ProfilePhotoHelper.pickAndCropPhoto(context);
+      if (croppedFile == null) {
+        print('Profile: No file selected or cropping cancelled');
+        return;
+      }
 
-    // Yükleme sırasında loading göster
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final url = await ProfilePhotoHelper.uploadProfilePhoto(croppedFile, uid);
-    Navigator.of(context).pop(); // Loading dialogu kapat
-    if (url != null) {
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'photoUrl': url,
-        'avatarEmoji': null,
-      });
-      setState(() {
-        _photoUrl = url;
-        _avatarEmoji = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile photo updated!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Photo upload failed. Please try again.')),
-      );
+      print('Profile: Photo selected, setting as pending...');
+      
+      if (mounted) {
+        setState(() {
+          _pendingPhotoFile = croppedFile;
+          _pendingAvatar = null; // Clear pending avatar if photo is selected
+          _hasPendingPhotoChanges = true;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📷 Photo selected! Click Save to upload.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Profile: Error in _handleProfilePhotoChange: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ An error occurred: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _handleAvatarPick() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
     final selected = await ProfilePhotoHelper.pickAvatar(context);
     if (selected != null) {
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'avatarEmoji': selected,
-        'photoUrl': null,
-      });
-      setState(() {
-        _avatarEmoji = selected;
-        _photoUrl = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar selected!')),
-      );
+      print('Profile: Avatar selected, setting as pending...');
+      
+      if (mounted) {
+        setState(() {
+          _pendingAvatar = selected;
+          _pendingPhotoFile = null; // Clear pending photo if avatar is selected
+          _hasPendingPhotoChanges = true;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('👤 Avatar selected! Click Save to apply.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -206,6 +223,44 @@ class _ProfileState extends State<Profile> {
         );
         return;
       }
+
+      // 🔹 Handle pending photo/avatar upload
+      String? newPhotoUrl = _photoUrl;
+      String? newAvatarEmoji = _avatarEmoji;
+      
+      if (_hasPendingPhotoChanges) {
+        if (_pendingPhotoFile != null) {
+          print('Profile: Uploading pending photo...');
+          
+          // 🔹 Yeni foto upload etmeden önce eski fotoğrafı sil
+          if (_photoUrl != null && _photoUrl!.isNotEmpty) {
+            await ProfilePhotoHelper.deleteOldProfilePhoto(_photoUrl);
+          }
+          
+          newPhotoUrl = await ProfilePhotoHelper.uploadProfilePhoto(_pendingPhotoFile!, uid);
+          if (newPhotoUrl != null) {
+            newAvatarEmoji = null; // Clear avatar if photo uploaded
+            print('Profile: Photo uploaded successfully');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('❌ Photo upload failed. Please try again.')),
+            );
+            return;
+          }
+        } else if (_pendingAvatar != null) {
+          print('Profile: Setting pending avatar...');
+          
+          // 🔹 Avatar seçilmişse eski fotoğrafı sil
+          if (_photoUrl != null && _photoUrl!.isNotEmpty) {
+            // Arka planda sil, hata olsa bile devam et
+            ProfilePhotoHelper.deleteOldProfilePhoto(_photoUrl);
+          }
+          
+          newAvatarEmoji = _pendingAvatar;
+          newPhotoUrl = null; // Clear photo if avatar selected
+        }
+      }
+
       String lastNameToSave = _lastNameController.text.trim().isEmpty ? 'N/A' : _lastNameController.text.trim();
       final oldUsername = _originalUsername;
       final newUsername = _usernameController.text.trim();
@@ -221,7 +276,9 @@ class _ProfileState extends State<Profile> {
         }
         await FirebaseFirestore.instance.collection('usernames').doc(newUsername).set({'email': email});
       }
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+
+      // 🔹 Update Firestore with all changes including photo/avatar
+      final updateData = {
         'username': newUsername,
         'firstName': _firstNameController.text.trim(),
         'lastName': lastNameToSave,
@@ -229,13 +286,34 @@ class _ProfileState extends State<Profile> {
         'province': _selectedProvince,
         'city': _selectedCity,
         'gender': _gender,
-      });
+      };
+
+      // Add photo/avatar updates if there were changes
+      if (_hasPendingPhotoChanges) {
+        updateData['photoUrl'] = newPhotoUrl;
+        updateData['avatarEmoji'] = newAvatarEmoji;
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(uid).update(updateData);
+      
       setState(() {
         _isEditMode = false;
         _originalUsername = newUsername;
+        // 🔹 Update local state and clear pending changes
+        if (_hasPendingPhotoChanges) {
+          _photoUrl = newPhotoUrl;
+          _avatarEmoji = newAvatarEmoji;
+          _pendingPhotoFile = null;
+          _pendingAvatar = null;
+          _hasPendingPhotoChanges = false;
+        }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
+        const SnackBar(
+          content: Text('✅ Profile updated successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -253,7 +331,8 @@ class _ProfileState extends State<Profile> {
         _country != _originalCountry ||
         _selectedProvince != _originalProvince ||
         _selectedCity != _originalCity ||
-        _gender != _originalGender;
+        _gender != _originalGender ||
+        _hasPendingPhotoChanges;
   }
 
   Future<void> _onEditCancel() async {
@@ -279,6 +358,10 @@ class _ProfileState extends State<Profile> {
     }
     setState(() {
       _isEditMode = false;
+      // 🔹 Clear pending photo/avatar changes
+      _pendingPhotoFile = null;
+      _pendingAvatar = null;
+      _hasPendingPhotoChanges = false;
       _loadUserData();
     });
   }
@@ -397,13 +480,17 @@ class _ProfileState extends State<Profile> {
                                 children: [
                                   CircleAvatar(
                                     radius: 64,
-                                    backgroundImage: _photoUrl != null
-                                        ? NetworkImage(_photoUrl!)
-                                        : (_avatarEmoji != null && _avatarEmoji!.startsWith('assets/avatars'))
-                                            ? AssetImage(_avatarEmoji!) as ImageProvider
-                                            : null,
+                                    backgroundImage: _pendingPhotoFile != null
+                                        ? FileImage(_pendingPhotoFile!) as ImageProvider
+                                        : _photoUrl != null
+                                            ? NetworkImage(_photoUrl!)
+                                            : (_pendingAvatar != null && _pendingAvatar!.startsWith('assets/avatars'))
+                                                ? AssetImage(_pendingAvatar!) as ImageProvider
+                                                : (_avatarEmoji != null && _avatarEmoji!.startsWith('assets/avatars'))
+                                                    ? AssetImage(_avatarEmoji!) as ImageProvider
+                                                    : null,
                                     backgroundColor: Colors.grey.shade300,
-                                    child: (_photoUrl == null && (_avatarEmoji == null || !_avatarEmoji!.startsWith('assets/avatars')))
+                                    child: (_pendingPhotoFile == null && _photoUrl == null && _pendingAvatar == null && (_avatarEmoji == null || !_avatarEmoji!.startsWith('assets/avatars')))
                                         ? const Icon(Icons.person, size: 48, color: Colors.white)
                                         : null,
                                   ),
@@ -413,11 +500,15 @@ class _ProfileState extends State<Profile> {
                                       right: 8,
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: Colors.black54,
+                                          color: _hasPendingPhotoChanges ? Colors.orange : Colors.black54,
                                           shape: BoxShape.circle,
                                         ),
                                         padding: const EdgeInsets.all(6),
-                                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 28),
+                                        child: Icon(
+                                          _hasPendingPhotoChanges ? Icons.pending : Icons.camera_alt, 
+                                          color: Colors.white, 
+                                          size: 28
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -697,7 +788,7 @@ class _ProfileState extends State<Profile> {
                 ),
                 child: _isSaving
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Save'),
+                    : Text(_hasPendingPhotoChanges ? 'Save & Upload' : 'Save'),
               ),
             )
           : null,

@@ -5,10 +5,9 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:open_file/open_file.dart';
-import 'package:flutter/foundation.dart';
 // For web download
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+// HTML import removed for mobile compatibility
 import 'package:csv/csv.dart';
 import 'dart:convert';
 import 'package:pdf/pdf.dart';
@@ -556,23 +555,13 @@ class _HighSchoolUnitCoordinatorStatsActiveStudentsPageState extends State<HighS
     }
     final List<int> bytes = workbook.saveAsStream();
     workbook.dispose();
-    if (kIsWeb) {
-      final content = Uint8List.fromList(bytes);
-      final blob = html.Blob([content]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Active Students.xlsx')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Active Students.xlsx';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Active Students.xlsx';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToPdf() async {
@@ -671,22 +660,13 @@ class _HighSchoolUnitCoordinatorStatsActiveStudentsPageState extends State<HighS
       ),
     );
     final bytes = await pdf.save();
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Active_Students.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Active_Students.pdf';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Active_Students.pdf';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToCsv() async {
@@ -710,22 +690,13 @@ class _HighSchoolUnitCoordinatorStatsActiveStudentsPageState extends State<HighS
     }
     String csvData = const ListToCsvConverter().convert(rows);
     final bytes = utf8.encode(csvData);
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Active Students.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Active Students.csv';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Active Students.csv';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToText() async {
@@ -752,22 +723,13 @@ class _HighSchoolUnitCoordinatorStatsActiveStudentsPageState extends State<HighS
     int total = _mentors.values.fold(0, (sum, mentees) => sum + mentees.length);
     buffer.writeln('\nTotal Mentees: $total');
     final bytes = utf8.encode(buffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Active Students.txt')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Active Students.txt';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Active Students.txt';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToHtml() async {
@@ -825,22 +787,13 @@ class _HighSchoolUnitCoordinatorStatsActiveStudentsPageState extends State<HighS
     buffer.writeln('</tr></table>');
     buffer.writeln('</body></html>');
     final bytes = utf8.encode(buffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Active_Students.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Active_Students.html';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Active_Students.html';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   String _monthYearString(DateTime date) {

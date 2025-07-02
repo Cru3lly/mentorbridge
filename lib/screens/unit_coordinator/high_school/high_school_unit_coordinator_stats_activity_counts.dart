@@ -7,9 +7,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+// HTML import removed for mobile compatibility
 import 'package:csv/csv.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -166,7 +165,9 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
           // Tarih aralığı kontrolü
           DateTime? reportDate;
           try {
-            reportDate = DateTime.parse(reportId);
+            // ID'nin ilk 10 karakteri tarih (yyyy-MM-dd)
+            final dateStr = reportId.substring(0, 10);
+            reportDate = DateTime.parse(dateStr);
           } catch (e) {
             reportDate = null;
           }
@@ -930,23 +931,13 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
 
     final List<int> bytes = workbook.saveAsStream();
     workbook.dispose();
-    if (kIsWeb) {
-      final content = Uint8List.fromList(bytes);
-      final blob = html.Blob([content]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts.xlsx')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts.xlsx';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts.xlsx';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> _exportToPdf() async {
@@ -1159,22 +1150,13 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
       ),
     );
     final bytes = await pdf.save();
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-      setState(() => _isExporting = false);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts.pdf';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _isExporting = false);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support  
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts.pdf';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    setState(() => _isExporting = false);
+    OpenFile.open(path);
   }
 
   Future<void> exportToCsv() async {
@@ -1222,20 +1204,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
     }
     String csvData = const ListToCsvConverter().convert(rows);
     final bytes = utf8.encode(csvData);
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts.csv';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts.csv';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 
   Future<void> exportToText() async {
@@ -1272,20 +1246,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
       ].join(' | '));
     }
     final bytes = utf8.encode(lines.join('\n'));
-    if (kIsWeb) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts.txt')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts.txt';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts.txt';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 
   Future<void> exportToHtml() async {
@@ -1395,20 +1361,12 @@ class _HighSchoolUnitCoordinatorStatsActivityCountsPageState extends State<HighS
     buffer.writeln('</table>');
     buffer.writeln('</body></html>');
     final bytes = utf8.encode(buffer.toString());
-    if (kIsWeb) {
-      final blob = html.Blob([bytes], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Activity Counts.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/Activity Counts.html';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      OpenFile.open(path);
-    }
+    // Web download removed - only mobile/desktop support
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/Activity Counts.html';
+    final file = File(path);
+    await file.writeAsBytes(bytes, flush: true);
+    OpenFile.open(path);
   }
 }
 

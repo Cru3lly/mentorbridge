@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
@@ -84,12 +83,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(
-    DevicePreview(
-      enabled: true,
-      builder: (context) => const MentorBridgeApp(),
-    ),
-  );
+  runApp(const MentorBridgeApp());
 }
 
 class MentorBridgeApp extends StatelessWidget {
@@ -99,7 +93,6 @@ class MentorBridgeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      builder: DevicePreview.appBuilder,
       title: 'MentorBridge',
       theme: ThemeData(
         fontFamily: 'NotoSans',
