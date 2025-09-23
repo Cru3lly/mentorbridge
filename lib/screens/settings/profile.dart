@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'profile_photo_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
 class Profile extends StatefulWidget {
@@ -42,6 +43,9 @@ class _ProfileState extends State<Profile> {
   String? _originalCity;
   String? _gender;
   String? _originalGender;
+  
+  // User data cache for member ID access
+  Map<String, dynamic> _userData = {};
   final List<String> _genders = ['Male', 'Female', 'Prefer not to answer'];
 
   // 🔹 Pending photo/avatar changes
@@ -70,9 +74,10 @@ class _ProfileState extends State<Profile> {
 
     if (doc.exists) {
       final data = doc.data()!;
+      _userData = data; // Cache user data for member ID access
       _usernameController.text = data['username'] ?? '';
       _firstNameController.text = data['firstName'] ?? '';
-      _lastNameController.text = (data['lastName'] == null || data['lastName'].toString().isEmpty) ? 'N/A' : data['lastName'];
+      _lastNameController.text = data['lastName'] ?? '';
       _photoUrl = data['photoUrl'];
       _avatarEmoji = data['avatarEmoji'];
       _country = data['country'] ?? '';
@@ -191,6 +196,12 @@ class _ProfileState extends State<Profile> {
         );
         return;
       }
+      if (_lastNameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Last name is required.')),
+        );
+        return;
+      }
       if (_country == null || _country!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Country is required.')),
@@ -261,7 +272,7 @@ class _ProfileState extends State<Profile> {
         }
       }
 
-      String lastNameToSave = _lastNameController.text.trim().isEmpty ? 'N/A' : _lastNameController.text.trim();
+      String lastNameToSave = _lastNameController.text.trim();
       final oldUsername = _originalUsername;
       final newUsername = _usernameController.text.trim();
       final email = _email;
@@ -366,32 +377,231 @@ class _ProfileState extends State<Profile> {
     });
   }
 
+  // 🗑️ Storage'dan kullanıcıya ait tüm dosyaları sil
+  Future<void> _deleteAllUserStorageFiles(String userId, Map<String, dynamic>? userData) async {
+    try {
+      final storage = FirebaseStorage.instance;
+      int deletedCount = 0;
+      
+      print('🗑️ Starting storage cleanup for user: $userId');
+      
+      // 1. Profile fotoğrafını sil (userData'dan photoUrl)
+      final photoUrl = userData?['photoUrl'];
+      if (photoUrl != null && photoUrl.toString().isNotEmpty) {
+        try {
+          await ProfilePhotoHelper.deleteOldProfilePhoto(photoUrl);
+          deletedCount++;
+          print('✅ Deleted profile photo from photoUrl');
+        } catch (e) {
+          print('❌ Profile photo deletion failed: $e');
+        }
+      }
+      
+      // 2. profile_photos/ klasöründe user ID ile başlayan dosyaları bul
+      try {
+        final profilePhotosRef = storage.ref().child('profile_photos');
+        final listResult = await profilePhotosRef.listAll();
+        
+        for (final item in listResult.items) {
+          // Dosya adı user ID ile başlıyorsa sil
+          if (item.name.startsWith(userId)) {
+            try {
+              await item.delete();
+              deletedCount++;
+              print('✅ Deleted storage file: ${item.fullPath}');
+            } catch (e) {
+              print('❌ Failed to delete ${item.fullPath}: $e');
+            }
+          }
+        }
+      } catch (e) {
+        print('❌ Error listing profile_photos: $e');
+      }
+      
+      // 3. Diğer potansiyel klasörleri kontrol et
+      final potentialFolders = [
+        'users/$userId',           // Kullanıcı klasörü
+        'documents/$userId',       // Belgeler
+        'uploads/$userId',         // Yüklemeler  
+        'avatars/$userId',         // Avatarlar
+      ];
+      
+      for (final folderPath in potentialFolders) {
+        try {
+          final folderRef = storage.ref().child(folderPath);
+          final listResult = await folderRef.listAll();
+          
+          // Klasördeki tüm dosyaları sil
+          for (final item in listResult.items) {
+            try {
+              await item.delete();
+              deletedCount++;
+              print('✅ Deleted: ${item.fullPath}');
+            } catch (e) {
+              print('❌ Failed to delete ${item.fullPath}: $e');
+            }
+          }
+          
+          // Alt klasörleri de kontrol et
+          for (final prefix in listResult.prefixes) {
+            await _deleteStorageFolder(prefix);
+          }
+          
+        } catch (e) {
+          print('❌ Error accessing folder $folderPath: $e');
+        }
+      }
+      
+      print('🎯 Storage cleanup completed. Deleted $deletedCount files for user: $userId');
+      
+    } catch (e) {
+      print('❌ Error during storage cleanup: $e');
+      // Storage hatası ana silme işlemini durdurmasın
+    }
+  }
+  
+  // 📁 Recursive klasör silme
+  Future<void> _deleteStorageFolder(Reference folderRef) async {
+    try {
+      final listResult = await folderRef.listAll();
+      
+      // Dosyaları sil
+      for (final item in listResult.items) {
+        try {
+          await item.delete();
+          print('✅ Deleted: ${item.fullPath}');
+        } catch (e) {
+          print('❌ Failed to delete ${item.fullPath}: $e');
+        }
+      }
+      
+      // Alt klasörleri recursive sil
+      for (final prefix in listResult.prefixes) {
+        await _deleteStorageFolder(prefix);
+      }
+      
+    } catch (e) {
+      print('❌ Error deleting folder ${folderRef.fullPath}: $e');
+    }
+  }
+
+  // 🗑️ Kullanıcı hesabı silinirken ilgili verileri temizle
+  Future<void> _cleanupUserRelatedData(String userId, Map<String, dynamic>? userData) async {
+    try {
+      if (userData == null) return;
+      
+      final batch = FirebaseFirestore.instance.batch();
+      
+      // Kullanıcının yönettiği organizational units'leri bul ve temizle
+      final managedUnits = await FirebaseFirestore.instance
+          .collection('organizationalUnits')
+          .where('managedBy', isEqualTo: userId)
+          .get();
+      
+      for (final unitDoc in managedUnits.docs) {
+        final unitData = unitDoc.data();
+        
+        // Unit'i "pendingReassignment" olarak işaretle, tamamen silme
+        batch.update(unitDoc.reference, {
+          'managedBy': null, // Clear manager
+          'status': 'pendingReassignment',
+          'lastManagerId': userId, // Track last manager for recovery
+          'managerChangedAt': FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
+          'needsReassignment': true,
+        });
+      }
+      
+      // Mentor olarak atanmış olduğu mentorship groups'ları temizle
+      final mentorGroups = await FirebaseFirestore.instance
+          .collection('organizationalUnits')
+          .where('currentMentorId', isEqualTo: userId)
+          .get();
+      
+      for (final groupDoc in mentorGroups.docs) {
+        batch.update(groupDoc.reference, {
+          'currentMentorId': null,
+          'mentorName': null,
+          'status': 'pending',
+          'lastMentorId': userId,
+          'mentorRemovedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      
+      // Multi-role sistemi: roles array'ından yönetilen entityleri de kontrol et
+      final roles = userData['roles'];
+      if (roles != null && roles is List) {
+        for (final role in roles) {
+          final managesEntity = role['managesEntity'];
+          if (managesEntity != null) {
+            try {
+              final entityRef = FirebaseFirestore.instance.doc(managesEntity);
+              final entityDoc = await entityRef.get();
+              
+              if (entityDoc.exists) {
+                batch.update(entityRef, {
+                  'managedBy': null, // Clear manager
+                  'status': 'pendingReassignment',
+                  'lastManagerId': userId, // Track last manager for recovery
+                  'managerDeletedAt': FieldValue.serverTimestamp(),
+                  'deletedUserRole': role['role'],
+                });
+              }
+            } catch (e) {
+              print('Error updating entity $managesEntity: $e');
+            }
+          }
+        }
+      }
+      
+      // Batch işlemini uygula
+      await batch.commit();
+      
+      print('User-related data cleanup completed for user: $userId');
+      
+    } catch (e) {
+      print('Error during user data cleanup: $e');
+      // Cleanup hatası ana silme işlemini durdurmasın
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleColors = {
       'admin': Colors.red,
-      'countryCoordinator': Colors.orange,
-      'middleSchoolRegionCoordinator': Colors.amber,
-      'highSchoolRegionCoordinator': Colors.purple,
-      'universityRegionCoordinator': Colors.indigo,
-      'middleSchoolUnitCoordinator': Colors.green,
-      'highSchoolUnitCoordinator': Colors.teal,
-      'universityUnitCoordinator': Colors.blueGrey,
-      'mentor': Colors.blue,
+      'director': Colors.orange,
+      'middleSchoolCoordinator': Colors.amber,
+      'highSchoolCoordinator': Colors.purple,
+      'universityCoordinator': Colors.indigo,
+      'housingCoordinator': Colors.cyan,
+      'middleSchoolAssistantCoordinator': Colors.green,
+      'highSchoolAssistantCoordinator': Colors.teal,
+      'universityAssistantCoordinator': Colors.blueGrey,
+      'housingAssistantCoordinator': Colors.lightGreen,
+      'middleSchoolMentor': Colors.blue,
+      'highSchoolMentor': Colors.blue,
+      'houseLeader': Colors.indigo,
       'student': Colors.deepPurple,
+      'accountant': Colors.brown,
+      'moderator': Colors.purple,
       'user': Colors.grey,
     };
     final roleLabels = {
       'admin': 'Admin',
-      'countryCoordinator': 'Country Coordinator',
-      'middleSchoolRegionCoordinator': 'Middle School Region Coordinator',
-      'highSchoolRegionCoordinator': 'High School Region Coordinator',
-      'universityRegionCoordinator': 'University Region Coordinator',
-      'middleSchoolUnitCoordinator': 'Middle School Unit Coordinator',
-      'highSchoolUnitCoordinator': 'High School Unit Coordinator',
-      'universityUnitCoordinator': 'University Unit Coordinator',
-      'mentor': 'Mentor',
+      'director': 'Director',
+      'middleSchoolCoordinator': 'Middle School Coordinator',
+      'highSchoolCoordinator': 'High School Coordinator',
+      'universityCoordinator': 'University Coordinator',
+      'housingCoordinator': 'Housing Coordinator',
+      'middleSchoolAssistantCoordinator': 'Middle School Assistant Coordinator',
+      'highSchoolAssistantCoordinator': 'High School Assistant Coordinator',
+      'universityAssistantCoordinator': 'University Assistant Coordinator',
+      'housingAssistantCoordinator': 'Housing Assistant Coordinator',
+      'middleSchoolMentor': 'Middle School Mentor',
+      'highSchoolMentor': 'High School Mentor',
+      'houseLeader': 'House Leader',
       'student': 'Student',
+      'accountant': 'Accountant',
+      'moderator': 'Moderator',
       'user': 'User',
     };
     return Scaffold(
@@ -698,22 +908,20 @@ class _ProfileState extends State<Profile> {
                               title: 'City',
                               subtitle: _selectedCity ?? '-',
                             ),
-                      // User ID
+                      // Member ID
                       ProfileListTile(
-                        icon: Icons.perm_identity,
-                        title: 'User ID',
-                        subtitle: _uid ?? '-',
-                        trailing: !_isEditMode
+                        icon: Icons.credit_card,
+                        title: 'Member ID',
+                        subtitle: _userData['memberId'] ?? 'Not assigned yet',
+                        trailing: !_isEditMode && _userData['memberId'] != null
                             ? IconButton(
                                 icon: const Icon(Icons.copy, size: 20),
-                                tooltip: 'Copy User ID',
+                                tooltip: 'Copy Member ID',
                                 onPressed: () {
-                                  if (_uid != null) {
-                                    Clipboard.setData(ClipboardData(text: _uid!));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('User ID copied!')),
-                                    );
-                                  }
+                                  Clipboard.setData(ClipboardData(text: _userData['memberId']));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Member ID copied!')),
+                                  );
                                 },
                               )
                             : null,
@@ -737,16 +945,31 @@ class _ProfileState extends State<Profile> {
                     );
                     if (confirmed == true) {
                       try {
-                        // Username dokümanını da sil
                         final user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
+                          // 1. Kullanıcı bilgilerini al
                           final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-                          final username = userDoc.data()?['username'];
+                          final userData = userDoc.data();
+                          final username = userData?['username'];
+                          
+                          // 2. Username dokümanını sil
                           if (username != null && username.toString().isNotEmpty) {
                             await FirebaseFirestore.instance.collection('usernames').doc(username).delete();
                           }
+                          
+                          // 3. Storage'dan kullanıcıya ait tüm dosyaları sil
+                          await _deleteAllUserStorageFiles(user.uid, userData);
+                          
+                          // 4. Organizational units ve ilgili verileri temizle
+                          await _cleanupUserRelatedData(user.uid, userData);
+                          
+                          // 5. Users collection'dan kullanıcı dokümanını sil
+                          await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+                          
+                          // 6. Firebase Auth'dan kullanıcıyı sil  
+                          await user.delete();
                         }
-                        await FirebaseAuth.instance.currentUser?.delete();
+                        
                         if (context.mounted) {
                           context.go('/login');
                         }

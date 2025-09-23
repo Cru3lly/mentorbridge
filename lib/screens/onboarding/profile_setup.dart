@@ -69,7 +69,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         'city': _selectedCity,
         'gender': _selectedGender,
       });
-      context.go('/homeDashboard');
+      context.go('/authGate');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Something went wrong. Please try again.')),

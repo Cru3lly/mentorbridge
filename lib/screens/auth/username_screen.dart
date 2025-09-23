@@ -110,6 +110,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
 
     if (username.isEmpty ||
         firstName.isEmpty ||
+        lastName.isEmpty ||
         _selectedCountry == null ||
         _selectedProvince == null ||
         _selectedCity == null ||
@@ -142,7 +143,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
       context.push('/register', extra: {
         'username': username,
         'firstName': firstName,
-        'lastName': lastName.isEmpty ? null : lastName,
+        'lastName': lastName, // Required now, no null check needed
         'country': _selectedCountry,
         'province': _selectedProvince,
         'city': _selectedCity,
@@ -264,7 +265,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                           FocusScope.of(context).unfocus();
                         },
                         decoration: InputDecoration(
-                          labelText: 'Last Name (Optional)',
+                          labelText: 'Last Name *',
                           prefixIcon: const Icon(Icons.badge_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),

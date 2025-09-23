@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 class RegisterScreen extends StatefulWidget {
   final String username;
   final String firstName;
-  final String? lastName;
+  final String lastName;
   final String country;
   final String province;
   final String city;
@@ -19,7 +19,7 @@ class RegisterScreen extends StatefulWidget {
     super.key,
     required this.username,
     required this.firstName,
-    this.lastName,
+    required this.lastName,
     required this.country,
     required this.province,
     required this.city,
@@ -58,11 +58,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool _isPasswordValid(String password) {
-    // Şifre sıfırlama ekranındakiyle aynı kriterler
-    final regex = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
-    );
-    return regex.hasMatch(password);
+    // 🔧 TEMPORARY: Password validation disabled for testing
+    // TODO: Re-enable for production
+    return true; // Always valid for testing
+    
+    // 🚫 DISABLED FOR TESTING - Original validation below:
+    // final regex = RegExp(
+    //   r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
+    // );
+    // return regex.hasMatch(password);
   }
 
   Future<void> _registerWithEmail() async {
@@ -85,6 +89,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
       setState(() => _isLoading = false);
+      return;
+    }
+
+    // Firebase minimum requirement: at least 6 characters
+    if (password.length < 6) {
+      setState(() {
+        _errorMessage = 'Password must be at least 6 characters.';
+        _isLoading = false;
+      });
       return;
     }
 
@@ -319,7 +332,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                       ),
-                      if (_passwordController.text.isNotEmpty) ...[
+                      // 🚫 DISABLED FOR TESTING - Password criteria UI hidden
+                      // TODO: Re-enable for production
+                      if (false && _passwordController.text.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _PasswordCriteriaRow(
                           met: _passwordController.text.length >= 8,

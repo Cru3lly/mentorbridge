@@ -24,18 +24,34 @@ class _AuthScreenState extends State<AuthScreen> {
 
   final List<String> _roles = [
     'student',
-    'mentor',
-    'unitCoordinator',
-    'regionCoordinator',
-    'countryCoordinator',
+    'middleSchoolMentor',
+    'highSchoolMentor',
+    'middleSchoolAssistantCoordinator',
+    'highSchoolAssistantCoordinator', 
+    'universityAssistantCoordinator',
+    'housingAssistantCoordinator',
+    'middleSchoolCoordinator',
+    'highSchoolCoordinator',
+    'universityCoordinator',
+    'housingCoordinator',
+    'houseLeader',
+    'director',
+    'accountant',
+    'moderator',
     'admin',
   ];
 
   final Map<String, List<String>> _subRoles = {
-    'unitCoordinator': ['middle_school', 'high_school', 'university'],
-    'regionCoordinator': ['middle_school', 'high_school', 'university'],
-    'countryCoordinator': ['middle_school', 'high_school', 'university'],
-    'admin': ['middle_school', 'high_school', 'university'],
+    'middleSchoolAssistantCoordinator': ['middle_school'],
+    'highSchoolAssistantCoordinator': ['high_school'],
+    'universityAssistantCoordinator': ['university'],
+    'housingAssistantCoordinator': ['housing'],
+    'middleSchoolCoordinator': ['middle_school'],
+    'highSchoolCoordinator': ['high_school'],
+    'universityCoordinator': ['university'],
+    'housingCoordinator': ['housing'],
+    'director': ['all_departments'],
+    'admin': ['system_admin'],
   };
 
   Future<void> _submit() async {

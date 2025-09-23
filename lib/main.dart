@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
+import 'services/notification_service.dart';
 
 // Auth Screens
 import 'screens/auth/splash_screen.dart';
@@ -18,70 +19,55 @@ import 'screens/auth/reset_password.dart' show ResetPassword;
 // Onboarding
 import 'screens/onboarding/onboarding.dart';
 import 'screens/onboarding/profile_setup.dart';
-import 'screens/home/home_goal_setup.dart';
-
-// Home
-import 'screens/home/home_dashboard.dart';
-import 'screens/home/home_daily_entry.dart';
-import 'screens/home/home_weekly_summary.dart';
 
 // Mentor
-import 'screens/mentor/mentor_dashboard.dart';
-import 'screens/mentor/mentor_weekend_report.dart';
+import 'screens/mentor/middle_school_mentor_weekend_report.dart';
+import 'screens/mentor/high_school_mentor_weekend_report.dart';
+import 'screens/mentor/middle_school_mentor_academic_calendar.dart';
+import 'screens/mentor/high_school_mentor_academic_calendar.dart';
 
-// Student
-import 'screens/student/student_dashboard.dart';
+// Universal
+import 'screens/universal/universal_role_assignment_page.dart';
+import 'screens/universal/universal_role_dashboard.dart';
+import 'screens/universal/universal_orphaned_groups.dart';
+import 'screens/universal/universal_user_tree_page.dart';
+import 'screens/universal/universal_edit_mentor_mentee_page.dart';
+import 'screens/universal/universal_mentors_page.dart';
+import 'screens/universal/universal_mentees_page.dart';
+import 'screens/universal/universal_mentor_weekend_report.dart';
 
 // Admin
-import 'screens/admin/admin_dashboard.dart';
-import 'screens/admin/admin_id_auth_page.dart';
-import 'screens/admin/admin_stats.dart';
+import 'screens/user/add_habit_page.dart';
 
-// Country Coordinator
-import 'screens/country_coordinator/country_coordinator_dashboard.dart';
-import 'screens/country_coordinator/country_coordinator_id_auth_page.dart';
-import 'screens/country_coordinator/country_coordinator_stats.dart';
-import 'screens/country_coordinator/country_coordinator_user_tree_page.dart';
-
-// Region Coordinator
-import 'screens/region_coordinator/middle_school/middle_school_region_coordinator_dashboard.dart';
-import 'screens/region_coordinator/middle_school/middle_school_region_coordinator_id_auth_page.dart';
-import 'screens/region_coordinator/middle_school/middle_school_region_coordinator_stats.dart';
-import 'screens/region_coordinator/high_school/high_school_region_coordinator_dashboard.dart';
-import 'screens/region_coordinator/high_school/high_school_region_coordinator_id_auth_page.dart';
-import 'screens/region_coordinator/high_school/high_school_region_coordinator_stats.dart';
-import 'screens/region_coordinator/university/university_region_coordinator_dashboard.dart';
-import 'screens/region_coordinator/university/university_region_coordinator_id_auth_page.dart';
-import 'screens/region_coordinator/university/university_region_coordinator_stats.dart';
-
-// Unit Coordinator
-import 'screens/unit_coordinator/middle_school/middle_school_unit_coordinator_dashboard.dart';
-import 'screens/unit_coordinator/middle_school/middle_school_unit_coordinator_id_auth_page.dart';
-import 'screens/unit_coordinator/middle_school/middle_school_unit_coordinator_edit_mentor_mentee.dart';
-import 'screens/unit_coordinator/middle_school/middle_school_unit_coordinator_stats.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_dashboard.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_id_auth_page.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_edit_mentor_mentee.dart' as mentor_mentee_page;
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_mentors.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_mentees.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_stats.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_stats_active_students.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_stats_activities.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_stats_activity_counts.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_stats_activity_counts_by_mentor.dart';
-import 'screens/unit_coordinator/university/university_unit_coordinator_dashboard.dart';
-import 'screens/unit_coordinator/university/university_unit_coordinator_id_auth_page.dart';
-import 'screens/unit_coordinator/university/university_unit_coordinator_student_stats.dart';
-import 'screens/unit_coordinator/high_school/high_school_unit_coordinator_academic_calendar.dart';
+// Assistant Coordinator
+import 'screens/assistant_coordinator/high_school/high_school_assistant_coordinator_stats.dart';
+import 'screens/assistant_coordinator/high_school/high_school_assistant_coordinator_stats_active_students.dart';
+import 'screens/assistant_coordinator/high_school/high_school_assistant_coordinator_stats_activities.dart';
+import 'screens/assistant_coordinator/high_school/high_school_assistant_coordinator_stats_activity_counts.dart';
+import 'screens/assistant_coordinator/high_school/high_school_assistant_coordinator_stats_activity_counts_by_mentor.dart';
 
 // Settings
 import 'screens/settings/settings.dart';
 import 'screens/settings/profile.dart';
 import 'screens/settings/help_center.dart';
 
+// Unified Dashboard
+import 'screens/unified_dashboard.dart';
+
+// App Shell
+import 'widgets/app_shell.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Notification Service
+  await NotificationService.initialize();
+
+  // Setup FCM handlers
+  NotificationService.setupFCMHandlers();
 
   runApp(const MentorBridgeApp());
 }
@@ -98,6 +84,9 @@ class MentorBridgeApp extends StatelessWidget {
         fontFamily: 'NotoSans',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        // Global transparent backgrounds
+        scaffoldBackgroundColor: Colors.transparent,
+        canvasColor: Colors.transparent,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
           centerTitle: true,
@@ -109,14 +98,52 @@ class MentorBridgeApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
+        // Navigation bar transparent
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        // Material widgets transparent
+        cardTheme: const CardThemeData(
+          color: Colors.transparent,
+          elevation: 0,
+        ),
+        dialogTheme: DialogThemeData(backgroundColor: Colors.transparent),
       ),
       routerConfig: GoRouter(
         initialLocation: '/splash',
         routes: [
-          GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
-          GoRoute(path: '/authGate', builder: (context, state) => const AuthGate()),
-          GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
-          GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+          // Shell route - wraps main app pages with navigation
+          ShellRoute(
+            builder: (context, state, child) => AppShell(child: child),
+            routes: [
+              GoRoute(
+                  path: '/unifiedDashboard',
+                  builder: (context, state) => const UnifiedDashboard()),
+              GoRoute(
+                  path: '/addHabit',
+                  builder: (context, state) => const AddHabitPage()),
+              GoRoute(
+                  path: '/settings',
+                  builder: (context, state) => const Settings()),
+              GoRoute(
+                  path: '/profile',
+                  builder: (context, state) => const Profile()),
+              GoRoute(
+                  path: '/help',
+                  builder: (context, state) => const HelpCenter()),
+            ],
+          ),
+          // Non-shell routes - no navigation bar
+          GoRoute(
+              path: '/splash',
+              builder: (context, state) => const SplashScreen()),
+          GoRoute(
+              path: '/authGate', builder: (context, state) => const AuthGate()),
+          GoRoute(
+              path: '/auth', builder: (context, state) => const AuthScreen()),
+          GoRoute(
+              path: '/login', builder: (context, state) => const LoginScreen()),
           GoRoute(
             path: '/register',
             builder: (context, state) {
@@ -124,7 +151,7 @@ class MentorBridgeApp extends StatelessWidget {
               return RegisterScreen(
                 username: args['username'] ?? '',
                 firstName: args['firstName'] ?? '',
-                lastName: args['lastName'],
+                lastName: args['lastName'] ?? '',
                 country: args['country'] ?? '',
                 province: args['province'] ?? '',
                 city: args['city'] ?? '',
@@ -132,7 +159,9 @@ class MentorBridgeApp extends StatelessWidget {
               );
             },
           ),
-          GoRoute(path: '/username', builder: (context, state) => const UsernameScreen()),
+          GoRoute(
+              path: '/username',
+              builder: (context, state) => const UsernameScreen()),
           GoRoute(
             path: '/roleBadge',
             builder: (context, state) => RoleBadge(role: state.extra as String),
@@ -146,7 +175,7 @@ class MentorBridgeApp extends StatelessWidget {
                 password: args['password'],
                 username: args['username'],
                 firstName: args['firstName'],
-                lastName: args['lastName'],
+                lastName: args['lastName'] ?? '',
                 country: args['country'],
                 province: args['province'],
                 city: args['city'],
@@ -154,81 +183,137 @@ class MentorBridgeApp extends StatelessWidget {
               );
             },
           ),
-          GoRoute(path: '/forgotPassword', builder: (context, state) => const ForgotPassword()),
+          GoRoute(
+              path: '/forgotPassword',
+              builder: (context, state) => const ForgotPassword()),
           GoRoute(
             path: '/resetPassword',
             builder: (context, state) {
               final args = state.extra as Map<String, String>? ?? {};
-              return ResetPassword(email: args['email'] ?? '', otp: args['otp'] ?? '');
+              return ResetPassword(
+                  email: args['email'] ?? '', otp: args['otp'] ?? '');
             },
           ),
-          GoRoute(path: '/onboarding', builder: (context, state) => const Onboarding()),
-          GoRoute(path: '/profileSetup', builder: (context, state) => const ProfileSetup()),
-          GoRoute(path: '/homegoalSetup', builder: (context, state) => const HomeGoalSetup()),
-          GoRoute(path: '/homeDashboard', builder: (context, state) => const HomeDashboard()),
-          GoRoute(path: '/homeDailyEntry', builder: (context, state) => const HomeDailyEntry()),
-          GoRoute(path: '/homeWeeklySummary', builder: (context, state) => const HomeWeeklySummary()),
-          GoRoute(path: '/adminDashboard', builder: (context, state) => const AdminDashboard()),
-          GoRoute(path: '/countryCoordinatorDashboard', builder: (context, state) => const CountryCoordinatorDashboard()),
-          GoRoute(path: '/regionCoordinatorDashboard', builder: (context, state) => const MiddleSchoolRegionCoordinatorDashboard()),
-          GoRoute(path: '/unitCoordinatorDashboard', builder: (context, state) => const MiddleSchoolUnitCoordinatorDashboard()),
-          GoRoute(path: '/mentorDashboard', builder: (context, state) => const MentorDashboard()),
-          GoRoute(path: '/mentorWeekendReport', builder: (context, state) => const MentorWeekendReport()),
-          GoRoute(path: '/studentScreen', builder: (context, state) => const Student()),
-          GoRoute(path: '/adminIdAuthPage', builder: (context, state) => const AdminIdAuthPage()),
-          GoRoute(path: '/adminStats', builder: (context, state) => const AdminStats()),
-          GoRoute(path: '/countryCoordinatorIdAuthPage', builder: (context, state) => const CountryCoordinatorIdAuthPage()),
-          GoRoute(path: '/countryCoordinatorStats', builder: (context, state) => const CountryCoordinatorStats()),
-          GoRoute(path: '/countryCoordinatorUserTree', builder: (context, state) => const CountryCoordinatorUserTreePage()),
-          GoRoute(path: '/middleSchoolRegionCoordinatorIdAuthPage', builder: (context, state) => const MiddleSchoolRegionCoordinatorIdAuthPage()),
-          GoRoute(path: '/middleSchoolRegionCoordinatorStats', builder: (context, state) => const MiddleSchoolRegionCoordinatorStats()),
-          GoRoute(path: '/highSchoolRegionCoordinatorDashboard', builder: (context, state) => const HighSchoolRegionCoordinatorDashboard()),
-          GoRoute(path: '/highSchoolRegionCoordinatorIdAuthPage', builder: (context, state) => const HighSchoolRegionCoordinatorIdAuthPage()),
-          GoRoute(path: '/highSchoolRegionCoordinatorStats', builder: (context, state) => const HighSchoolRegionCoordinatorStats()),
-          GoRoute(path: '/universityRegionCoordinatorDashboard', builder: (context, state) => const UniversityRegionCoordinatorDashboard()),
-          GoRoute(path: '/universityRegionCoordinatorIdAuthPage', builder: (context, state) => const UniversityRegionCoordinatorIdAuthPage()),
-          GoRoute(path: '/universityRegionCoordinatorStats', builder: (context, state) => const UniversityRegionCoordinatorStats()),
-          GoRoute(path: '/middleSchoolUnitCoordinatorIdAuthPage', builder: (context, state) => const MiddleSchoolUnitCoordinatorIdAuthPage()),
-          GoRoute(path: '/middleSchoolUnitCoordinatorEditMentorMentee', builder: (context, state) => const MiddleSchoolUnitCoordinatorEditMentorMentee()),
-          GoRoute(path: '/middleSchoolUnitCoordinatorStats', builder: (context, state) => const MiddleSchoolUnitCoordinatorStats()),
-          GoRoute(path: '/middleSchoolUnitCoordinatorDashboard', builder: (context, state) => const MiddleSchoolUnitCoordinatorDashboard()),
-          GoRoute(path: '/highSchoolUnitCoordinatorIdAuthPage', builder: (context, state) => const HighSchoolUnitCoordinatorIdAuthPage()),
-          GoRoute(path: '/highSchoolUnitCoordinatorEditMentorMentee', builder: (context, state) => const mentor_mentee_page.HighSchoolUnitCoordinatorEditMentorMentee()),
-          GoRoute(path: '/highSchoolUnitCoordinatorMentors', builder: (context, state) => const HighSchoolUnitCoordinatorMentors()),
-          GoRoute(path: '/highSchoolUnitCoordinatorMentees', builder: (context, state) => const HighSchoolUnitCoordinatorMentees()),
-          GoRoute(path: '/highSchoolUnitCoordinatorStats', builder: (context, state) => const HighSchoolUnitCoordinatorStats()),
-          GoRoute(path: '/highSchoolUnitCoordinatorDashboard', builder: (context, state) => const HighSchoolUnitCoordinatorDashboard()),
-          GoRoute(path: '/universityUnitCoordinatorIdAuthPage', builder: (context, state) => const UniversityUnitCoordinatorIdAuthPage()),
-          GoRoute(path: '/universityUnitCoordinatorStudentStats', builder: (context, state) => const UniversityUnitCoordinatorStudentStats()),
-          GoRoute(path: '/universityUnitCoordinatorDashboard', builder: (context, state) => const UniversityUnitCoordinatorDashboard()),
-          GoRoute(path: '/settings', builder: (context, state) => const Settings()),
-          GoRoute(path: '/profile', builder: (context, state) => const Profile()),
-          GoRoute(path: '/help', builder: (context, state) => const HelpCenter()),
-          GoRoute(path: '/highSchoolUnitCoordinatorStatsActiveStudents', builder: (context, state) {
-            final args = state.extra as Map<String, dynamic>? ?? {};
-            return HighSchoolUnitCoordinatorStatsActiveStudentsPage(
-              filters: args,
-            );
-          }),
-          GoRoute(path: '/highSchoolUnitCoordinatorStatsActivities', builder: (context, state) {
-            final args = state.extra as Map<String, dynamic>? ?? {};
-            return HighSchoolUnitCoordinatorStatsActivitiesPage(
-              filters: args,
-            );
-          }),
-          GoRoute(path: '/highSchoolUnitCoordinatorStatsActivityCounts', builder: (context, state) {
-            final args = state.extra as Map<String, dynamic>? ?? {};
-            return HighSchoolUnitCoordinatorStatsActivityCountsPage(
-              filters: args,
-            );
-          }),
-          GoRoute(path: '/highSchoolUnitCoordinatorStatsActivityCountsByMentor', builder: (context, state) {
-            final args = state.extra as Map<String, dynamic>? ?? {};
-            return HighSchoolUnitCoordinatorStatsActivityCountsByMentorPage(
-              filters: args,
-            );
-          }),
-          GoRoute(path: '/highSchoolUnitCoordinatorAcademicCalendar', builder: (context, state) => const HighSchoolUnitCoordinatorAcademicCalendar()),
+          GoRoute(
+              path: '/onboarding',
+              builder: (context, state) => const Onboarding()),
+          GoRoute(
+              path: '/profileSetup',
+              builder: (context, state) => const ProfileSetup()),
+
+          // Assistant Coordinators
+          GoRoute(
+              path: '/highSchoolAssistantCoordinatorStats',
+              builder: (context, state) =>
+                  const HighSchoolAssistantCoordinatorStats()),
+
+          // Mentors
+          GoRoute(
+              path: '/middleSchoolMentorWeekendReport',
+              builder: (context, state) =>
+                  const MiddleSchoolMentorWeekendReport()),
+          GoRoute(
+              path: '/highSchoolMentorWeekendReport',
+              builder: (context, state) =>
+                  const HighSchoolMentorWeekendReport()),
+          GoRoute(
+              path: '/middleSchoolMentorAcademicCalendar',
+              builder: (context, state) =>
+                  const MiddleSchoolMentorAcademicCalendarPage()),
+          GoRoute(
+              path: '/highSchoolMentorAcademicCalendar',
+              builder: (context, state) =>
+                  const HighSchoolMentorAcademicCalendarPage()),
+
+          // Universal
+          GoRoute(
+              path: '/universalRoleAssignmentPage',
+              builder: (context, state) => const UniversalRoleAssignmentPage()),
+          GoRoute(
+              path: '/universalRoleDashboard',
+              builder: (context, state) => const UniversalRoleDashboard(
+                  currentRole: 'user', allUserRoles: ['user'])),
+          GoRoute(
+            path: '/universalOrphanedGroups',
+            builder: (context, state) {
+              final contextRole = state.uri.queryParameters['contextRole'];
+              return UniversalOrphanedGroups(contextRole: contextRole);
+            },
+          ),
+          GoRoute(
+            path: '/universalUserTree',
+            builder: (context, state) {
+              final currentRole =
+                  state.uri.queryParameters['currentRole'] ?? 'user';
+              final userId = state.uri.queryParameters['userId'] ?? '';
+              return UniversalUserTreePage(
+                  currentRole: currentRole, userId: userId);
+            },
+          ),
+          GoRoute(
+              path: '/universalEditMentorMentee',
+              builder: (context, state) =>
+                  const UniversalEditMentorMenteePage()),
+          GoRoute(
+              path: '/universalMentors',
+              builder: (context, state) => const UniversalMentorsPage()),
+          GoRoute(
+              path: '/universalMentees',
+              builder: (context, state) => const UniversalMenteesPage()),
+          GoRoute(
+              path: '/universalMentorWeekendReport',
+              builder: (context, state) =>
+                  const UniversalMentorWeekendReport()),
+          GoRoute(
+              path: '/settings', builder: (context, state) => const Settings()),
+          GoRoute(
+              path: '/profile', builder: (context, state) => const Profile()),
+          GoRoute(
+              path: '/help', builder: (context, state) => const HelpCenter()),
+
+          // Advanced Assistant Coordinator Stats (eski Unit Coordinator stats)
+          GoRoute(
+              path: '/highSchoolAssistantCoordinatorStatsActiveStudents',
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>? ?? {};
+                return HighSchoolAssistantCoordinatorStatsActiveStudentsPage(
+                  filters: args,
+                );
+              }),
+          GoRoute(
+              path: '/highSchoolAssistantCoordinatorStatsActivities',
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>? ?? {};
+                return HighSchoolAssistantCoordinatorStatsActivitiesPage(
+                  filters: args,
+                );
+              }),
+          GoRoute(
+              path: '/highSchoolAssistantCoordinatorStatsActivityCounts',
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>? ?? {};
+                return HighSchoolAssistantCoordinatorStatsActivityCountsPage(
+                  filters: args,
+                );
+              }),
+          GoRoute(
+              path:
+                  '/highSchoolAssistantCoordinatorStatsActivityCountsByMentor',
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>? ?? {};
+                return HighSchoolAssistantCoordinatorStatsActivityCountsByMentorPage(
+                  filters: args,
+                );
+              }),
+          // This route moved above to highSchoolAssistantCoordinatorAcademicCalendar
+          GoRoute(
+              path: '/middleSchoolMentorAcademicCalendar',
+              builder: (context, state) =>
+                  const MiddleSchoolMentorAcademicCalendarPage()),
+          GoRoute(
+              path: '/highSchoolMentorAcademicCalendar',
+              builder: (context, state) =>
+                  const HighSchoolMentorAcademicCalendarPage()),
         ],
       ),
     );

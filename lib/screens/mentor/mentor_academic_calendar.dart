@@ -19,7 +19,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
   ];
   String selectedAcademicYear = '2025-2026';
   String? _selectedMonth;
-  String? _unitCoordinatorId; 
+  String? _assistantCoordinatorId; 
 
   final Map<String, Map<String, dynamic>> _calendarDataForYear = {};
   bool _isLoading = true;
@@ -28,7 +28,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
   void initState() {
     super.initState();
     _initializeToCurrentDate();
-    _fetchUnitCoordinatorIdAndLoadData();
+    _fetchAssistantCoordinatorIdAndLoadData();
   }
 
   void _initializeToCurrentDate() {
@@ -51,7 +51,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
     _selectedMonth = currentMonthName;
   }
 
-  Future<void> _fetchUnitCoordinatorIdAndLoadData() async {
+  Future<void> _fetchAssistantCoordinatorIdAndLoadData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
@@ -66,7 +66,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
       final parentId = userDoc.data()?['parentId'] as String?;
 
       if (parentId != null && parentId.isNotEmpty) {
-        _unitCoordinatorId = parentId;
+        _assistantCoordinatorId = parentId;
         await _loadAllWeeksForYear();
       } else {
          if (mounted) setState(() => _isLoading = false);
@@ -77,7 +77,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
   }
 
   Future<void> _loadAllWeeksForYear() async {
-    if (_unitCoordinatorId == null || _unitCoordinatorId!.isEmpty) {
+    if (_assistantCoordinatorId == null || _assistantCoordinatorId!.isEmpty) {
       if (mounted) setState(() => _isLoading = false);
       return;
     }
@@ -85,7 +85,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
     _calendarDataForYear.clear();
 
     try {
-      final baseRef = FirebaseFirestore.instance.collection('academicCalendars').doc(_unitCoordinatorId);
+      final baseRef = FirebaseFirestore.instance.collection('academicCalendars').doc(_assistantCoordinatorId);
       
       final Map<String, Future<QuerySnapshot<Map<String, dynamic>>>> monthFutures = {};
 
@@ -233,7 +233,7 @@ class _MentorAcademicCalendarPageState extends State<MentorAcademicCalendarPage>
             ),
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                : _unitCoordinatorId == null 
+                : _assistantCoordinatorId == null 
                   ? const Center(child: Text("Your coordinator has not set up a calendar.", style: TextStyle(color: Colors.white, fontSize: 16)))
                   : SafeArea(
                     child: AnimatedSwitcher(

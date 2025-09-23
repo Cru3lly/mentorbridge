@@ -5,13 +5,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../auth/auth_service.dart'; // sendRegistrationOtp & verifyRegistrationOtp
 import 'package:go_router/go_router.dart';
+import '../../utils/member_id_generator.dart';
 
 class VerifyRegistrationOtp extends StatefulWidget {
   final String email;
   final String password;
   final String username;
   final String firstName;
-  final String? lastName;
+  final String lastName;
   final String country;
   final String province;
   final String city;
@@ -23,7 +24,7 @@ class VerifyRegistrationOtp extends StatefulWidget {
     required this.password,
     required this.username,
     required this.firstName,
-    this.lastName,
+    required this.lastName,
     required this.country,
     required this.province,
     required this.city,
@@ -139,6 +140,9 @@ class _VerifyRegistrationOtpState
       );
       final uid = cred.user!.uid;
 
+      // Generate Member ID for new user
+      final memberId = await MemberIdGenerator.generateUniqueMemberId();
+      
       // Firestore profili
       await FirebaseFirestore.instance
           .collection('users')
@@ -153,10 +157,14 @@ class _VerifyRegistrationOtpState
         'country': widget.country,
         'province': widget.province,
         'city': widget.city,
+        'memberId': memberId,                    // 🎉 NEW: Auto-assign Member ID
+        'updatedAt': FieldValue.serverTimestamp(),
         'createdAt': FieldValue.serverTimestamp(),
         'completedOnboarding': false,
         'badgeShown': false,
       });
+      
+      print('✅ New user created with Member ID: $memberId');
 
       // username rezervasyonu
       await FirebaseFirestore.instance
@@ -167,25 +175,12 @@ class _VerifyRegistrationOtpState
       setState(() => _isVerifying = false);
       if (!mounted) return;
       context.go('/onboarding');
-    } on FirebaseAuthException catch (e) {
-      String msg = 'Registration failed. Please try again.';
-      if (e.code == 'weak-password') {
-        msg = 'The password is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        msg = 'This email is already in use.';
-        // Kullanıcıyı bir önceki ekrana yönlendir
-        if (mounted) {
-          _showError(msg);
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) context.pop();
-          });
-        }
-        setState(() => _isVerifying = false);
-        return;
-      }
+    } on FirebaseAuthException {
+      // All validation (email, password, username) is done in RegisterScreen
+      // OTP screen only handles OTP verification and user creation
       setState(() {
         _isVerifying = false;
-        _errorMessage = msg;
+        _errorMessage = 'Registration failed. Please try again.';
       });
     } catch (e) {
       setState(() {
@@ -212,9 +207,8 @@ class _VerifyRegistrationOtpState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.deepPurple),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
-          tooltip: 'Back',
         ),
       ),
       body: SingleChildScrollView(

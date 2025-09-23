@@ -1,12 +1,12 @@
 buildscript {
-    val kotlin_version by extra("1.9.22")
+    val kotlin_version by extra("1.9.25")
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.4.1")
+        classpath("com.android.tools.build:gradle:8.5.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
         classpath("com.google.gms:google-services:4.4.2")
     }
@@ -18,6 +18,8 @@ allprojects {
         mavenCentral()
     }
 }
+
+
 
 rootProject.layout.buildDirectory = file("../build")
 subprojects {

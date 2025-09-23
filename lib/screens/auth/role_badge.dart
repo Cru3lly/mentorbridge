@@ -11,36 +11,41 @@ class RoleBadge extends StatelessWidget {
 
   String _getRoleTitle() {
     switch (role) {
-      case 'mentor':
-        return 'Mentor';
+      case 'middleSchoolMentor':
+        return 'Middle School Mentor';
+      case 'highSchoolMentor':
+        return 'High School Mentor';
       case 'student':
         return 'Student';
-      case 'unitCoordinator':
-        switch (subRole) {
-          case 'middle_school':
-            return 'Middle School Unit Coordinator';
-          case 'high_school':
-            return 'High School Unit Coordinator';
-          case 'university':
-            return 'University Unit Coordinator';
-          default:
-            return 'Unit Coordinator';
-        }
-      case 'regionCoordinator':
-        switch (subRole) {
-          case 'middle_school':
-            return 'Middle School Regional Coordinator';
-          case 'high_school':
-            return 'High School Regional Coordinator';
-          case 'university':
-            return 'University Regional Coordinator';
-          default:
-            return 'Regional Coordinator';
-        }
-      case 'countryCoordinator':
-        return 'Country Coordinator';
+      // Assistant Coordinators (eski Unit Coordinators)
+      case 'middleSchoolAssistantCoordinator':
+        return 'Middle School Assistant Coordinator';
+      case 'highSchoolAssistantCoordinator':
+        return 'High School Assistant Coordinator';
+      case 'universityAssistantCoordinator':
+        return 'University Assistant Coordinator';
+      case 'housingAssistantCoordinator':
+        return 'Housing Assistant Coordinator';
+      // Coordinators (eski Region Coordinators)
+      case 'middleSchoolCoordinator':
+        return 'Middle School Coordinator';
+      case 'highSchoolCoordinator':
+        return 'High School Coordinator';
+      case 'universityCoordinator':
+        return 'University Coordinator';
+      case 'housingCoordinator':
+        return 'Housing Coordinator';
+      // Leadership roles
+      case 'director':
+        return 'Director';
       case 'admin':
         return 'Admin';
+      case 'moderator':
+        return 'Moderator';
+      case 'accountant':
+        return 'Accountant';
+      case 'houseLeader':
+        return 'House Leader';
       default:
         return 'User';
     }
@@ -62,47 +67,9 @@ class RoleBadge extends StatelessWidget {
   void _continue(BuildContext context) async {
     await _markBadgeSeen();
 
-    if (role == 'admin') {
-      context.go('/adminDashboard');
-    } else if (role == 'countryCoordinator') {
-      context.go('/countryCoordinatorDashboard');
-    } else if (role == 'regionCoordinator') {
-      switch (subRole) {
-        case 'middle_school':
-          context.go('/middleSchoolRegionCoordinatorDashboard');
-          break;
-        case 'high_school':
-          context.go('/highSchoolRegionCoordinatorDashboard');
-          break;
-        case 'university':
-          context.go('/universityRegionCoordinatorDashboard');
-          break;
-        default:
-          context.go('/homeDashboard');
-          break;
-      }
-    } else if (role == 'unitCoordinator') {
-      switch (subRole) {
-        case 'middle_school':
-          context.go('/middleSchoolUnitCoordinatorDashboard');
-          break;
-        case 'high_school':
-          context.go('/highSchoolUnitCoordinatorDashboard');
-          break;
-        case 'university':
-          context.go('/universityUnitCoordinatorDashboard');
-          break;
-        default:
-          context.go('/homeDashboard');
-          break;
-      }
-    } else if (role == 'mentor') {
-      context.go('/mentorDashboard');
-    } else if (role == 'student') {
-      context.go('/studentScreen');
-    } else {
-      context.go('/homeDashboard');
-    }
+    // Everyone now goes to the unified dashboard
+    // The unified dashboard will handle role-based page switching internally
+    context.go('/authGate');
   }
 
   @override
