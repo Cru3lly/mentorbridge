@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
 import 'services/notification_service.dart';
+import 'theme/app_theme.dart';
 
 // Auth Screens
 import 'screens/auth/splash_screen.dart';
@@ -80,36 +81,9 @@ class MentorBridgeApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'MentorBridge',
-      theme: ThemeData(
-        fontFamily: 'NotoSans',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-        // Global transparent backgrounds
-        scaffoldBackgroundColor: Colors.transparent,
-        canvasColor: Colors.transparent,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,
-          centerTitle: true,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.white),
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        // Navigation bar transparent
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        // Material widgets transparent
-        cardTheme: const CardThemeData(
-          color: Colors.transparent,
-          elevation: 0,
-        ),
-        dialogTheme: DialogThemeData(backgroundColor: Colors.transparent),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: GoRouter(
         initialLocation: '/splash',
         routes: [

@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../widgets/drag_lock.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import '../../widgets/clean_card.dart';
+import '../../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -247,19 +248,19 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
   }
 
   Color _getColorFromName(String colorName) {
-    switch (colorName) {
-      case 'green': return Colors.green;
-      case 'blue': return Colors.blue;
-      case 'purple': return Colors.purple;
-      case 'orange': return Colors.orange;
-      case 'red': return Colors.red;
-      case 'teal': return Colors.teal;
-      case 'amber': return Colors.amber;
-      case 'indigo': return Colors.indigo;
-      case 'cyan': return Colors.cyan;
-      case 'brown': return Colors.brown;
-      default: return Colors.green;
-    }
+    final colorMap = {
+      'green': AppColors.habitColors[0],
+      'blue': AppColors.habitColors[1],
+      'purple': AppColors.habitColors[2],
+      'orange': AppColors.habitColors[3],
+      'red': AppColors.habitColors[4],
+      'teal': AppColors.habitColors[5],
+      'amber': AppColors.habitColors[6],
+      'indigo': AppColors.habitColors[7],
+      'cyan': AppColors.habitColors[8],
+      'brown': AppColors.habitColors[9],
+    };
+    return colorMap[colorName] ?? AppColors.habitColors[0];
   }
 
   void _changeDate(int days) {
@@ -322,7 +323,7 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
       context: context,
       builder: (context, locked) {
         return Scaffold(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.background,
           body: GestureDetector(
             // When locked, capture horizontal gestures ONLY from empty areas
             onHorizontalDragStart: locked ? (_) {
@@ -336,151 +337,37 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
             child: SafeArea(
               child: Column(
             children: [
-              // Date navigation (moved up with less top padding)
+              // Clean Date Navigation - En üste yakın
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Semantics(
-                      label: 'Previous day',
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _changeDate(-1);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(
-                              minWidth: 44,
-                              minHeight: 44,
-                            ),
-                            child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Semantics(
-                      label: 'Select date',
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _showDatePicker();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            constraints: const BoxConstraints(
-                              minHeight: 44,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.calendar_today, color: Colors.white, size: 16),
-                                const SizedBox(width: 8),
-                                Text(
-                                  DateFormat('EEEE, MMM d').format(_selectedDate),
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Semantics(
-                      label: 'Next day',
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _changeDate(1);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(
-                              minWidth: 44,
-                              minHeight: 44,
-                            ),
-                            child: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm, // Çok minimal top padding
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
                 ),
+                child: _buildDateNavigation(),
               ),
 
-              // Progress indicator (moved up)
-              Container(
-                margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: Column(
-                  children: [
-                    Text(
-                      _getOverallProgressText(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    LinearProgressIndicator(
-                      value: _getOverallProgress(),
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ],
-                ),
+              // Clean Progress Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                child: _buildProgressSection(),
               ),
 
               const SizedBox(height: 10),
 
-              // Activities grid or empty state (more space utilized)
+              // Habits Grid
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenPadding,
+                    AppSpacing.sectionSpacing,
+                    AppSpacing.screenPadding,
+                    AppSpacing.lg, // Bottom navigation için yer bırak
+                  ),
                   child: _userHabits.isEmpty 
                     ? _buildEmptyState()
-                    : DragLock.listen(
-                        context: context,
-                        builder: (context, locked) {
-                          return GridView.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 1.1, // Smaller, more square cards
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: _userHabits.length,
-                            physics: locked 
-                                ? const NeverScrollableScrollPhysics()
-                                : const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return _buildCircularActivityCard(_userHabits[index]);
-                            },
-                          );
-                        },
-                      ),
+                    : _buildHabitsGrid(),
                 ),
               ),
               ],
@@ -493,42 +380,220 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppBorderRadius.card),
+              ),
+              child: Icon(
+                Icons.self_improvement,
+                size: 40,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sectionSpacing),
+            Text(
+              'Start Your Spiritual Journey',
+              style: AppTextStyles.headline.copyWith(
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Create meaningful habits to strengthen your spiritual connection and track your progress.',
+              style: AppTextStyles.body.copyWith(
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sectionSpacing),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to add habit page
+              },
+              child: const Text('Add Your First Habit'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateNavigation() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Row(
+      children: [
+        // Previous day button
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _changeDate(-1);
+            },
+            borderRadius: BorderRadius.circular(AppBorderRadius.button),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Icon(
+                Icons.chevron_left,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+        
+        // Date selector
+        Expanded(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showDatePicker();
+              },
+              borderRadius: BorderRadius.circular(AppBorderRadius.button),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  DateFormat('EEEE, MMM d').format(_selectedDate),
+                  style: AppTextStyles.headline.copyWith(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        
+        // Next day button
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _changeDate(1);
+            },
+            borderRadius: BorderRadius.circular(AppBorderRadius.button),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Icon(
+                Icons.chevron_right,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _buildProgressSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progress = _getOverallProgress();
+    
+    return CleanCard(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.add_circle_outline,
-            size: 80,
-            color: Colors.white.withOpacity(0.6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Today\'s Progress',
+                style: AppTextStyles.subheadline.copyWith(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+              Text(
+                _getOverallProgressText(),
+                style: AppTextStyles.bodySecondary.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            'No habits yet',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white.withOpacity(0.8),
+          const SizedBox(height: AppSpacing.md),
+          CleanProgressIndicator(
+            value: progress,
+            color: progress >= 1.0 ? AppColors.success : AppColors.primary,
+          ),
+          if (progress >= 1.0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                  size: 16,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'All habits completed!',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Tap the + button to add your first spiritual habit',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.6),
-            ),
-            textAlign: TextAlign.center,
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCircularActivityCard(Map<String, dynamic> activity) {
+  Widget _buildHabitsGrid() {
+    return DragLock.listen(
+      context: context,
+      builder: (context, locked) {
+        return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.0,
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+          ),
+          itemCount: _userHabits.length,
+          physics: locked 
+              ? const NeverScrollableScrollPhysics()
+              : const BouncingScrollPhysics(),
+          itemBuilder: (context, index) {
+            return _buildHabitCard(_userHabits[index]);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildHabitCard(Map<String, dynamic> activity) {
     final double progress = activity['current'] / activity['target'];
     final bool isBeingDragged = _isDragging && _currentDragActivity == _userHabits.indexOf(activity);
     final bool isCompleted = activity['current'] >= activity['target'];
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     final lock = DragLock.of(context);
     
@@ -536,147 +601,79 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
       label: '${activity['name']} habit. Progress: ${activity['current']} of ${activity['target']}. ${isCompleted ? 'Completed' : 'In progress'}',
       hint: 'Drag to increase progress',
       child: AbsorbPointer(
-        // BYPASS GLOBAL BLOCKING - Cards should always work
-        absorbing: false, // Never absorb, let cards work freely
+        absorbing: false,
         child: Listener(
-          // DRAGLOCK SYSTEM - Lock/unlock global scrolling
-          onPointerDown: (_) {
-            lock.lock();
-          },
-          onPointerUp: (_) {
-            lock.unlock();
-          },
-          onPointerCancel: (_) {
-            lock.unlock();
-          },
+          onPointerDown: (_) => lock.lock(),
+          onPointerUp: (_) => lock.unlock(),
+          onPointerCancel: (_) => lock.unlock(),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanStart: (details) {
-              _handleDragStart(details, activity);
-            },
+            onPanStart: (details) => _handleDragStart(details, activity),
             onPanUpdate: (details) => _handleDragProgress(activity, details),
-            onPanEnd: (details) {
-              _handleDragEnd(activity);
-            },
+            onPanEnd: (details) => _handleDragEnd(activity),
             child: AnimatedScale(
-              scale: isBeingDragged ? 1.05 : 1.0, // Slight scale up when dragging
+              scale: isBeingDragged ? 1.02 : 1.0,
               duration: const Duration(milliseconds: 100),
-              child: GlassmorphicContainer(
-                width: double.infinity,
-                height: double.infinity,
-                borderRadius: 20,
-                blur: 15,
-                border: 1.5,
-                linearGradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.white.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderGradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.2),
-                    Colors.white.withOpacity(0.1),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  padding: const EdgeInsets.all(20), // Reduced padding for smaller cards
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Large Circular Progress (takes most of the card space)
-                      Expanded(
-                        flex: 3,
-                        child: AspectRatio(
-                          aspectRatio: 1.0,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Background circle
-                              Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                            ),
-                            // Progress circle (thick stroke for visibility)
-                            SizedBox(
-                              width: double.infinity,
-                              height: double.infinity,
-                              child: CircularProgressIndicator(
-                                value: progress.clamp(0.0, 1.0),
-                                strokeWidth: 8, // Much thicker stroke
-                                backgroundColor: Colors.white.withOpacity(0.2),
-                                valueColor: AlwaysStoppedAnimation<Color>(activity['color']),
-                                strokeCap: StrokeCap.round, // Rounded ends
-                              ),
-                            ),
-                            // Large icon in center
-                            Container(
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: activity['color'].withOpacity(0.2),
-                                border: Border.all(
-                                  color: activity['color'].withOpacity(0.3),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Icon(
-                                activity['icon'],
-                                color: Colors.white,
-                                size: 40, // Much larger icon
-                              ),
-                            ),
-                          ],
-                        ),
+              child: CleanCard(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Clean circular progress
+                    CleanCircularProgress(
+                      value: progress.clamp(0.0, 1.0),
+                      color: isCompleted ? AppColors.success : activity['color'],
+                      size: 64,
+                      strokeWidth: 4,
+                      child: Icon(
+                        isCompleted ? Icons.check : activity['icon'],
+                        color: isCompleted ? AppColors.success : activity['color'],
+                        size: 24,
                       ),
                     ),
                     
-                    // Text section (fixed height to prevent overflow)
-                    SizedBox(
-                      height: 50, // Fixed height
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Activity name
-                          Text(
-                            activity['name'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          
-                          const SizedBox(height: 2),
-                          
-                          // Progress text
-                          Text(
-                            _getActivityProgress(activity),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: activity['color'],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    // Habit name
+                    Text(
+                      activity['name'],
+                      style: AppTextStyles.subheadline.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    
+                    const SizedBox(height: AppSpacing.xs),
+                    
+                    // Progress text
+                    Text(
+                      _getActivityProgress(activity),
+                      style: AppTextStyles.bodySecondary.copyWith(
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    
+                    if (isCompleted)
+                      Container(
+                        margin: const EdgeInsets.only(top: AppSpacing.xs),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                        ),
+                        child: Text(
+                          'Completed',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -684,7 +681,7 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
           ),
         ),
       ),
-    ));
+    );
   }
 
   void _handleDragStart(DragStartDetails details, Map<String, dynamic> activity) {
@@ -970,160 +967,91 @@ class _UserSpiritualTrackingState extends State<UserSpiritualTracking> with Widg
   }
 
   Widget _buildLoadingState(bool isLargeScreen) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Loading skeleton for date navigation
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  Container(
-                    width: 200,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Loading skeleton for progress bar
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-              child: Column(
-                children: [
-                  Container(
-                    width: 150,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Loading indicator
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Loading habits...',
-                      style: TextStyle(
-                        fontSize: isLargeScreen ? 18 : 16,
-                        color: Colors.white.withOpacity(0.8),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  strokeWidth: 3,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Loading your habits...',
+                style: AppTextStyles.subheadline.copyWith(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+
   Widget _buildErrorState(bool isLargeScreen) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.screenPadding),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  _isConnected ? Icons.error_outline : Icons.wifi_off,
-                  size: isLargeScreen ? 80 : 64,
-                  color: Colors.white.withOpacity(0.8),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.card),
+                  ),
+                  child: Icon(
+                    _isConnected ? Icons.error_outline : Icons.wifi_off,
+                    size: 40,
+                    color: AppColors.error,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.sectionSpacing),
                 Text(
                   _isConnected ? 'Something went wrong' : 'No Internet Connection',
-                  style: TextStyle(
-                    fontSize: isLargeScreen ? 24 : 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  style: AppTextStyles.headline.copyWith(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 Text(
-                  _error ?? 'An unexpected error occurred',
-                  style: TextStyle(
-                    fontSize: isLargeScreen ? 16 : 14,
-                    color: Colors.white.withOpacity(0.9),
+                  _error ?? 'An unexpected error occurred while loading your habits',
+                  style: AppTextStyles.body.copyWith(
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
-                Semantics(
-                  label: 'Try again',
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      setState(() {
-                        _error = null;
-                      });
-                      _loadUserHabits();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isLargeScreen ? 32 : 24,
-                        vertical: isLargeScreen ? 16 : 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: AppSpacing.sectionSpacing),
+                ElevatedButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    setState(() {
+                      _error = null;
+                    });
+                    _loadUserHabits();
+                  },
+                  child: const Text('Try Again'),
                 ),
               ],
             ),
