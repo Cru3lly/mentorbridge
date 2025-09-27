@@ -5,7 +5,7 @@ import 'modern_bottom_nav.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
-  
+
   const AppShell({super.key, required this.child});
 
   @override
@@ -14,13 +14,13 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateCurrentIndex();
   }
-  
+
   void _updateCurrentIndex() {
     final location = GoRouterState.of(context).uri.toString();
     setState(() {
@@ -35,11 +35,11 @@ class _AppShellState extends State<AppShell> {
       }
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: widget.child,
@@ -50,13 +50,11 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-
-
   void _onNavTap(BuildContext context, int index) {
     setState(() {
       _currentIndex = index;
     });
-    
+
     switch (index) {
       case 0:
         context.go('/unifiedDashboard');
@@ -75,10 +73,10 @@ class _AppShellState extends State<AppShell> {
         break;
     }
   }
-  
+
   void _showComingSoon(BuildContext context, String feature) {
     if (!context.mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$feature - Coming Soon!'),
@@ -88,9 +86,9 @@ class _AppShellState extends State<AppShell> {
           borderRadius: BorderRadius.circular(AppBorderRadius.button),
         ),
         margin: const EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding, 
-          0, 
-          AppSpacing.screenPadding, 
+          AppSpacing.screenPadding,
+          0,
+          AppSpacing.screenPadding,
           AppSpacing.screenPadding + 60, // Bottom navigation için yer bırak
         ),
       ),

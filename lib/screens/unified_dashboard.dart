@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/drag_lock.dart';
 import '../widgets/weekend_report_slide_up.dart';
 import '../services/notification_service.dart';
 import '../services/weekend_report_service.dart';
@@ -391,126 +390,117 @@ class _UnifiedDashboardState extends State<UnifiedDashboard>
       );
     }
 
-    return DragLock(
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFF5F7FA), // Slightly cooler light grey
-                    Color(0xFFEBF0F5), // Cool light grey
-                    Color(0xFFF8FAFC), // Very light blue-grey
-                    Color(0xFFF1F5F9), // Subtle blue tint
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0.0, 0.4, 0.7, 1.0],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Page content with safe area for top
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        top: 20), // Consistent minimal padding
-                    child: DragLock.listen(
-                      context: context,
-                      builder: (context, locked) {
-                        return PageView.builder(
-                          controller: _pageController,
-                          physics: locked
-                              ? const NeverScrollableScrollPhysics()
-                              : const PageScrollPhysics(),
-                          onPageChanged: (index) {
-                            if (_currentPageIndex != index) {
-                              HapticFeedback.selectionClick();
-                              setState(() {
-                                _currentPageIndex = index;
-                              });
-                            }
-                          },
-                          itemCount: _userRoles.length,
-                          itemBuilder: (context, index) {
-                            return _buildRolePage(_userRoles[index], index);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Role title removed - now handled by individual dashboard wrappers
-
-                  // Page indicators (dots) positioned above navigation bar
-                  // Sadece çoklu role sahip kullanıcılara göster (user + başka rol)
-                  if (_userRoles.length > 1)
-                    Positioned(
-                      bottom:
-                          95, // Navigation bar'ın hemen üzerine (+ butonunun üstü)
-                      left: 0,
-                      right: 0,
-                      child: Semantics(
-                        label:
-                            'Page ${_currentPageIndex + 1} of ${_userRoles.length}',
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(_userRoles.length, (index) {
-                            final isActive = _currentPageIndex == index;
-                            return Semantics(
-                              label:
-                                  '${_userRoles[index]} dashboard, ${isActive ? 'current page' : 'page ${index + 1}'}',
-                              button: true,
-                              child: GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  _pageController.animateToPage(
-                                    index,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 5),
-                                  width: isActive ? 14 : 10,
-                                  height: isActive ? 14 : 10,
-                                  decoration: BoxDecoration(
-                                    color: isActive
-                                        ? Colors.white
-                                        : Colors.white.withOpacity(0.6),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isActive
-                                          ? Colors.white.withOpacity(0.8)
-                                          : Colors.white.withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ),
+    return Builder(
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFF5F7FA), // Slightly cooler light grey
+                  Color(0xFFEBF0F5), // Cool light grey
+                  Color(0xFFF8FAFC), // Very light blue-grey
+                  Color(0xFFF1F5F9), // Subtle blue tint
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: [0.0, 0.4, 0.7, 1.0],
               ),
             ),
-            // Bottom navigation for all pages
-            // Navigation bar now handled by AppShell
-          );
-        },
-      ),
+            child: Stack(
+              children: [
+                // Page content with safe area for top
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 20), // Consistent minimal padding
+                  child: PageView.builder(
+                    controller: _pageController,
+                    physics: const PageScrollPhysics(),
+                    onPageChanged: (index) {
+                      if (_currentPageIndex != index) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _currentPageIndex = index;
+                        });
+                      }
+                    },
+                    itemCount: _userRoles.length,
+                    itemBuilder: (context, index) {
+                      return _buildRolePage(_userRoles[index], index);
+                    },
+                  ),
+                ),
+
+                // Role title removed - now handled by individual dashboard wrappers
+
+                // Page indicators (dots) positioned above navigation bar
+                // Sadece çoklu role sahip kullanıcılara göster (user + başka rol)
+                if (_userRoles.length > 1)
+                  Positioned(
+                    bottom:
+                        25, // Bottom navigation bar'a daha yakın konumlandırıldı
+                    left: 0,
+                    right: 0,
+                    child: Semantics(
+                      label:
+                          'Page ${_currentPageIndex + 1} of ${_userRoles.length}',
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_userRoles.length, (index) {
+                          final isActive = _currentPageIndex == index;
+                          return Semantics(
+                            label:
+                                '${_userRoles[index]} dashboard, ${isActive ? 'current page' : 'page ${index + 1}'}',
+                            button: true,
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                _pageController.animateToPage(
+                                  index,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 5),
+                                width: isActive ? 14 : 10,
+                                height: isActive ? 14 : 10,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.6),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isActive
+                                        ? Colors.white.withOpacity(0.8)
+                                        : Colors.white.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Bottom navigation for all pages
+          // Navigation bar now handled by AppShell
+        );
+      },
     );
   }
 

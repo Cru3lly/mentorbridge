@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
+import '../../theme/app_theme.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -54,19 +55,21 @@ class _SettingsState extends State<Settings> {
 
       if (userDoc.exists) {
         final userData = userDoc.data() as Map<String, dynamic>;
-        
+
         // Everyone has 'user' role by default
         List<String> roles = ['user'];
-        
+
         // Add additional role if exists
         final additionalRole = userData['role'] as String?;
-        if (additionalRole != null && additionalRole != 'user' && additionalRole.isNotEmpty) {
+        if (additionalRole != null &&
+            additionalRole != 'user' &&
+            additionalRole.isNotEmpty) {
           roles.add(additionalRole);
         }
-        
+
         return roles;
       }
-      
+
       return ['user'];
     } catch (e) {
       debugPrint('Error loading user roles: $e');
@@ -117,7 +120,7 @@ class _SettingsState extends State<Settings> {
 
   Future<void> _showPageOrderDialog(BuildContext context) async {
     final roles = await _getUserRoles();
-    
+
     if (roles.length <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -138,10 +141,10 @@ class _SettingsState extends State<Settings> {
     final prefs = await SharedPreferences.getInstance();
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    
+
     final savedOrder = prefs.getStringList('page_order_${currentUser.uid}');
     List<String> orderedRoles = List.from(roles);
-    
+
     // Apply saved order if exists
     if (savedOrder != null && savedOrder.isNotEmpty) {
       List<String> reorderedRoles = [];
@@ -189,20 +192,55 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Dinamik olarak top sections oluştur
     final List<_SettingsSection> topSections = [
-      _SettingsSection(icon: Icons.person_outline, label: 'Profile', route: '/profile', color: theme.colorScheme.primary),
+      _SettingsSection(
+          icon: Icons.person_outline,
+          label: 'Profile',
+          route: '/profile',
+          color: theme.colorScheme.primary),
       // Page Order butonunu sadece birden fazla rolü olanlara göster
       if (_hasMultipleRoles && !_isLoadingRoles)
-        _SettingsSection(icon: Icons.reorder, label: 'Page Order', route: '/settings/page-order', color: Colors.purple, isSpecial: true),
-      _SettingsSection(icon: Icons.notifications_none, label: 'Notifications', route: '/settings/notifications', color: Colors.pink),
-      _SettingsSection(icon: Icons.security_outlined, label: 'Privacy', route: '/settings/privacy', color: Colors.green),
+        _SettingsSection(
+            icon: Icons.reorder,
+            label: 'Page Order',
+            route: '/settings/page-order',
+            color: Colors.purple,
+            isSpecial: true),
+      _SettingsSection(
+          icon: Icons.palette_outlined,
+          label: 'Theme Color',
+          route: '/settings/theme-color',
+          color: AppColors.primary,
+          isSpecial: true),
+      _SettingsSection(
+          icon: Icons.notifications_none,
+          label: 'Notifications',
+          route: '/settings/notifications',
+          color: Colors.pink),
+      _SettingsSection(
+          icon: Icons.security_outlined,
+          label: 'Privacy',
+          route: '/settings/privacy',
+          color: Colors.green),
     ];
     final List<_SettingsSection> bottomSections = [
-      _SettingsSection(icon: Icons.settings, label: 'App Settings', route: '/settings/app', color: Colors.blueGrey),
-      _SettingsSection(icon: Icons.info_outline, label: 'About', route: '/settings/about', color: Colors.amber),
-      _SettingsSection(icon: Icons.help_outline, label: 'Help Center', route: '/help', color: Colors.orange),
+      _SettingsSection(
+          icon: Icons.settings,
+          label: 'App Settings',
+          route: '/settings/app',
+          color: Colors.blueGrey),
+      _SettingsSection(
+          icon: Icons.info_outline,
+          label: 'About',
+          route: '/settings/about',
+          color: Colors.amber),
+      _SettingsSection(
+          icon: Icons.help_outline,
+          label: 'Help Center',
+          route: '/help',
+          color: Colors.orange),
     ];
     final allSections = [...topSections, ...bottomSections];
 
@@ -219,7 +257,8 @@ class _SettingsState extends State<Settings> {
             }
           },
         ),
-        title: const Text('Settings', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Settings',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.black.withOpacity(0.2),
         elevation: 0,
@@ -249,12 +288,16 @@ class _SettingsState extends State<Settings> {
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.white.withOpacity(0.4), Colors.white.withOpacity(0.2)],
+                        colors: [
+                          Colors.white.withOpacity(0.4),
+                          Colors.white.withOpacity(0.2)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(width: 1.5, color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(
+                          width: 1.5, color: Colors.white.withOpacity(0.2)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -274,7 +317,8 @@ class _SettingsState extends State<Settings> {
                                       context: context,
                                       applicationName: _appName,
                                       applicationVersion: _appVersion,
-                                      applicationLegalese: 'Developed by MentorBridge Team\nAll rights reserved.',
+                                      applicationLegalese:
+                                          'Developed by MentorBridge Team\nAll rights reserved.',
                                     );
                                   } else if (section.label == 'Page Order') {
                                     _showPageOrderDialog(context);
@@ -284,25 +328,34 @@ class _SettingsState extends State<Settings> {
                                 },
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: section.color.withOpacity(0.13),
-                                    child: Icon(section.icon, color: section.color, size: 26),
+                                    backgroundColor:
+                                        section.color.withOpacity(0.13),
+                                    child: Icon(section.icon,
+                                        color: section.color, size: 26),
                                   ),
                                   title: Text(
                                     section.label,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87),
                                   ),
-                                  trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 22),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                  trailing: const Icon(Icons.chevron_right,
+                                      color: Colors.grey, size: 22),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 6),
                                 ),
                               ),
                             ),
                             if (!isLast)
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: isEndOfTopSection ? 0 : 16.0),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: isEndOfTopSection ? 0 : 16.0),
                                 child: Divider(
                                   height: 1,
                                   thickness: isEndOfTopSection ? 2 : 1,
-                                  color: Colors.white.withOpacity(isEndOfTopSection ? 0.4 : 0.2),
+                                  color: Colors.white.withOpacity(
+                                      isEndOfTopSection ? 0.4 : 0.2),
                                 ),
                               ),
                           ],
@@ -321,7 +374,8 @@ class _SettingsState extends State<Settings> {
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.red,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   child: const Text('Log Out'),
                 ),
@@ -342,7 +396,12 @@ class _SettingsSection {
   final String route;
   final Color color;
   final bool isSpecial;
-  const _SettingsSection({required this.icon, required this.label, required this.route, required this.color, this.isSpecial = false});
+  const _SettingsSection(
+      {required this.icon,
+      required this.label,
+      required this.route,
+      required this.color,
+      this.isSpecial = false});
 }
 
 // Page Order Dialog Widget
@@ -381,12 +440,16 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0.8)],
+                colors: [
+                  Colors.white.withOpacity(0.9),
+                  Colors.white.withOpacity(0.8)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(width: 1.5, color: Colors.white.withOpacity(0.3)),
+              border:
+                  Border.all(width: 1.5, color: Colors.white.withOpacity(0.3)),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -423,7 +486,7 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Reorderable List
                 Container(
                   constraints: const BoxConstraints(maxHeight: 400),
@@ -447,7 +510,8 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                          border:
+                              Border.all(color: Colors.grey.withOpacity(0.3)),
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
@@ -483,9 +547,9 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Action Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -494,7 +558,8 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.grey[600],
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -506,7 +571,8 @@ class _PageOrderDialogState extends State<_PageOrderDialog> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

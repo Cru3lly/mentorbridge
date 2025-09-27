@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import '../theme/app_theme.dart';
 
 // Dashboard button visual styles. Default is minimal.
 enum DashboardButtonStyle {
@@ -79,7 +79,7 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -124,28 +124,27 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
                       0, // No top margin since title is above
                       isLargeScreen ? 24 : 16,
                       isLargeScreen ? 16 : 10),
-                  child: GlassmorphicContainer(
+                  child: Container(
                     width: double.infinity,
                     height: isLargeScreen
                         ? 160
                         : isMediumScreen
                             ? 150
                             : 140,
-                    borderRadius: isLargeScreen ? 24 : 20,
-                    blur: 15,
-                    border: 1.5,
-                    linearGradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.3),
-                        Colors.white.withOpacity(0.1),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderGradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.4),
-                        Colors.white.withOpacity(0.1),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.circular(isLargeScreen ? 24 : 20),
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
                       ],
                     ),
                     child: Semantics(
@@ -209,21 +208,17 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // All Actions as Circular Buttons (Apple iOS Style)
+                              // Clean Apple-Style Action Buttons Grid
                               GridView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,
-                                  mainAxisSpacing: isLargeScreen
-                                      ? 12
-                                      : 10, // Better vertical spacing
-                                  crossAxisSpacing: isLargeScreen
-                                      ? 18
-                                      : 14, // Better horizontal spacing
+                                  mainAxisSpacing: AppSpacing.lg,
+                                  crossAxisSpacing: AppSpacing.md,
                                   childAspectRatio:
-                                      0.88, // Optimized proportions
+                                      0.85, // Optimized for square buttons + text
                                 ),
                                 itemCount: widget.menuItems.length,
                                 itemBuilder: (context, index) =>
@@ -502,82 +497,178 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
     );
   }
 
-  // Apple iOS Style Rounded Square Buttons
+  // Modern Premium Card-Style Action Buttons
   Widget _buildCircularActionItem(
       Map<String, dynamic> item, bool isLargeScreen, bool isMediumScreen) {
-    final containerSize = isLargeScreen
-        ? 120.0
-        : isMediumScreen
-            ? 110.0
-            : 100.0; // Bigger containers
-    final fontSize = isLargeScreen
-        ? 18.0
-        : isMediumScreen
-            ? 17.0
-            : 16.0; // Bigger text
-    final iconContainerSize = isLargeScreen
-        ? 80.0
-        : isMediumScreen
-            ? 74.0
-            : 70.0; // Bigger icon containers
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final Color itemColor = (item['color'] as Color?) ?? AppColors.primary;
+
+    // Responsive sizing for premium feel
+    final double cardSize = isLargeScreen ? 84.0 : 80.0;
+    final double iconSize = isLargeScreen ? 30.0 : 28.0;
+    final double borderRadius = isLargeScreen ? 20.0 : 18.0;
+    final double fontSize = isLargeScreen ? 11.0 : 10.5;
+
+    // Calculate total height with 3-line text support
+    final double totalHeight = cardSize + 60; // Card + spacing + 3-line text
+
+    // Helper function to break text into max 3 lines
+    List<String> _breakTextIntoLines(String text) {
+      final words = text.split(' ');
+      if (words.length <= 1) return [text];
+      if (words.length == 2) return words;
+      if (words.length >= 3) return words.take(3).toList();
+      return words;
+    }
+
+    final textLines = _breakTextIntoLines(item['label'] as String);
 
     return Semantics(
       label: '${item['label']} action',
       button: true,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(
-            isLargeScreen ? 20 : 16), // Apple rounded corners
-        child: InkWell(
-          borderRadius: BorderRadius.circular(
-              isLargeScreen ? 20 : 16), // Apple rounded corners
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.1),
-          onTap: () async {
-            try {
-              HapticFeedback.lightImpact();
-              final onTapCallback = item['onTap'] as VoidCallback?;
-              if (onTapCallback != null && mounted) {
-                onTapCallback.call();
-              }
-            } catch (e) {
-              _handleError('Action failed: ${e.toString()}');
-            }
-          },
-          child: SizedBox(
-            width: containerSize,
-            height: containerSize,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Main container - adaptive styling based on button style
-                Container(
-                  width: iconContainerSize,
-                  height: iconContainerSize,
-                  decoration: _buildMainContainerDecoration(isLargeScreen),
-                  child: _buildIconTileByStyle(item, isLargeScreen),
-                ),
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 150),
+        tween: Tween(begin: 1.0, end: 1.0),
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(borderRadius),
+                splashColor: itemColor.withOpacity(0.2),
+                highlightColor: itemColor.withOpacity(0.1),
+                onTapDown: (_) {
+                  // Scale down effect on tap
+                  HapticFeedback.lightImpact();
+                },
+                onTap: () async {
+                  try {
+                    final onTapCallback = item['onTap'] as VoidCallback?;
+                    if (onTapCallback != null && mounted) {
+                      onTapCallback.call();
+                    }
+                  } catch (e) {
+                    _handleError('Action failed: ${e.toString()}');
+                  }
+                },
+                child: Container(
+                  height: totalHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      // Premium card-style icon container
+                      Container(
+                        width: cardSize,
+                        height: cardSize,
+                        decoration: BoxDecoration(
+                          // Soft gradient background based on item color
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isDark
+                                ? [
+                                    itemColor.withOpacity(0.15),
+                                    itemColor.withOpacity(0.08),
+                                  ]
+                                : [
+                                    itemColor.withOpacity(0.12),
+                                    itemColor.withOpacity(0.06),
+                                  ],
+                          ),
+                          borderRadius: BorderRadius.circular(borderRadius),
+                          // Defined border with subtle color tint
+                          border: Border.all(
+                            color: isDark
+                                ? itemColor.withOpacity(0.2)
+                                : itemColor.withOpacity(0.15),
+                            width: 1.2,
+                          ),
+                          // Premium shadow system for depth
+                          boxShadow: [
+                            // Primary colored shadow
+                            BoxShadow(
+                              color: itemColor.withOpacity(isDark ? 0.2 : 0.1),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                              spreadRadius: 0,
+                            ),
+                            // Secondary depth shadow
+                            BoxShadow(
+                              color:
+                                  Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
+                              spreadRadius: 0,
+                            ),
+                            // Subtle ambient shadow
+                            BoxShadow(
+                              color:
+                                  Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                              blurRadius: 6,
+                              offset: const Offset(0, 1),
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            item['icon'] as IconData,
+                            color: itemColor,
+                            size: iconSize,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(0, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
 
-                SizedBox(height: isLargeScreen ? 8 : 6), // Reduced text spacing
+                      const SizedBox(height: 12),
 
-                // Text label with adaptive styling
-                Container(
-                  width: containerSize + 10, // More width for text
-                  constraints: BoxConstraints(
-                    minHeight: isLargeScreen ? 40 : 36,
-                  ),
-                  child: Text(
-                    item['label'] as String,
-                    style: _buildTextStyle(fontSize),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.visible,
+                      // 3-line text layout with consistent alignment
+                      SizedBox(
+                        height: 42, // Fixed height for 3 lines
+                        width: cardSize + 12,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: textLines.asMap().entries.map((entry) {
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    entry.key < textLines.length - 1 ? 1 : 0,
+                              ),
+                              child: Text(
+                                entry.value,
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimaryLight,
+                                  height: 1.1, // Tight line height
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -586,13 +677,13 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
   TextStyle _buildRoleTitleStyle(bool isLargeScreen) {
     switch (widget.buttonStyle) {
       case DashboardButtonStyle.minimal:
-        // Strong, prominent title for minimal style
+        // Strong, prominent title for minimal style using global colors
         return TextStyle(
-          fontSize: isLargeScreen ? 34 : 30, // Larger for more impact
-          fontWeight: FontWeight.w800, // Bolder weight
-          color: Colors.grey[900], // Strong dark text
-          letterSpacing: -0.6, // Tighter for modern look
-          height: 1.05, // Tighter line height
+          fontSize: isLargeScreen ? 34 : 30,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimaryLight, // Use global text color
+          letterSpacing: -0.6,
+          height: 1.05,
         );
       case DashboardButtonStyle.glassPro:
       default:
@@ -613,17 +704,18 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
     }
   }
 
-  // Build text style based on button style
+  // Build text style based on button style (LEGACY - not currently used)
+  /*
   TextStyle _buildTextStyle(double fontSize) {
     switch (widget.buttonStyle) {
       case DashboardButtonStyle.minimal:
-        // Strong, readable text for minimal style
+        // Strong, readable text for minimal style using global colors
         return TextStyle(
-          fontSize: fontSize + 1, // Slightly larger for better readability
-          fontWeight: FontWeight.w700, // Bolder weight
-          color: Colors.grey[900], // Stronger contrast
-          letterSpacing: -0.2, // Tighter spacing
-          height: 1.15, // Optimized line height
+          fontSize: fontSize + 1,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimaryLight, // Use global text color
+          letterSpacing: -0.2,
+          height: 1.15,
         );
       case DashboardButtonStyle.glassPro:
       default:
@@ -644,20 +736,21 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
         );
     }
   }
+  */
 
-  // Build main container decoration based on style
+  // Build main container decoration based on style (LEGACY - not currently used)
+  /*
   BoxDecoration _buildMainContainerDecoration(bool isLargeScreen) {
     switch (widget.buttonStyle) {
       case DashboardButtonStyle.minimal:
-        // Enhanced minimal decoration with better depth
+        // Enhanced minimal decoration using global colors
         return BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(
-              isLargeScreen ? 22 : 18), // Slightly more rounded
+          color: AppColors.surfaceLight, // Use global surface color
+          borderRadius: BorderRadius.circular(isLargeScreen ? 22 : 18),
           boxShadow: [
-            // Primary shadow for depth
+            // Primary shadow for depth with theme color tint
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: AppColors.primary.withOpacity(0.08),
               blurRadius: 16,
               offset: const Offset(0, 6),
               spreadRadius: 0,
@@ -678,7 +771,7 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
             ),
           ],
           border: Border.all(
-            color: Colors.grey.withOpacity(0.12),
+            color: AppColors.borderLight, // Use global border color
             width: 0.8,
           ),
         );
@@ -709,8 +802,10 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
         );
     }
   }
+  */
 
-  // Build inner icon tile by style variant
+  // Build inner icon tile by style variant (LEGACY - not currently used)
+  /*
   Widget _buildIconTileByStyle(Map<String, dynamic> item, bool isLargeScreen) {
     switch (widget.buttonStyle) {
       case DashboardButtonStyle.glassPro:
@@ -728,6 +823,7 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
         return _buildIconTileMinimal(item, isLargeScreen);
     }
   }
+  */
 
   Widget _buildIconTileGlassPro(Map<String, dynamic> item, bool isLargeScreen) {
     final double innerSize = isLargeScreen ? 58 : 54;
@@ -879,25 +975,24 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
     );
   }
 
-  // 🆕 Enhanced Minimal Style - Clean with subtle color tint
+  // 🆕 Enhanced Minimal Style - Using CleanCard system with global colors
   Widget _buildIconTileMinimal(Map<String, dynamic> item, bool isLargeScreen) {
-    final double innerSize = isLargeScreen ? 66 : 62; // Slightly larger
-    final double iconSize = isLargeScreen ? 34 : 30; // Larger icons
-    final Color baseColor = (item['color'] as Color?) ?? Colors.blue;
+    final double innerSize = isLargeScreen ? 66 : 62;
+    final double iconSize = isLargeScreen ? 34 : 30;
+    final Color baseColor = (item['color'] as Color?) ?? AppColors.primary;
 
     return Center(
       child: Container(
         width: innerSize,
         height: innerSize,
         decoration: BoxDecoration(
-          // Subtle tinted background for visual interest
-          color: baseColor.withOpacity(0.03),
-          borderRadius:
-              BorderRadius.circular(isLargeScreen ? 18 : 16), // More rounded
-          // Enhanced shadow system
+          // Use global theme color with subtle tint
+          color: AppColors.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(isLargeScreen ? 18 : 16),
+          // Enhanced shadow system using AppColors
           boxShadow: [
             BoxShadow(
-              color: baseColor.withOpacity(0.08), // Color-tinted shadow
+              color: AppColors.primary.withOpacity(0.12),
               blurRadius: 12,
               offset: const Offset(0, 4),
               spreadRadius: 0,
@@ -909,16 +1004,16 @@ class _RoleDashboardWrapperState extends State<RoleDashboardWrapper>
               spreadRadius: 0,
             ),
           ],
-          // Subtle colored border
+          // Subtle border using global theme color
           border: Border.all(
-            color: baseColor.withOpacity(0.15),
+            color: AppColors.primary.withOpacity(0.2),
             width: 0.8,
           ),
         ),
         child: Center(
           child: Icon(
             item['icon'] as IconData,
-            color: baseColor.withOpacity(0.95), // Strong, vibrant color
+            color: baseColor, // Use the item's specific color
             size: iconSize,
           ),
         ),

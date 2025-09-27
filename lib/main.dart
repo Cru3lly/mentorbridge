@@ -51,6 +51,7 @@ import 'screens/assistant_coordinator/high_school/high_school_assistant_coordina
 import 'screens/settings/settings.dart';
 import 'screens/settings/profile.dart';
 import 'screens/settings/help_center.dart';
+import 'screens/settings/theme_color_settings.dart';
 
 // Unified Dashboard
 import 'screens/unified_dashboard.dart';
@@ -61,8 +62,14 @@ import 'widgets/app_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Initialize Firebase with error handling
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e) {
+    // Firebase already initialized, continue
+    print('Firebase already initialized: $e');
+  }
 
   // Initialize Notification Service
   await NotificationService.initialize();
@@ -106,6 +113,9 @@ class MentorBridgeApp extends StatelessWidget {
               GoRoute(
                   path: '/help',
                   builder: (context, state) => const HelpCenter()),
+              GoRoute(
+                  path: '/settings/theme-color',
+                  builder: (context, state) => const ThemeColorSettings()),
             ],
           ),
           // Non-shell routes - no navigation bar
@@ -212,6 +222,13 @@ class MentorBridgeApp extends StatelessWidget {
             builder: (context, state) {
               final contextRole = state.uri.queryParameters['contextRole'];
               return UniversalOrphanedGroups(contextRole: contextRole);
+            },
+          ),
+          GoRoute(
+            path: '/universalRoleAssignment',
+            builder: (context, state) {
+              final contextRole = state.uri.queryParameters['contextRole'];
+              return UniversalRoleAssignmentPage(contextRole: contextRole);
             },
           ),
           GoRoute(

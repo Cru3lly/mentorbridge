@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../role_dashboard_wrapper.dart';
 import 'universal_role_assignment_page.dart';
 import 'universal_user_tree_page.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/clean_card.dart';
 
 class UniversalRoleDashboard extends StatefulWidget {
   final String currentRole;
@@ -26,10 +28,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       roleTitle: _getRoleTitle(widget.currentRole),
       topWidget: _buildTopWidget(widget.currentRole),
       menuItems: _getMenuItems(widget.currentRole),
-      onTopWidgetTap: () {
-        HapticFeedback.lightImpact();
-        _handleTopWidgetTap(widget.currentRole);
-      },
+      onTopWidgetTap: null,
     );
   }
 
@@ -81,11 +80,254 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
   Widget _buildTopWidget(String role) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = MediaQuery.of(context).size.width;
+        final mediaQuery = MediaQuery.of(context);
+        final screenWidth = mediaQuery.size.width;
         final isLargeScreen = screenWidth > 600;
-        // Always return empty notification widget as requested
-        return _buildEmptyNotificationWidget(isLargeScreen);
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
+        // Mock notification data - bu gerçek verilerle değiştirilecek
+        final notifications = _getMockNotifications();
+
+        return _buildDynamicNotificationContainer(
+            notifications, isLargeScreen, isDark);
       },
+    );
+  }
+
+  // Mock notifications - gerçek veri için bu method değiştirilecek
+  List<Map<String, String>> _getMockNotifications() {
+    // Test için farklı durumları simüle edebiliriz
+    // Boş liste = "Şu an bildirim yok"
+    return [];
+
+    // Tek notification = tüm kutuyu kapla
+    // return [
+    //   {
+    //     'title': 'System Update',
+    //     'message': 'New features available',
+    //     'time': '2 min ago'
+    //   },
+    // ];
+
+    // Çoklu notification = kaydırılabilir
+    // return [
+    //   {
+    //     'title': 'System Update',
+    //     'message': 'New features available',
+    //     'time': '2 min ago'
+    //   },
+    //   {
+    //     'title': 'New Assignment',
+    //     'message': 'Role assignment pending',
+    //     'time': '5 min ago'
+    //   },
+    // ];
+  }
+
+  Widget _buildDynamicNotificationContainer(
+      List<Map<String, String>> notifications,
+      bool isLargeScreen,
+      bool isDark) {
+    if (notifications.isEmpty) {
+      return _buildEmptyNotificationState(isLargeScreen, isDark);
+    } else if (notifications.length == 1) {
+      return _buildSingleNotificationState(
+          notifications.first, isLargeScreen, isDark);
+    } else {
+      return _buildMultipleNotificationState(
+          notifications, isLargeScreen, isDark);
+    }
+  }
+
+  Widget _buildEmptyNotificationState(bool isLargeScreen, bool isDark) {
+    return Container(
+      height: 120,
+      margin: EdgeInsets.all(isLargeScreen ? AppSpacing.md : AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(isLargeScreen ? 20 : 16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off_outlined,
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
+              size: isLargeScreen ? 32 : 28,
+            ),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'All caught up! No new notifications',
+              style: AppTextStyles.body.copyWith(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+                fontSize: isLargeScreen ? 16 : 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleNotificationState(
+      Map<String, String> notification, bool isLargeScreen, bool isDark) {
+    return Container(
+      margin: EdgeInsets.all(isLargeScreen ? AppSpacing.md : AppSpacing.sm),
+      padding: EdgeInsets.all(isLargeScreen ? AppSpacing.lg : AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(isLargeScreen ? 20 : 16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: isLargeScreen ? 52 : 44,
+            height: isLargeScreen ? 52 : 44,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(isLargeScreen ? 14 : 12),
+            ),
+            child: Icon(
+              Icons.notifications_outlined,
+              color: AppColors.primary,
+              size: isLargeScreen ? 26 : 22,
+            ),
+          ),
+          SizedBox(width: isLargeScreen ? AppSpacing.lg : AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  notification['title'] ?? 'Notification',
+                  style: AppTextStyles.subheadline.copyWith(
+                    fontSize: isLargeScreen ? 18 : 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  notification['message'] ?? '',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: isLargeScreen ? 14 : 12,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                ),
+                if (notification['time'] != null)
+                  Text(
+                    notification['time']!,
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: isLargeScreen ? 12 : 10,
+                      color: isDark
+                          ? AppColors.textSecondaryDark.withOpacity(0.7)
+                          : AppColors.textSecondaryLight.withOpacity(0.7),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMultipleNotificationState(
+      List<Map<String, String>> notifications,
+      bool isLargeScreen,
+      bool isDark) {
+    return Container(
+      height: 140,
+      margin: EdgeInsets.all(isLargeScreen ? AppSpacing.md : AppSpacing.sm),
+      child: PageView.builder(
+        itemCount: notifications.length,
+        itemBuilder: (context, index) {
+          final notification = notifications[index];
+          return Container(
+            margin: EdgeInsets.symmetric(horizontal: 4),
+            padding:
+                EdgeInsets.all(isLargeScreen ? AppSpacing.lg : AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(isLargeScreen ? 20 : 16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: isLargeScreen ? 40 : 36,
+                      height: isLargeScreen ? 40 : 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        borderRadius:
+                            BorderRadius.circular(isLargeScreen ? 12 : 10),
+                      ),
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        color: AppColors.primary,
+                        size: isLargeScreen ? 20 : 18,
+                      ),
+                    ),
+                    SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification['title'] ?? 'Notification',
+                            style: AppTextStyles.subheadline.copyWith(
+                              fontSize: isLargeScreen ? 16 : 14,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.textPrimaryDark
+                                  : AppColors.textPrimaryLight,
+                            ),
+                          ),
+                          Text(
+                            notification['time'] ?? '',
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: isLargeScreen ? 12 : 10,
+                              color: isDark
+                                  ? AppColors.textSecondaryDark.withOpacity(0.7)
+                                  : AppColors.textSecondaryLight
+                                      .withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSpacing.sm),
+                Text(
+                  notification['message'] ?? '',
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: isLargeScreen ? 14 : 12,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -133,14 +375,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
 
   // 🎯 Navigate to Universal Role Assignment with context
   void _navigateToRoleAssignment() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UniversalRoleAssignmentPage(
-          contextRole: widget.currentRole,
-        ),
-      ),
-    );
+    context.push('/universalRoleAssignment?contextRole=${widget.currentRole}');
   }
 
   // 🎯 Navigate to Universal Orphaned Groups with context
@@ -201,41 +436,12 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
 
   // 🔔 Enhanced notification widget - refined minimal style
   Widget _buildEmptyNotificationWidget(bool isLargeScreen) {
-    return Container(
-      height: 120,
-      margin: EdgeInsets.all(isLargeScreen ? 8 : 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(isLargeScreen ? 18 : 16), // More rounded
-        boxShadow: [
-          // Enhanced shadow system matching buttons
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 7,
-            offset: const Offset(0, 2),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-            spreadRadius: 0,
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.12),
-          width: 0.8,
-        ),
-      ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return CleanCard.elevated(
       child: Padding(
-        padding: EdgeInsets.all(isLargeScreen ? 16 : 14),
+        padding: EdgeInsets.all(isLargeScreen ? AppSpacing.lg : AppSpacing.md),
         child: Row(
           children: [
             // Left side - Quick overview
@@ -246,27 +452,30 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
                 children: [
                   Text(
                     'Dashboard Overview',
-                    style: TextStyle(
-                      fontSize: isLargeScreen ? 17 : 15, // Slightly larger
-                      fontWeight: FontWeight.w700, // Bolder
-                      color: Colors.grey[900], // Stronger contrast
-                      letterSpacing: -0.3, // Tighter spacing
+                    style: AppTextStyles.subheadline.copyWith(
+                      fontSize: isLargeScreen ? 17 : 15,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight,
                     ),
                   ),
-                  SizedBox(height: isLargeScreen ? 8 : 6),
+                  SizedBox(
+                      height: isLargeScreen ? AppSpacing.sm : AppSpacing.xs),
                   Row(
                     children: [
                       _buildMinimalStatChip(
                         label: 'Active',
                         value: '12',
-                        color: Colors.green,
+                        color: AppColors.success,
                         isLargeScreen: isLargeScreen,
                       ),
-                      SizedBox(width: isLargeScreen ? 8 : 6),
+                      SizedBox(
+                          width: isLargeScreen ? AppSpacing.sm : AppSpacing.xs),
                       _buildMinimalStatChip(
                         label: 'Pending',
                         value: '3',
-                        color: Colors.orange,
+                        color: AppColors.warning,
                         isLargeScreen: isLargeScreen,
                       ),
                     ],
@@ -280,12 +489,12 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
               width: isLargeScreen ? 50 : 44,
               height: isLargeScreen ? 50 : 44,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(isLargeScreen ? 12 : 10),
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppBorderRadius.md),
               ),
               child: Icon(
                 Icons.dashboard_outlined,
-                color: Colors.grey[600],
+                color: AppColors.primary,
                 size: isLargeScreen ? 24 : 20,
               ),
             ),
@@ -302,14 +511,17 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
     required Color color,
     required bool isLargeScreen,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isLargeScreen ? 8 : 6,
-        vertical: isLargeScreen ? 4 : 3,
+        horizontal: isLargeScreen ? AppSpacing.sm : AppSpacing.xs,
+        vertical: isLargeScreen ? AppSpacing.xs : 3,
       ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(isLargeScreen ? 6 : 5),
+        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
         border: Border.all(
           color: color.withOpacity(0.2),
           width: 0.5,
@@ -320,19 +532,21 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
         children: [
           Text(
             value,
-            style: TextStyle(
+            style: AppTextStyles.caption.copyWith(
               fontSize: isLargeScreen ? 12 : 11,
               fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
-          SizedBox(width: isLargeScreen ? 4 : 3),
+          SizedBox(width: isLargeScreen ? AppSpacing.xs : 3),
           Text(
             label,
-            style: TextStyle(
+            style: AppTextStyles.caption.copyWith(
               fontSize: isLargeScreen ? 11 : 10,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
             ),
           ),
         ],
@@ -916,7 +1130,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.amber.withOpacity(0.3),
+                      AppColors.warning,
                       Colors.amber.withOpacity(0.2),
                     ],
                   ),
@@ -1111,7 +1325,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1120,7 +1334,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Fix Orphaned Groups',
         'icon': Icons.healing,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToOrphanedGroups();
@@ -1129,7 +1343,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'System Reset',
         'icon': Icons.restore,
-        'color': Colors.red.withOpacity(0.3),
+        'color': AppColors.error,
         'onTap': () {
           HapticFeedback.heavyImpact();
           _showSystemResetConfirmation();
@@ -1143,7 +1357,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1152,7 +1366,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Fix Orphaned Groups',
         'icon': Icons.healing,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToOrphanedGroups();
@@ -1166,7 +1380,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1175,7 +1389,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Fix Orphaned Groups',
         'icon': Icons.healing,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToOrphanedGroups();
@@ -1184,7 +1398,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'User Tree',
         'icon': Icons.account_tree,
-        'color': Colors.green.withOpacity(0.3),
+        'color': AppColors.success,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToUserTree();
@@ -1193,7 +1407,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Mentor & Mentee',
         'icon': Icons.school,
-        'color': Colors.purple.withOpacity(0.3),
+        'color': AppColors.info,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToMentorMentee();
@@ -1208,7 +1422,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1217,7 +1431,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Fix Orphaned Groups',
         'icon': Icons.healing,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToOrphanedGroups();
@@ -1230,7 +1444,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       items.add({
         'label': 'Mentor & Mentee',
         'icon': Icons.school,
-        'color': Colors.purple.withOpacity(0.3),
+        'color': AppColors.info,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToMentorMentee();
@@ -1246,7 +1460,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1255,7 +1469,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Fix Orphaned Groups',
         'icon': Icons.healing,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToOrphanedGroups();
@@ -1269,7 +1483,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       items.add({
         'label': 'Mentor & Mentee',
         'icon': Icons.school,
-        'color': Colors.purple.withOpacity(0.3),
+        'color': AppColors.info,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToMentorMentee();
@@ -1288,7 +1502,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       items.add({
         'label': 'Weekend Report',
         'icon': Icons.assignment,
-        'color': Colors.blue.withOpacity(0.3),
+        'color': AppColors.info,
         'onTap': () {
           HapticFeedback.lightImpact();
           context.push('/universalMentorWeekendReport');
@@ -1299,7 +1513,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
     items.add({
       'label': 'Resources',
       'icon': Icons.library_books,
-      'color': Colors.orange.withOpacity(0.3),
+      'color': AppColors.warning,
       'onTap': () {
         HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1318,7 +1532,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Assign Role',
         'icon': Icons.person_add,
-        'color': Colors.deepPurple.withOpacity(0.3),
+        'color': AppColors.primary,
         'onTap': () {
           HapticFeedback.lightImpact();
           _navigateToRoleAssignment();
@@ -1333,7 +1547,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'My Contributions',
         'icon': Icons.star,
-        'color': Colors.orange.withOpacity(0.3),
+        'color': AppColors.warning,
         'onTap': () {
           HapticFeedback.lightImpact();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1350,7 +1564,7 @@ class _UniversalRoleDashboardState extends State<UniversalRoleDashboard> {
       {
         'label': 'Financial Reports',
         'icon': Icons.assessment,
-        'color': Colors.blue.withOpacity(0.3),
+        'color': AppColors.info,
         'onTap': () {
           HapticFeedback.lightImpact();
           ScaffoldMessenger.of(context).showSnackBar(
