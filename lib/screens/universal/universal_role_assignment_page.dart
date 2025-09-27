@@ -11,12 +11,29 @@ class RolePermissions {
   static const Map<String, List<String>> assignableRoles = {
     'admin': ['*'], // Herkesi
     'moderator': [
-      'director', 'middleSchoolCoordinator', 'highSchoolCoordinator', 'universityCoordinator', 
-      'housingCoordinator', 'middleSchoolAssistantCoordinator', 'highSchoolAssistantCoordinator',
-      'universityAssistantCoordinator', 'housingAssistantCoordinator', 'middleSchoolMentor',
-      'highSchoolMentor', 'houseLeader', 'studentHouseLeader', 'houseMember', 'studentHouseMember', 'accountant'
+      'director',
+      'middleSchoolCoordinator',
+      'highSchoolCoordinator',
+      'universityCoordinator',
+      'housingCoordinator',
+      'middleSchoolAssistantCoordinator',
+      'highSchoolAssistantCoordinator',
+      'universityAssistantCoordinator',
+      'housingAssistantCoordinator',
+      'middleSchoolMentor',
+      'highSchoolMentor',
+      'houseLeader',
+      'studentHouseLeader',
+      'houseMember',
+      'studentHouseMember',
+      'accountant'
     ],
-    'director': ['middleSchoolCoordinator', 'highSchoolCoordinator', 'universityCoordinator', 'housingCoordinator'],
+    'director': [
+      'middleSchoolCoordinator',
+      'highSchoolCoordinator',
+      'universityCoordinator',
+      'housingCoordinator'
+    ],
     'middleSchoolCoordinator': ['middleSchoolAssistantCoordinator'],
     'highSchoolCoordinator': ['highSchoolAssistantCoordinator'],
     'universityCoordinator': ['universityAssistantCoordinator'],
@@ -34,12 +51,29 @@ class RolePermissions {
   static const Map<String, List<String>> nameSearchableRoles = {
     'admin': ['*'], // Herkesi
     'moderator': [
-      'director', 'middleSchoolCoordinator', 'highSchoolCoordinator', 'universityCoordinator', 
-      'housingCoordinator', 'middleSchoolAssistantCoordinator', 'highSchoolAssistantCoordinator',
-      'universityAssistantCoordinator', 'housingAssistantCoordinator', 'middleSchoolMentor',
-      'highSchoolMentor', 'houseLeader', 'studentHouseLeader', 'houseMember', 'studentHouseMember', 'accountant'
+      'director',
+      'middleSchoolCoordinator',
+      'highSchoolCoordinator',
+      'universityCoordinator',
+      'housingCoordinator',
+      'middleSchoolAssistantCoordinator',
+      'highSchoolAssistantCoordinator',
+      'universityAssistantCoordinator',
+      'housingAssistantCoordinator',
+      'middleSchoolMentor',
+      'highSchoolMentor',
+      'houseLeader',
+      'studentHouseLeader',
+      'houseMember',
+      'studentHouseMember',
+      'accountant'
     ], // Admin/Moderator hariç herkesi
-    'director': ['middleSchoolCoordinator', 'highSchoolCoordinator', 'universityCoordinator', 'housingCoordinator'],
+    'director': [
+      'middleSchoolCoordinator',
+      'highSchoolCoordinator',
+      'universityCoordinator',
+      'housingCoordinator'
+    ],
     'middleSchoolCoordinator': ['middleSchoolAssistantCoordinator'],
     'highSchoolCoordinator': ['highSchoolAssistantCoordinator'],
     'universityCoordinator': ['universityAssistantCoordinator'],
@@ -63,19 +97,22 @@ class RolePermissions {
   }
 
   // İsimle arama yetkisi kontrolü
-  static bool canSearchUserByName(String currentUserRole, List<String> targetUserRoles) {
+  static bool canSearchUserByName(
+      String currentUserRole, List<String> targetUserRoles) {
     final searchable = nameSearchableRoles[currentUserRole] ?? [];
-    
+
     // Admin her türlü arayabilir
     if (searchable.contains('*')) return true;
-    
+
     // User-only kişileri herkes bulabilir
-    if (targetUserRoles.isEmpty || (targetUserRoles.length == 1 && targetUserRoles.contains('user'))) {
+    if (targetUserRoles.isEmpty ||
+        (targetUserRoles.length == 1 && targetUserRoles.contains('user'))) {
       return true;
     }
-    
+
     // Hedef kullanıcının rollerinden herhangi biri aranabilir mi?
-    return targetUserRoles.any((role) => role != 'user' && searchable.contains(role));
+    return targetUserRoles
+        .any((role) => role != 'user' && searchable.contains(role));
   }
 
   // Kullanıcının atayabileceği rollerin listesi
@@ -85,27 +122,40 @@ class RolePermissions {
 }
 
 class UniversalRoleAssignmentPage extends StatefulWidget {
-  final String? contextRole; // Role context from which dashboard this was called
-  
+  final String?
+      contextRole; // Role context from which dashboard this was called
+
   const UniversalRoleAssignmentPage({
     super.key,
     this.contextRole,
   });
 
   @override
-  _UniversalRoleAssignmentPageState createState() => _UniversalRoleAssignmentPageState();
+  _UniversalRoleAssignmentPageState createState() =>
+      _UniversalRoleAssignmentPageState();
 }
 
-class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPage> with TickerProviderStateMixin {
+class _UniversalRoleAssignmentPageState
+    extends State<UniversalRoleAssignmentPage> with TickerProviderStateMixin {
   // 🚀 NEW: Modern search system controllers
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   // 🎯 Management roles list for checking user permissions
   final List<String> managementRoles = [
-    'moderator', 'director', 'middleSchoolCoordinator', 'highSchoolCoordinator', 
-    'universityCoordinator', 'housingCoordinator', 'middleSchoolAssistantCoordinator',
-    'highSchoolAssistantCoordinator', 'universityAssistantCoordinator', 'housingAssistantCoordinator',
-    'houseLeader', 'studentHouseLeader', 'middleSchoolMentor', 'highSchoolMentor'
+    'moderator',
+    'director',
+    'middleSchoolCoordinator',
+    'highSchoolCoordinator',
+    'universityCoordinator',
+    'housingCoordinator',
+    'middleSchoolAssistantCoordinator',
+    'highSchoolAssistantCoordinator',
+    'universityAssistantCoordinator',
+    'housingAssistantCoordinator',
+    'houseLeader',
+    'studentHouseLeader',
+    'middleSchoolMentor',
+    'highSchoolMentor'
   ];
   // New controllers for organizational units
   String? _selectedUnitGender;
@@ -114,16 +164,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
   Timer? _searchDebounce;
-  
+
   // Performance optimization - Search cache
   final Map<String, List<Map<String, dynamic>>> _searchCache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
   static const Duration _cacheExpiry = Duration(minutes: 5);
-  
+
   // Supervisor cache for performance
-  final Map<String, Map<String, List<Map<String, dynamic>>>> _supervisorCache = {};
+  final Map<String, Map<String, List<Map<String, dynamic>>>> _supervisorCache =
+      {};
   final Map<String, DateTime> _supervisorCacheTimestamps = {};
-  
+
   // Mentorship groups cache for lazy loading
   final Map<String, List<Map<String, dynamic>>> _mentorshipGroupsCache = {};
   final Map<String, DateTime> _mentorshipCacheTimestamps = {};
@@ -135,14 +186,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   String _message = '';
   String? _error;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   // Success message timer and animation state
   Timer? _successMessageTimer;
   bool _showSuccessMessage = false;
   bool _showDeletionMessage = false; // New flag for red deletion messages
   int _countdown = 5;
   double _progressValue = 1.0;
-  
+
   // Animation controller for slide out effect
   late AnimationController _slideAnimationController;
   late Animation<Offset> _slideAnimation;
@@ -151,66 +202,81 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   String? _targetUserName;
   String? _supervisorUserName;
   String? _supervisorUserRole;
-  
+
   bool? _supervisorRoleMatches;
 
   // New state for wizard flow
   String? _selectedCity;
   String? _selectedCountry;
   String? _selectedProvince;
-  
-  // _targetUserGender no longer used; Step 4 gender is _selectedUnitGender
 
+  // _targetUserGender no longer used; Step 4 gender is _selectedUnitGender
 
   // State for mentor assignment
   List<Map<String, dynamic>> _mentorshipGroups = [];
   String? _selectedMentorshipGroupId;
-  String? _selectedMentorshipGroupName; // 🎯 Cached selected class name to survive refetches
+  String?
+      _selectedMentorshipGroupName; // 🎯 Cached selected class name to survive refetches
 
   // 🚀 NEW: Supervisor dropdown system
-  
+
   Map<String, List<Map<String, dynamic>>> _supervisorsByCity = {};
   bool _isLoadingSupervisors = false;
   String? _selectedSupervisorId;
-  
+
   bool _isLoadingGroups = false;
   // String? _supervisorUnitPath; // removed unused field
-  
 
   // Simple step system
   int _currentStep = 1;
   int get _totalSteps {
     // 🎯 NEW: Always 5 steps for consistency
-    if (_selectedRole == null) return 2; // Still 2 for initial steps (search + role selection)
-    
-    bool needsSupervisor = _supervisorRoleHierarchy.containsKey(_selectedRole) || 
-                          _dependentRoles.contains(_selectedRole);
-    
+    if (_selectedRole == null)
+      return 2; // Still 2 for initial steps (search + role selection)
+
+    bool needsSupervisor =
+        _supervisorRoleHierarchy.containsKey(_selectedRole) ||
+            _dependentRoles.contains(_selectedRole);
+
     if (!needsSupervisor) {
       // Step 1: Search, Step 2: Role Selection, Step 3: Groups Need Supervision
       return 3;
     }
-    
+
     // 🎯 Management roles (unit-managing, mentors) always get full flow:
     // Step 1: Search, Step 2: Role, Step 3: Supervisor, Step 4: Details, Step 5: Groups Need Supervision
     if (_unitManagingRoles.contains(_selectedRole)) {
       return 5;
     }
-    
+
     // 🎯 Other roles with supervisor (like student):
-    // Step 1: Search, Step 2: Role, Step 3: Supervisor, Step 4: Groups Need Supervision  
+    // Step 1: Search, Step 2: Role, Step 3: Supervisor, Step 4: Groups Need Supervision
     return 4;
   }
 
   // TODO: Country/Province/City data should come from a centralized service
   final List<String> _countries = ['Canada', 'USA', 'UK'];
-  
+
   final Map<String, List<String>> _provincesByCountry = {
-    'Canada': ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan'],
-    'USA': ['New York', 'California', 'Illinois', 'Texas', 'Arizona', 'Florida'],
+    'Canada': [
+      'Ontario',
+      'Quebec',
+      'British Columbia',
+      'Alberta',
+      'Manitoba',
+      'Saskatchewan'
+    ],
+    'USA': [
+      'New York',
+      'California',
+      'Illinois',
+      'Texas',
+      'Arizona',
+      'Florida'
+    ],
     'UK': ['England', 'Scotland', 'Wales', 'Northern Ireland'],
   };
-  
+
   final Map<String, List<String>> _citiesByProvince = {
     // Canada
     'Ontario': ['Toronto', 'Ottawa', 'Mississauga', 'Hamilton', 'London'],
@@ -219,7 +285,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     'Alberta': ['Calgary', 'Edmonton', 'Red Deer', 'Lethbridge'],
     'Manitoba': ['Winnipeg', 'Brandon'],
     'Saskatchewan': ['Saskatoon', 'Regina'],
-    
+
     // USA
     'New York': ['New York City', 'Albany', 'Buffalo', 'Rochester'],
     'California': ['Los Angeles', 'San Francisco', 'San Diego', 'Sacramento'],
@@ -227,15 +293,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     'Texas': ['Houston', 'Dallas', 'Austin', 'San Antonio'],
     'Arizona': ['Phoenix', 'Tucson', 'Mesa'],
     'Florida': ['Miami', 'Orlando', 'Tampa', 'Jacksonville'],
-    
+
     // UK
     'England': ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Bristol'],
     'Scotland': ['Glasgow', 'Edinburgh', 'Aberdeen', 'Dundee'],
     'Wales': ['Cardiff', 'Swansea', 'Newport'],
     'Northern Ireland': ['Belfast', 'Derry', 'Lisburn'],
   };
-  
-  
 
   // Helper functions for location data
   List<String> _getProvincesForCountry(String country) {
@@ -245,10 +309,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   List<String> _getCitiesForProvince(String province) {
     return _citiesByProvince[province] ?? [];
   }
-
-
-
-
 
   // 🚀 NEW: Role hierarchy for determining primary role (highest rank first)
   static const List<String> _roleHierarchy = [
@@ -297,12 +357,16 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     'middleSchoolMentor': 'middleSchoolAssistantCoordinator',
     'highSchoolMentor': 'highSchoolAssistantCoordinator',
     'accountant': 'director',
-    'houseLeader': 'housingAssistantCoordinator', // 🎯 UPDATED: Housing assistant coordinator
-    'studentHouseLeader': 'universityAssistantCoordinator', // 🎯 NEW: University housing
-    'houseMember': 'houseLeader', // 🎯 NEW: House member supervised by house leader
-    'studentHouseMember': 'studentHouseLeader', // 🎯 NEW: Student house member supervised by student house leader
+    'houseLeader':
+        'housingAssistantCoordinator', // 🎯 UPDATED: Housing assistant coordinator
+    'studentHouseLeader':
+        'universityAssistantCoordinator', // 🎯 NEW: University housing
+    'houseMember':
+        'houseLeader', // 🎯 NEW: House member supervised by house leader
+    'studentHouseMember':
+        'studentHouseLeader', // 🎯 NEW: Student house member supervised by student house leader
   };
-  
+
   // Defines roles that manage a new organizational unit upon assignment.
   static const Set<String> _unitManagingRoles = {
     'moderator', // 🎯 NEW: Moderator now creates organizational unit
@@ -323,7 +387,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   };
 
   // Defines roles that require a supervisor but don't create a new unit.
-  static const Set<String> _dependentRoles = {'houseMember', 'studentHouseMember'};
+  static const Set<String> _dependentRoles = {
+    'houseMember',
+    'studentHouseMember'
+  };
 
   // Sadece seçilebilir rolleri ayrı bir liste olarak tut
   final List<String> _selectableRoles = [
@@ -348,9 +415,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   ];
 
   // 🚀 State variables for multi-role system
-  bool _isAddingNewRole = true; // TODO: Remove after refactoring to operation-based logic
+  bool _isAddingNewRole =
+      true; // TODO: Remove after refactoring to operation-based logic
   List<Map<String, dynamic>> _existingUserRoles = [];
-  
+
   // 🚀 New state variables for the enhanced multi-role system
   String _currentOperation = ''; // 'add', 'delete'
   String? _selectedExistingRole; // For delete operations
@@ -367,20 +435,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   String? _orphanedUnitChoice; // 'recover', 'create_new'
   String? _selectedOrphanedUnitId;
 
-
-
   // 🎯 NEW: Role hierarchy for consistent sorting (highest to lowest authority)
   static const List<String> _roleHierarchyOrder = [
     'admin',
-    'moderator', 
+    'moderator',
     'director',
     'middleSchoolCoordinator',
-    'highSchoolCoordinator', 
+    'highSchoolCoordinator',
     'universityCoordinator',
     'housingCoordinator',
     'middleSchoolAssistantCoordinator',
     'highSchoolAssistantCoordinator',
-    'universityAssistantCoordinator', 
+    'universityAssistantCoordinator',
     'housingAssistantCoordinator',
     'middleSchoolMentor',
     'highSchoolMentor',
@@ -393,37 +459,38 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   ];
 
   // 🎯 NEW: Sort roles by hierarchy (highest to lowest authority)
-  List<Map<String, dynamic>> _sortRolesByHierarchy(List<Map<String, dynamic>> roles) {
-    return roles..sort((a, b) {
-      final aIndex = _roleHierarchyOrder.indexOf(a['role'] as String);
-      final bIndex = _roleHierarchyOrder.indexOf(b['role'] as String);
-      
-      // If role not found in hierarchy, put it at the end
-      final aPos = aIndex == -1 ? _roleHierarchyOrder.length : aIndex;
-      final bPos = bIndex == -1 ? _roleHierarchyOrder.length : bIndex;
-      
-      return aPos.compareTo(bPos);
-    });
+  List<Map<String, dynamic>> _sortRolesByHierarchy(
+      List<Map<String, dynamic>> roles) {
+    return roles
+      ..sort((a, b) {
+        final aIndex = _roleHierarchyOrder.indexOf(a['role'] as String);
+        final bIndex = _roleHierarchyOrder.indexOf(b['role'] as String);
+
+        // If role not found in hierarchy, put it at the end
+        final aPos = aIndex == -1 ? _roleHierarchyOrder.length : aIndex;
+        final bPos = bIndex == -1 ? _roleHierarchyOrder.length : bIndex;
+
+        return aPos.compareTo(bPos);
+      });
   }
 
   // 🎯 NEW: Sort role strings by hierarchy (highest to lowest authority)
   List<String> _sortRoleStringsByHierarchy(List<String> roles) {
-    return roles..sort((a, b) {
-      final aIndex = _roleHierarchyOrder.indexOf(a);
-      final bIndex = _roleHierarchyOrder.indexOf(b);
-      
-      // If role not found in hierarchy, put it at the end
-      final aPos = aIndex == -1 ? _roleHierarchyOrder.length : aIndex;
-      final bPos = bIndex == -1 ? _roleHierarchyOrder.length : bIndex;
-      
-      return aPos.compareTo(bPos);
-    });
+    return roles
+      ..sort((a, b) {
+        final aIndex = _roleHierarchyOrder.indexOf(a);
+        final bIndex = _roleHierarchyOrder.indexOf(b);
+
+        // If role not found in hierarchy, put it at the end
+        final aPos = aIndex == -1 ? _roleHierarchyOrder.length : aIndex;
+        final bPos = bIndex == -1 ? _roleHierarchyOrder.length : bIndex;
+
+        return aPos.compareTo(bPos);
+      });
   }
 
   // 🚀 NEW: Find orphaned units that could be recovered for the current role
   Future<void> _checkForOrphanedUnits() async {
-    
-    
     if (!_unitManagingRoles.contains(_selectedRole)) {
       setState(() {
         _availableOrphanedUnits = [];
@@ -433,8 +500,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       });
       return;
     }
-    
-    
 
     try {
       // Determine expected unit characteristics
@@ -443,22 +508,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       // 🎯 NEW SYSTEM: Updated expected unit characteristics
       if (_selectedRole == 'moderator') {
         expectedUnitLevel = 'moderator';
-        
       } else if (_selectedRole == 'director') {
         expectedUnitLevel = 'director';
-        
-      } else if (_selectedRole!.contains('Coordinator') && !_selectedRole!.contains('AssistantCoordinator')) {
+      } else if (_selectedRole!.contains('Coordinator') &&
+          !_selectedRole!.contains('AssistantCoordinator')) {
         expectedUnitLevel = 'coordinator';
       } else if (_selectedRole!.contains('AssistantCoordinator')) {
         expectedUnitLevel = 'assistantCoordinator';
       } else if (_selectedRole == 'accountant') {
         expectedUnitLevel = 'accountant';
-        
       } else if (_selectedRole == 'middleSchoolMentor') {
         expectedUnitLevel = 'middleSchoolMentor';
       } else if (_selectedRole == 'highSchoolMentor') {
         expectedUnitLevel = 'highSchoolMentor';
-        
       } else if (_selectedRole == 'houseLeader') {
         expectedUnitLevel = 'houseLeader';
       } else if (_selectedRole == 'studentHouseLeader') {
@@ -474,22 +536,27 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       bool isAdmin = false;
       bool isModerator = false;
       if (currentUser != null) {
-        final currentUserDoc = await _firestore.collection('users').doc(currentUser.uid).get();
+        final currentUserDoc =
+            await _firestore.collection('users').doc(currentUser.uid).get();
         final currentUserData = currentUserDoc.data();
         final currentUserRoles = currentUserData?['roles'] as List<dynamic>?;
-        isAdmin = currentUserRoles?.any((role) => role['role'] == 'admin') == true;
-        isModerator = currentUserRoles?.any((role) => role['role'] == 'moderator') == true;
+        isAdmin =
+            currentUserRoles?.any((role) => role['role'] == 'admin') == true;
+        isModerator =
+            currentUserRoles?.any((role) => role['role'] == 'moderator') ==
+                true;
       }
 
       // Search for orphaned units
-      var query = _firestore.collection('organizationalUnits')
+      var query = _firestore
+          .collection('organizationalUnits')
           .where('status', isEqualTo: 'pendingReassignment');
 
       // Add level filter if available
       if (expectedUnitLevel != null) {
         query = query.where('level', isEqualTo: expectedUnitLevel);
       }
-      
+
       // 🎯 Location-based filtering
       if (isAdmin) {
         // Admin sees all orphaned units globally - no filtering
@@ -509,50 +576,61 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       }
 
       final results = await query.get();
-      
+
       List<Map<String, dynamic>> orphanedUnits = [];
-      
+
       for (final doc in results.docs) {
         final data = doc.data();
         final unitName = data['name'] as String?;
         final unitLevel = data['level'] as String?;
-        
+
         // 🎯 NEW SYSTEM: Check if this unit is relevant for the current role
         bool isRelevant = false;
-        
+
         if (_selectedRole == 'moderator' && unitLevel == 'moderator') {
           isRelevant = true;
         } else if (_selectedRole == 'director' && unitLevel == 'director') {
           isRelevant = true;
-        } else if (_selectedRole!.contains('Coordinator') && !_selectedRole!.contains('AssistantCoordinator') && unitLevel == 'coordinator') {
+        } else if (_selectedRole!.contains('Coordinator') &&
+            !_selectedRole!.contains('AssistantCoordinator') &&
+            unitLevel == 'coordinator') {
           // Check if it matches the education level
-          final roleEducationLevel = _selectedRole!.replaceAll('Coordinator', '').toLowerCase();
+          final roleEducationLevel =
+              _selectedRole!.replaceAll('Coordinator', '').toLowerCase();
           final unitNameLower = unitName?.toLowerCase() ?? '';
-          if (unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'))) {
+          if (unitNameLower
+              .contains(roleEducationLevel.replaceAll('school', ' school'))) {
             isRelevant = true;
           }
-        } else if (_selectedRole!.contains('AssistantCoordinator') && unitLevel == 'assistantCoordinator') {
+        } else if (_selectedRole!.contains('AssistantCoordinator') &&
+            unitLevel == 'assistantCoordinator') {
           // For assistant coordinators, check if it matches the education level
-          final roleEducationLevel = _selectedRole!.replaceAll('AssistantCoordinator', '').toLowerCase();
+          final roleEducationLevel = _selectedRole!
+              .replaceAll('AssistantCoordinator', '')
+              .toLowerCase();
           final unitNameLower = unitName?.toLowerCase() ?? '';
-          if (unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'))) {
+          if (unitNameLower
+              .contains(roleEducationLevel.replaceAll('school', ' school'))) {
             isRelevant = true;
           }
         } else if (_selectedRole == 'accountant' && unitLevel == 'accountant') {
           isRelevant = true;
-        } else if ((_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') && unitLevel == 'mentor') {
+        } else if ((_selectedRole == 'middleSchoolMentor' ||
+                _selectedRole == 'highSchoolMentor') &&
+            unitLevel == 'mentor') {
           // Check if it matches the education level
-          final roleEducationLevel = _selectedRole!.replaceAll('Mentor', '').toLowerCase();
+          final roleEducationLevel =
+              _selectedRole!.replaceAll('Mentor', '').toLowerCase();
           final unitNameLower = unitName?.toLowerCase() ?? '';
-          if (unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'))) {
+          if (unitNameLower
+              .contains(roleEducationLevel.replaceAll('school', ' school'))) {
             isRelevant = true;
           }
-        } else if (_selectedRole == 'houseLeader' && unitLevel == 'houseLeader') {
+        } else if (_selectedRole == 'houseLeader' &&
+            unitLevel == 'houseLeader') {
           isRelevant = true;
         }
-        
-        
-        
+
         if (isRelevant) {
           final unitData = Map<String, dynamic>.from(data);
           unitData['id'] = doc.id;
@@ -567,7 +645,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         _orphanedUnitChoice = null;
         _selectedOrphanedUnitId = null;
       });
-
     } catch (e) {
 // print('Error checking for orphaned units: $e');
       setState(() {
@@ -583,208 +660,233 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Widget _buildOrphanedUnitsChoiceStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.start, // 🎯 Force content to start from top
+      mainAxisAlignment:
+          MainAxisAlignment.start, // 🎯 Force content to start from top
       children: [
         Expanded(
           child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Groups Need Supervision',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _availableOrphanedUnits.isNotEmpty 
-                ? 'Found ${_availableOrphanedUnits.length} group${_availableOrphanedUnits.length == 1 ? '' : 's'} without supervision. Choose what to do:'
-                : 'Choose what to do:',
-            style: const TextStyle(fontSize: 16, color: Colors.white70),
-          ),
-          const SizedBox(height: 30),
-          
-          // Choice options
-          _buildChoiceOption(
-            'create_new',
-            'Create New Group',
-            'Start fresh with a completely new group',
-            Icons.group_add,
-            Colors.green,
-          ),
-          const SizedBox(height: 16),
-          _buildChoiceOption(
-            'recover',
-            'Take Over Existing Group',
-            'Assign supervision to a group that needs help',
-            Icons.supervisor_account,
-            Colors.blue,
-          ),
-          
-          // Show available orphaned units if recover is selected
-          if (_orphanedUnitChoice == 'recover') ...[
-            const SizedBox(height: 24),
-            const Text(
-              'Choose Group:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ..._availableOrphanedUnits.asMap().entries.map((entry) {
-              final index = entry.key;
-              final unit = entry.value;
-              return _buildOrphanedUnitOption(unit, index);
-            }),
-          ],
-          
-          const SizedBox(height: 40),
-          
-          // Progress indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: _orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null)
-                      ? Colors.green.withOpacity(0.2)
-                      : Colors.orange.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null)
-                        ? Colors.green.withOpacity(0.4)
-                        : Colors.orange.withOpacity(0.4),
-                  ),
-                ),
-                child: Text(
-                  _orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null)
-                      ? 'Ready to assign'
-                      : 'Choose an option above',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Groups Need Supervision',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 30),
-          
-          // Navigation buttons
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Colors.white.withOpacity(0.2),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                const SizedBox(height: 8),
+                Text(
+                  _availableOrphanedUnits.isNotEmpty
+                      ? 'Found ${_availableOrphanedUnits.length} group${_availableOrphanedUnits.length == 1 ? '' : 's'} without supervision. Choose what to do:'
+                      : 'Choose what to do:',
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
+                ),
+                const SizedBox(height: 30),
+
+                // Choice options
+                _buildChoiceOption(
+                  'create_new',
+                  'Create New Group',
+                  'Start fresh with a completely new group',
+                  Icons.group_add,
+                  Colors.green,
+                ),
+                const SizedBox(height: 16),
+                _buildChoiceOption(
+                  'recover',
+                  'Take Over Existing Group',
+                  'Assign supervision to a group that needs help',
+                  Icons.supervisor_account,
+                  Colors.blue,
+                ),
+
+                // Show available orphaned units if recover is selected
+                if (_orphanedUnitChoice == 'recover') ...[
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Choose Group:',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ..._availableOrphanedUnits.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final unit = entry.value;
+                    return _buildOrphanedUnitOption(unit, index);
+                  }),
+                ],
+
+                const SizedBox(height: 40),
+
+                // Progress indicator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _orphanedUnitChoice != null &&
+                                (_orphanedUnitChoice != 'recover' ||
+                                    _selectedOrphanedUnitId != null)
+                            ? Colors.green.withOpacity(0.2)
+                            : Colors.orange.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _orphanedUnitChoice != null &&
+                                  (_orphanedUnitChoice != 'recover' ||
+                                      _selectedOrphanedUnitId != null)
+                              ? Colors.green.withOpacity(0.4)
+                              : Colors.orange.withOpacity(0.4),
+                        ),
+                      ),
+                      child: Text(
+                        _orphanedUnitChoice != null &&
+                                (_orphanedUnitChoice != 'recover' ||
+                                    _selectedOrphanedUnitId != null)
+                            ? 'Ready to assign'
+                            : 'Choose an option above',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: _goToPreviousStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                  label: const Text('Back', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const Spacer(),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: (_orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null))
-                      ? Colors.green.withOpacity(0.3)
-                      : Colors.white.withOpacity(0.1),
-                  border: Border.all(
-                    color: (_orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null))
-                        ? Colors.green.withOpacity(0.5)
-                        : Colors.white.withOpacity(0.2),
-                  ),
-                  boxShadow: (_orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null))
-                      ? [
+
+                const SizedBox(height: 30),
+
+                // Navigation buttons
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withOpacity(0.2),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.3)),
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.2),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ]
-                      : [],
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: _goToPreviousStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                        ),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                        label: const Text('Back',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: (_orphanedUnitChoice != null &&
+                                (_orphanedUnitChoice != 'recover' ||
+                                    _selectedOrphanedUnitId != null))
+                            ? Colors.green.withOpacity(0.3)
+                            : Colors.white.withOpacity(0.1),
+                        border: Border.all(
+                          color: (_orphanedUnitChoice != null &&
+                                  (_orphanedUnitChoice != 'recover' ||
+                                      _selectedOrphanedUnitId != null))
+                              ? Colors.green.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.2),
+                        ),
+                        boxShadow: (_orphanedUnitChoice != null &&
+                                (_orphanedUnitChoice != 'recover' ||
+                                    _selectedOrphanedUnitId != null))
+                            ? [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.2),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: (_orphanedUnitChoice != null &&
+                                (_orphanedUnitChoice != 'recover' ||
+                                    _selectedOrphanedUnitId != null))
+                            ? assignRole // Step 5 is always the final step
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                        ),
+                        icon: const Icon(Icons.check_circle_rounded, size: 20),
+                        label: const Text('Complete',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: (_orphanedUnitChoice != null && (_orphanedUnitChoice != 'recover' || _selectedOrphanedUnitId != null)) 
-                      ? assignRole // Step 5 is always the final step
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  icon: const Icon(Icons.check_circle_rounded, size: 20),
-                  label: const Text(
-                    'Complete', 
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildChoiceOption(String value, String title, String description, IconData icon, Color color) {
+  Widget _buildChoiceOption(String value, String title, String description,
+      IconData icon, Color color) {
     final isSelected = _orphanedUnitChoice == value;
     final isDisabled = value == 'recover' && _availableOrphanedUnits.isEmpty;
-    
+
     return GestureDetector(
-      onTap: isDisabled ? null : () {
-        setState(() {
-          _orphanedUnitChoice = value;
-          if (value != 'recover') {
-            _selectedOrphanedUnitId = null;
-          }
-        });
-      },
+      onTap: isDisabled
+          ? null
+          : () {
+              setState(() {
+                _orphanedUnitChoice = value;
+                if (value != 'recover') {
+                  _selectedOrphanedUnitId = null;
+                }
+              });
+            },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDisabled
               ? Colors.grey.withOpacity(0.35) // Daha belirgin
-              : isSelected 
-              ? color.withOpacity(0.2) 
-              : Colors.white.withOpacity(0.1),
+              : isSelected
+                  ? color.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDisabled
                 ? Colors.grey.withOpacity(0.6) // Daha belirgin border
-                : isSelected 
-                ? color.withOpacity(0.5) 
-                : Colors.white.withOpacity(0.3),
+                : isSelected
+                    ? color.withOpacity(0.5)
+                    : Colors.white.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -793,12 +895,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDisabled 
-                    ? Colors.grey.withOpacity(0.3) // Disabled için daha belirgin
+                color: isDisabled
+                    ? Colors.grey
+                        .withOpacity(0.3) // Disabled için daha belirgin
                     : color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: isDisabled ? Colors.grey.shade300 : color, size: 24),
+              child: Icon(icon,
+                  color: isDisabled ? Colors.grey.shade300 : color, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -806,7 +910,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isDisabled ? 'Take Over Existing Group\n(No groups available)' : title,
+                    isDisabled
+                        ? 'Take Over Existing Group\n(No groups available)'
+                        : title,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -815,7 +921,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isDisabled ? 'There are currently no orphaned groups to take over' : description,
+                    isDisabled
+                        ? 'There are currently no orphaned groups to take over'
+                        : description,
                     style: TextStyle(
                       fontSize: 14,
                       color: isDisabled ? Colors.grey.shade500 : Colors.white70,
@@ -824,8 +932,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 24),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
           ],
         ),
       ),
@@ -837,7 +944,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     final unitName = unit['name'] as String? ?? 'Unknown Unit';
     final status = unit['status'] as String? ?? 'unknown';
     final daysOrphaned = _calculateDaysOrphaned(unit);
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -848,13 +955,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? Colors.blue.withOpacity(0.2) 
+          color: isSelected
+              ? Colors.blue.withOpacity(0.2)
               : Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
-                ? Colors.blue.withOpacity(0.5) 
+            color: isSelected
+                ? Colors.blue.withOpacity(0.5)
                 : Colors.white.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
@@ -896,7 +1003,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     try {
       final reassignmentNeeded = unit['reassignmentNeededAt'];
       if (reassignmentNeeded != null) {
-        final timestamp = reassignmentNeeded is Timestamp 
+        final timestamp = reassignmentNeeded is Timestamp
             ? reassignmentNeeded.toDate()
             : DateTime.parse(reassignmentNeeded.toString());
         return DateTime.now().difference(timestamp).inDays;
@@ -916,7 +1023,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       default:
         statusText = 'Needs help';
     }
-    
+
     if (daysOrphaned > 0) {
       return '$statusText • $daysOrphaned day${daysOrphaned == 1 ? '' : 's'} ago';
     }
@@ -934,13 +1041,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
     try {
       // Search for existing organizational units with same characteristics
-      final results = await _firestore.collection('organizationalUnits')
+      final results = await _firestore
+          .collection('organizationalUnits')
           .where('name', isEqualTo: unitName)
           .get();
-      
+
       for (final doc in results.docs) {
         final data = doc.data();
-        
+
         // Additional validation for exact match
         if (unitType != null && data['type'] != unitType) continue;
         if (unitLevel != null && data['level'] != unitLevel) continue;
@@ -960,8 +1068,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     }
   }
 
-
-
   // 🚀 New methods for enhanced multi-role system
 
   void _selectOperation(String operation) {
@@ -973,7 +1079,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       _selectedExistingRole = null;
       _message = '';
       // 🚀 FIXED: Don't reset user data - keep the validated user info
-      // _targetUserName = null; 
+      // _targetUserName = null;
       _supervisorUserName = null;
       _supervisorUserRole = null;
       _supervisorRoleMatches = false;
@@ -981,20 +1087,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       // _currentStep = 2; // Reset to step 2 (role selection)
       // 🚀 FIXED: Don't clear existing user roles - we need them for UI
       // _existingUserRoles.clear();
-      
+
       // Clear all validation states for next steps
       _selectedCountry = null;
       _selectedCity = null;
       _selectedUnitGender = null;
       _selectedMentorshipGroupId = null;
       _mentorshipGroups.clear();
-      
+
       // Clear supervisor selection state
       _selectedSupervisorId = null;
-      
+
       // 🚀 FIXED: Legacy onIdChanged removed
     });
-    
+
     // 🎯 UX IMPROVEMENT: Smooth scroll to role selection section
     // Give setState a moment to rebuild UI, then scroll
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1005,12 +1111,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   // 🎯 UX IMPROVEMENT: Smooth scroll to role selection section
   void _scrollToRoleSelection() {
     if (!_scrollController.hasClients) return;
-    
+
     // Calculate approximate position of role selection section
     // This is roughly after the operation buttons section
     final screenHeight = MediaQuery.of(context).size.height;
-    final scrollOffset = screenHeight * 0.4; // Scroll down about 40% of screen height
-    
+    final scrollOffset =
+        screenHeight * 0.4; // Scroll down about 40% of screen height
+
     _scrollController.animateTo(
       scrollOffset,
       duration: const Duration(milliseconds: 800),
@@ -1021,14 +1128,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   // 🎯 UX IMPROVEMENT: Smooth scroll to mentor class section after gender selection
   void _scrollToMentorClassSection() {
     if (!_scrollController.hasClients) return;
-    
+
     // Give setState a moment to rebuild the UI with mentor class section
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Calculate approximate position where mentor class section appears
       // This is roughly after gender selection in the details step
       final screenHeight = MediaQuery.of(context).size.height;
-      final scrollOffset = screenHeight * 0.7; // Scroll down about 70% of screen height
-      
+      final scrollOffset =
+          screenHeight * 0.7; // Scroll down about 70% of screen height
+
       _scrollController.animateTo(
         scrollOffset,
         duration: const Duration(milliseconds: 800),
@@ -1051,7 +1159,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   void _showDeleteConfirmation() {
     if (_selectedExistingRole == null) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1064,7 +1172,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             SizedBox(width: 12),
             Text(
               'Confirm Role Deletion',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -1077,7 +1188,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 16),
-            
+
             // Role to be deleted
             Container(
               width: double.infinity,
@@ -1089,12 +1200,16 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ),
               child: Row(
                 children: [
-                  Icon(_getRoleIcon(_selectedExistingRole!), color: Colors.red, size: 20),
+                  Icon(_getRoleIcon(_selectedExistingRole!),
+                      color: Colors.red, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                    _getRoleTitle(_selectedExistingRole!),
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      _getRoleTitle(_selectedExistingRole!),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                     ),
@@ -1102,42 +1217,54 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
             Text(
               'After deletion, the user will have these roles:',
               style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            
+
             // Remaining roles (excluding user role)
-            if (_existingUserRoles.where((r) => r['role'] != _selectedExistingRole && r['role'] != 'user').isNotEmpty)
-              ...(_sortRolesByHierarchy(_existingUserRoles.where((r) => r['role'] != _selectedExistingRole && r['role'] != 'user').toList()).map((role) => 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withOpacity(0.4)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(_getRoleIcon(role['role']), color: Colors.green, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                        _getRoleTitle(role['role']),
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+            if (_existingUserRoles
+                .where((r) =>
+                    r['role'] != _selectedExistingRole && r['role'] != 'user')
+                .isNotEmpty)
+              ...(_sortRolesByHierarchy(_existingUserRoles
+                      .where((r) =>
+                          r['role'] != _selectedExistingRole &&
+                          r['role'] != 'user')
+                      .toList())
+                  .map(
+                    (role) => Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: Colors.green.withOpacity(0.4)),
                       ),
-                    ],
-                  ),
-                ),
-              ).toList())
+                      child: Row(
+                        children: [
+                          Icon(_getRoleIcon(role['role']),
+                              color: Colors.green, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _getRoleTitle(role['role']),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList())
             else
               Container(
                 width: double.infinity,
@@ -1159,11 +1286,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ],
                 ),
               ),
-            
+
             const SizedBox(height: 16),
             const Text(
               'Are you sure you want to proceed?',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -1175,7 +1305,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
@@ -1183,11 +1314,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ),
                   child: const Text(
                     'Cancel',
-                    style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              
+
               // Confirm button - Sağ alt
               TextButton(
                 onPressed: () {
@@ -1195,7 +1329,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   _performRoleDeletion();
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.red.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
@@ -1203,7 +1338,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ),
                   child: const Text(
                     'Confirm',
-                    style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -1216,10 +1354,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   Future<void> _performRoleDeletion() async {
     setState(() => _isLoading = true);
-    
-    try {
 
-      
+    try {
       // Try multiple sources for target user ID
       String targetUserId = '';
       if (_selectedUser != null) {
@@ -1228,7 +1364,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       } else {
         // Try to find user by Member ID if available
         for (final result in _searchResults) {
-          if (result['firstName'] == _targetUserName?.split(' ').first && 
+          if (result['firstName'] == _targetUserName?.split(' ').first &&
               result['lastName'] == _targetUserName?.split(' ').last) {
             targetUserId = result['uid'] ?? result['id'] ?? '';
             if (targetUserId.isNotEmpty) {
@@ -1237,30 +1373,31 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           }
         }
       }
-      
+
       if (targetUserId.isEmpty) {
         setState(() {
-          _message = 'Error: Could not find target user ID. Please try selecting the user again.';
+          _message =
+              'Error: Could not find target user ID. Please try selecting the user again.';
           _isLoading = false;
         });
         return;
       }
-      
+
       final targetUserRef = _firestore.collection('users').doc(targetUserId);
-      
+
       // Get current data
       final targetUserDoc = await targetUserRef.get();
       final userData = targetUserDoc.data();
-      
+
       if (userData == null) {
         throw Exception('User data not found');
       }
-      
+
       // 🚀 NEW: Remove selected role and recalculate primary role
       // Remove the role from roles array
       List<Map<String, dynamic>> updatedRoles = List.from(_existingUserRoles);
       updatedRoles.removeWhere((r) => r['role'] == _selectedExistingRole);
-      
+
       // Determine the new primary role after deletion
       String newPrimaryRole = 'user'; // Default to user
       if (updatedRoles.isNotEmpty) {
@@ -1271,17 +1408,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         );
         newPrimaryRole = nonUserRole['role'];
       }
-      
+
       // Prepare comprehensive cleanup for role deletion
       final updateData = <String, dynamic>{
         'roles': updatedRoles,
-        'role': newPrimaryRole, // Update primary role for backward compatibility
+        'role':
+            newPrimaryRole, // Update primary role for backward compatibility
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      
+
       // 🎯 Check if user still has any management roles after deletion
-      
-      
+
       // If user now only has 'user' role, clean up all role-specific data
       if (newPrimaryRole == 'user' && updatedRoles.length == 1) {
         // Clean up assignment metadata
@@ -1289,60 +1426,61 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         updateData['assignedAt'] = FieldValue.delete();
         updateData['assignedCountry'] = FieldValue.delete();
         // Note: managesEntity is now handled per-role in roles array, no top-level field
-        
+
         // Clean up role-specific geographic data (only if they were role-specific)
         // Keep personal data like firstName, lastName, email, gender, createdAt
         updateData['parentUnit'] = FieldValue.delete();
         updateData['department'] = FieldValue.delete();
-        
+
         // Note: We keep city, country, province as they might be personal info
         // 🔧 REMOVED: Username deletion logic that was causing usernames to disappear
         // Previous code was deleting usernames that contained role keywords, which was too aggressive
         // and could delete legitimate usernames. Personal usernames should be preserved.
-      } 
+      }
       // 🎯 NEW: If deleted role was management role, it's already removed from roles array
       // No need to clear top-level managesEntity as we use per-role managesEntity
-                 // User still has other roles, only clean up deleted role specific data
+      // User still has other roles, only clean up deleted role specific data
       else {
-         // You might want to check if the specific deleted role had assignedCountry etc.
-         if (_selectedExistingRole == 'moderator') {
-           updateData['assignedCountry'] = FieldValue.delete();
-         }
+        // You might want to check if the specific deleted role had assignedCountry etc.
+        if (_selectedExistingRole == 'moderator') {
+          updateData['assignedCountry'] = FieldValue.delete();
+        }
       }
-      
+
       // Update user document with comprehensive cleanup
       await targetUserRef.update(updateData);
-      
-      // Update organizationalUnits collection for role deletion
-      await _handleOrganizationalUnitForRoleDeletion(targetUserId, _selectedExistingRole!);
-      
 
-      
+      // Update organizationalUnits collection for role deletion
+      await _handleOrganizationalUnitForRoleDeletion(
+          targetUserId, _selectedExistingRole!);
+
       // 🔧 FIX: Create success message before clearing any data
-      final userName = _selectedUser != null 
-          ? '${_selectedUser!['firstName'] ?? ''} ${_selectedUser!['lastName'] ?? ''}'.trim()
+      final userName = _selectedUser != null
+          ? '${_selectedUser!['firstName'] ?? ''} ${_selectedUser!['lastName'] ?? ''}'
+              .trim()
           : (_targetUserName ?? 'Unknown User');
-      final successMessage = '${_getRoleTitle(_selectedExistingRole!)} role removed successfully from $userName!';
-      
+      final successMessage =
+          '${_getRoleTitle(_selectedExistingRole!)} role removed successfully from $userName!';
+
       // Clear controllers BEFORE setting success message to avoid triggering listeners
       _searchController.clear();
       _searchController.clear();
-      
+
       // 🚨 FIX: Clear search cache to prevent stale data when searching same user again
       _searchCache.clear();
       _cacheTimestamps.clear();
-      
+
       // 🚀 Show deletion success message with red styling
       _showDeletionSuccessMessageWithTimer(successMessage);
-      
+
       setState(() {
-        _isLoading = false; 
+        _isLoading = false;
         _currentStep = 1;
         _showRoleSelection = false;
         _currentOperation = '';
         _selectedExistingRole = null;
         _existingUserRoles = updatedRoles;
-        
+
         // 🔧 FIX: Clear other form data (controllers already cleared above)
         _selectedUser = null;
         _searchResults = [];
@@ -1350,7 +1488,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         _targetUserName = null;
         // _targetUserRole removed
       });
-      
     } catch (e) {
       setState(() {
         _message = 'Error deleting role: $e';
@@ -1364,15 +1501,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     try {
       final userDoc = await _firestore.collection('users').doc(userId).get();
       if (!userDoc.exists) return [];
-      
+
       final userData = userDoc.data();
       if (userData == null) return [];
-      
+
       // New system: roles array exists
       if (userData['roles'] != null) {
         return List<Map<String, dynamic>>.from(userData['roles']);
       }
-      
+
       // Old system: single role field - convert to new format
       if (userData['role'] != null) {
         // 🎯 Get managesEntity from roles array if available, fallback to top-level for backward compatibility
@@ -1389,16 +1526,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         }
         // Fallback to top-level managesEntity for backward compatibility
         managesEntityForRole ??= userData['managesEntity'] as String?;
-        
-        return [{
-          'role': userData['role'],
-          'managesEntity': managesEntityForRole,
-          'assignedBy': userData['assignedBy'] ?? 'system',
-          'assignedAt': userData['assignedAt'] ?? DateTime.now().millisecondsSinceEpoch,
-          'isDefault': userData['role'] == 'user',
-        }];
+
+        return [
+          {
+            'role': userData['role'],
+            'managesEntity': managesEntityForRole,
+            'assignedBy': userData['assignedBy'] ?? 'system',
+            'assignedAt':
+                userData['assignedAt'] ?? DateTime.now().millisecondsSinceEpoch,
+            'isDefault': userData['role'] == 'user',
+          }
+        ];
       }
-      
+
       return [];
     } catch (e) {
       return [];
@@ -1409,166 +1549,186 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Future<void> _performMultiRoleAssignment() async {
     final targetMemberId = _selectedUser?['memberId'] ?? '';
     final supervisorMemberId = _selectedSupervisorId ?? '';
-    
+
     // 🎉 NEW: Convert Member ID to UID for target user
     final targetUserId = await _getUidFromMemberId(targetMemberId);
     if (targetUserId == null) {
-
-      setState(() { _message = 'Target Member ID not found.'; _isLoading = false; });
+      setState(() {
+        _message = 'Target Member ID not found.';
+        _isLoading = false;
+      });
       return;
     }
-    
+
     // 🎉 NEW: Convert Member ID to UID for supervisor
     String? finalSupervisorId;
     if (supervisorMemberId.isNotEmpty) {
- 
       finalSupervisorId = await _getUidFromMemberId(supervisorMemberId);
- 
+
       if (finalSupervisorId == null) {
- 
-        setState(() { _message = 'Supervisor Member ID not found.'; _isLoading = false; });
+        setState(() {
+          _message = 'Supervisor Member ID not found.';
+          _isLoading = false;
+        });
         return;
       }
     }
- 
+
     final batch = _firestore.batch();
 
     try {
- 
       if (targetUserId.isEmpty) {
- 
         throw Exception('Target user ID is empty');
       }
-      
- 
+
       final targetUserRef = _firestore.collection('users').doc(targetUserId);
-      
+
       final targetUserDoc = await targetUserRef.get();
       if (!targetUserDoc.exists) {
- 
         throw Exception('Target user document does not exist: $targetUserId');
       }
-
 
       // targetUserData not used
 
       // Get existing roles
- 
+
       _existingUserRoles = await _getExistingRoles(targetUserId);
- 
-      
+
       // Ensure user role exists (everyone must have user role)
- 
+
       bool hasUserRole = _existingUserRoles.any((r) => r['role'] == 'user');
       if (!hasUserRole) {
- 
         _existingUserRoles.add({
           'role': 'user',
           'managesEntity': null,
           'assignedBy': 'system',
-          'assignedAt': DateTime.now().millisecondsSinceEpoch, // Use regular timestamp
+          'assignedAt':
+              DateTime.now().millisecondsSinceEpoch, // Use regular timestamp
           'isDefault': true,
         });
-      } else {
- 
-      }
+      } else {}
 
       // Handle role assignment
- 
+
       List<Map<String, dynamic>> updatedRoles = List.from(_existingUserRoles);
       if (!_isAddingNewRole) {
-        // Legacy behavior: remove all non-user roles 
- 
+        // Legacy behavior: remove all non-user roles
+
         updatedRoles.removeWhere((r) => r['role'] != 'user');
-      } else {
- 
-      }
+      } else {}
 
       // Supervisor validation
- 
+
       DocumentReference? parentUnitRef;
       DocumentSnapshot? supervisorDoc;
       // newUnitName is set later inside creation methods
       String? parentUnitName;
 
       final requiredSupervisorRole = _supervisorRoleHierarchy[_selectedRole];
- 
+
       if (requiredSupervisorRole != null) {
         if (finalSupervisorId == null || finalSupervisorId.isEmpty) {
- 
-          setState(() { _message = 'This role requires a Supervisor Member ID.'; _isLoading = false; });
+          setState(() {
+            _message = 'This role requires a Supervisor Member ID.';
+            _isLoading = false;
+          });
           return;
         }
-        
- 
-        supervisorDoc = await _firestore.collection('users').doc(finalSupervisorId).get();
+
+        supervisorDoc =
+            await _firestore.collection('users').doc(finalSupervisorId).get();
         if (!supervisorDoc.exists) {
- 
-          setState(() { _message = 'Supervisor Member ID does not exist.'; _isLoading = false; });
+          setState(() {
+            _message = 'Supervisor Member ID does not exist.';
+            _isLoading = false;
+          });
           return;
         }
-        
+
         final supervisorData = supervisorDoc.data() as Map<String, dynamic>?;
         if (supervisorData == null) {
- 
-          setState(() { _message = 'Could not read supervisor data.'; _isLoading = false; });
+          setState(() {
+            _message = 'Could not read supervisor data.';
+            _isLoading = false;
+          });
           return;
         }
-        
+
         final supervisorRole = supervisorData['role'] as String?;
- 
-        
+
         // Supervisor role validation
         bool isValidSupervisor = false;
         if (_selectedRole == 'director') {
           isValidSupervisor = (supervisorRole == 'moderator');
           if (!isValidSupervisor) {
- 
-            setState(() { _message = 'Invalid Supervisor. Expected role: Moderator.'; _isLoading = false; });
+            setState(() {
+              _message = 'Invalid Supervisor. Expected role: Moderator.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (_selectedRole == 'moderator') {
           isValidSupervisor = (supervisorRole == 'admin');
           if (!isValidSupervisor) {
- 
-            setState(() { _message = 'Invalid Supervisor. Expected role: Admin.'; _isLoading = false; });
+            setState(() {
+              _message = 'Invalid Supervisor. Expected role: Admin.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (_selectedRole == 'houseLeader') {
           // 🎯 UPDATED: houseLeader now supervised only by housing assistant coordinator
           isValidSupervisor = (supervisorRole == 'housingAssistantCoordinator');
           if (!isValidSupervisor) {
-            setState(() { _message = 'Invalid Supervisor. Expected role: Housing Assistant Coordinator.'; _isLoading = false; });
+            setState(() {
+              _message =
+                  'Invalid Supervisor. Expected role: Housing Assistant Coordinator.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (_selectedRole == 'studentHouseLeader') {
           // 🎯 NEW: studentHouseLeader supervised by university assistant coordinator
-          isValidSupervisor = (supervisorRole == 'universityAssistantCoordinator');
+          isValidSupervisor =
+              (supervisorRole == 'universityAssistantCoordinator');
           if (!isValidSupervisor) {
-            setState(() { _message = 'Invalid Supervisor. Expected role: University Assistant Coordinator.'; _isLoading = false; });
+            setState(() {
+              _message =
+                  'Invalid Supervisor. Expected role: University Assistant Coordinator.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (_selectedRole == 'houseMember') {
           // 🎯 NEW: houseMember supervised by house leader
           isValidSupervisor = (supervisorRole == 'houseLeader');
           if (!isValidSupervisor) {
-            setState(() { _message = 'Invalid Supervisor. Expected role: House Leader.'; _isLoading = false; });
+            setState(() {
+              _message = 'Invalid Supervisor. Expected role: House Leader.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (_selectedRole == 'studentHouseMember') {
           // 🎯 NEW: studentHouseMember supervised by student house leader
           isValidSupervisor = (supervisorRole == 'studentHouseLeader');
           if (!isValidSupervisor) {
-            setState(() { _message = 'Invalid Supervisor. Expected role: Student House Leader.'; _isLoading = false; });
+            setState(() {
+              _message =
+                  'Invalid Supervisor. Expected role: Student House Leader.';
+              _isLoading = false;
+            });
             return;
           }
         } else if (supervisorRole != requiredSupervisorRole) {
- 
-          setState(() { _message = 'Invalid Supervisor. Expected role: ${_getRoleTitle(requiredSupervisorRole)}.'; _isLoading = false; });
+          setState(() {
+            _message =
+                'Invalid Supervisor. Expected role: ${_getRoleTitle(requiredSupervisorRole)}.';
+            _isLoading = false;
+          });
           return;
         }
-        
-        
+
         // 🎯 Get supervisor's managesEntity from their roles array
         String? parentEntityPath;
         final supervisorRoles = supervisorData['roles'] as List<dynamic>?;
@@ -1579,7 +1739,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               final role = r is Map ? r['role']?.toString() : null;
               final roleLower = role?.toLowerCase();
               // 🎯 FIX: Compare with lowercase versions of management roles
-              final managementRolesLower = managementRoles.map((r) => r.toLowerCase()).toList();
+              final managementRolesLower =
+                  managementRoles.map((r) => r.toLowerCase()).toList();
               return r is Map && managementRolesLower.contains(roleLower);
             },
             orElse: () => null,
@@ -1590,17 +1751,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         }
         // Fallback to top-level managesEntity for backward compatibility
         parentEntityPath ??= supervisorData['managesEntity'] as String?;
-        
+
         // Only process parent entity for roles that actually need it
         // Moderator role doesn't need parent entity information
-        if (parentEntityPath != null && parentEntityPath.isNotEmpty && _selectedRole != 'moderator') {
+        if (parentEntityPath != null &&
+            parentEntityPath.isNotEmpty &&
+            _selectedRole != 'moderator') {
           try {
-          parentUnitRef = _firestore.doc(parentEntityPath);
-            
-          final parentUnitDoc = await parentUnitRef.get();
+            parentUnitRef = _firestore.doc(parentEntityPath);
+
+            final parentUnitDoc = await parentUnitRef.get();
             if (parentUnitDoc.exists) {
-          final parentUnitData = parentUnitDoc.data() as Map<String, dynamic>?;
-          parentUnitName = parentUnitData?['name'] as String?;
+              final parentUnitData =
+                  parentUnitDoc.data() as Map<String, dynamic>?;
+              parentUnitName = parentUnitData?['name'] as String?;
             } else {
               parentUnitRef = null; // Reset to null if document doesn't exist
             }
@@ -1608,22 +1772,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             parentUnitRef = null; // Reset to null on error
             parentUnitName = null;
           }
-        } else {
-        }
+        } else {}
       }
 
       // Create organizational unit and assign role based on type
       String? managesEntityPath;
-      
-      
+
       if (_unitManagingRoles.contains(_selectedRole)) {
-        
         managesEntityPath = await _createOrganizationalUnitWithDeduplication(
-          batch, parentUnitRef, parentUnitName, targetUserId
-        );
-            } else if (_dependentRoles.contains(_selectedRole)) {
+            batch, parentUnitRef, parentUnitName, targetUserId);
+      } else if (_dependentRoles.contains(_selectedRole)) {
         final supervisorData = supervisorDoc?.data() as Map<String, dynamic>?;
-        
+
         // 🎯 Get supervisor's managesEntity from their roles array
         String? supervisorManagesEntity;
         final supervisorRoles = supervisorData?['roles'] as List<dynamic>?;
@@ -1633,81 +1793,84 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               final role = r is Map ? r['role']?.toString() : null;
               final roleLower = role?.toLowerCase();
               // 🎯 FIX: Compare with lowercase versions of management roles
-              final managementRolesLower = managementRoles.map((r) => r.toLowerCase()).toList();
+              final managementRolesLower =
+                  managementRoles.map((r) => r.toLowerCase()).toList();
               return r is Map && managementRolesLower.contains(roleLower);
             },
             orElse: () => null,
           );
           if (managementRole != null && managementRole is Map) {
-            supervisorManagesEntity = managementRole['managesEntity'] as String?;
+            supervisorManagesEntity =
+                managementRole['managesEntity'] as String?;
           }
         }
         // Fallback to top-level managesEntity for backward compatibility
-        managesEntityPath = supervisorManagesEntity ?? supervisorData?['managesEntity'] as String?;
+        managesEntityPath = supervisorManagesEntity ??
+            supervisorData?['managesEntity'] as String?;
       } else {
         managesEntityPath = null; // For roles that don't manage units
       }
-      
 
       // Add new role to roles array
       final currentTimestamp = DateTime.now().millisecondsSinceEpoch;
       final currentUserMemberId = await _getCurrentUserMemberId();
-      
+
       final newRoleData = <String, dynamic>{
         'role': _selectedRole!,
-        'assignedBy': FirebaseAuth.instance.currentUser!.uid,    // ✅ Keep UID for backward compatibility
-        'assignedByMemberId': currentUserMemberId,               // 🎉 NEW: Member ID reference
-        'assignedAt': currentTimestamp, // Use regular timestamp instead of FieldValue.serverTimestamp()
+        'assignedBy': FirebaseAuth
+            .instance.currentUser!.uid, // ✅ Keep UID for backward compatibility
+        'assignedByMemberId':
+            currentUserMemberId, // 🎉 NEW: Member ID reference
+        'assignedAt':
+            currentTimestamp, // Use regular timestamp instead of FieldValue.serverTimestamp()
         'isDefault': false,
       };
-      
+
       // Only add managesEntity if it's not null
       if (managesEntityPath != null) {
         newRoleData['managesEntity'] = managesEntityPath;
-      } else {
-      }
-      
+      } else {}
 
-      
       updatedRoles.add(newRoleData);
 
       // 🚀 NEW: Determine the highest ranking role for primary role field
-      List<String> allRoleNames = updatedRoles.map((r) => r['role'] as String).toList();
+      List<String> allRoleNames =
+          updatedRoles.map((r) => r['role'] as String).toList();
       String primaryRole = _getHighestRankingRole(allRoleNames);
 
       // Update user document with multi-role support
       final updateData = <String, dynamic>{
         'roles': updatedRoles,
-        'role': primaryRole, // Primary role based on hierarchy (highest ranking)
-        'assignedBy': FirebaseAuth.instance.currentUser!.uid,    // ✅ Keep UID for backward compatibility
-        'assignedByMemberId': currentUserMemberId,               // 🎉 NEW: Member ID reference
+        'role':
+            primaryRole, // Primary role based on hierarchy (highest ranking)
+        'assignedBy': FirebaseAuth
+            .instance.currentUser!.uid, // ✅ Keep UID for backward compatibility
+        'assignedByMemberId':
+            currentUserMemberId, // 🎉 NEW: Member ID reference
         'assignedAt': currentTimestamp, // Use same timestamp as role entry
         'parentId': FieldValue.delete(),
         'assignedTo': FieldValue.delete(),
       };
-      
+
       // 🎯 No longer setting top-level managesEntity - it's handled per-role in roles array
       // The managesEntity is already set in newRoleData above
-      
+
       // Add country assignment for moderator role (backward compatibility)
       if (_selectedRole == 'moderator' && _selectedCountry != null) {
         updateData['assignedCountry'] = _selectedCountry;
       }
-      
+
       batch.update(targetUserRef, updateData);
 
       await batch.commit();
-      
 
-      
       // Success - reset form
       _resetFormAfterSuccess();
-
     } catch (e) {
-                setState(() {
-        _message = 'An error occurred during role assignment: $e'; 
-                    _isLoading = false;
-                });
+      setState(() {
+        _message = 'An error occurred during role assignment: $e';
+        _isLoading = false;
+      });
     }
   }
 
@@ -1718,11 +1881,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     String? parentUnitName,
     String targetUserId,
   ) async {
-    
-    
     final newUnitRef = _firestore.collection('organizationalUnits').doc();
     String? newUnitName;
-        String? newUnitLevel;
+    String? newUnitLevel;
 
     // 🎯 NEW SYSTEM: Set unit name and level based on role type with consistent naming
     if (_selectedRole == 'moderator') {
@@ -1731,7 +1892,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     } else if (_selectedRole == 'director') {
       newUnitName = '${_selectedCity!} - Director (${_selectedUnitGender!})';
       newUnitLevel = 'director';
-    } else if (_selectedRole!.contains('Coordinator') && !_selectedRole!.contains('AssistantCoordinator')) {
+    } else if (_selectedRole!.contains('Coordinator') &&
+        !_selectedRole!.contains('AssistantCoordinator')) {
       final roleTitle = _getRoleTitle(_selectedRole!);
       newUnitName = '${_selectedCity!} - $roleTitle (${_selectedUnitGender!})';
       newUnitLevel = 'coordinator';
@@ -1743,62 +1905,65 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       newUnitName = '${_selectedCity!} - Accountant (${_selectedUnitGender!})';
       newUnitLevel = 'accountant';
     } else if (_selectedRole == 'houseLeader') {
-      newUnitName = '${_selectedCity!} - House Leader (${_selectedUnitGender!})';
+      newUnitName =
+          '${_selectedCity!} - House Leader (${_selectedUnitGender!})';
       newUnitLevel = 'houseLeader';
     } else if (_selectedRole == 'studentHouseLeader') {
-      newUnitName = '${_selectedCity!} - Student House Leader (${_selectedUnitGender!})';
+      newUnitName =
+          '${_selectedCity!} - Student House Leader (${_selectedUnitGender!})';
       newUnitLevel = 'studentHouseLeader';
     } else if (_selectedRole == 'middleSchoolMentor') {
-      newUnitName = '${_selectedCity!} - Middle School Mentor (${_selectedUnitGender!})';
+      newUnitName =
+          '${_selectedCity!} - Middle School Mentor (${_selectedUnitGender!})';
       newUnitLevel = 'middleSchoolMentor';
     } else if (_selectedRole == 'highSchoolMentor') {
-      newUnitName = '${_selectedCity!} - High School Mentor (${_selectedUnitGender!})';
+      newUnitName =
+          '${_selectedCity!} - High School Mentor (${_selectedUnitGender!})';
       newUnitLevel = 'highSchoolMentor';
     }
 
-        // Province comes from Step 4 selection - no need for legacy logic
+    // Province comes from Step 4 selection - no need for legacy logic
 
     // Get Member IDs for references
     final targetMemberId = await _getUidToMemberId(targetUserId);
     final currentUserMemberId = await _getCurrentUserMemberId();
-    
+
     // Create the organizational unit with standard fields
     final unitData = <String, dynamic>{
-          'name': newUnitName,
+      'name': newUnitName,
       'type': 'unit', // 🎉 NEW: All roles use 'unit' (including accountant)
-          'level': newUnitLevel,
+      'level': newUnitLevel,
       'status': 'active', // 🎉 NEW: Add status field
       'country': _selectedCountry!, // 🎉 Step 4'te seçilen country (mandatory)
       'city': _selectedCity!,
       'gender': _selectedUnitGender!,
       'managedBy': targetUserId,
       'managedByMemberId': targetMemberId,
-      'managerChangedAt': FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
+      'managerChangedAt':
+          FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
       'createdAt': FieldValue.serverTimestamp(),
       'createdByMemberId': currentUserMemberId,
       'updatedAt': FieldValue.serverTimestamp(),
     };
-    
+
     // 🎯 NEW: Add class field for mentor roles (prefer cached name)
-    if ((_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor')) {
-      if (_selectedMentorshipGroupName != null && _selectedMentorshipGroupName!.isNotEmpty) {
-        unitData['class'] = _selectedMentorshipGroupName; // Use cached name to survive refetches
-        
+    if ((_selectedRole == 'middleSchoolMentor' ||
+        _selectedRole == 'highSchoolMentor')) {
+      if (_selectedMentorshipGroupName != null &&
+          _selectedMentorshipGroupName!.isNotEmpty) {
+        unitData['class'] =
+            _selectedMentorshipGroupName; // Use cached name to survive refetches
       } else if (_selectedMentorshipGroupId != null) {
-      
-      final selectedGroupData = _mentorshipGroups.firstWhere((g) => g['id'] == _selectedMentorshipGroupId, orElse: () => <String, dynamic>{});
-      
-      if (selectedGroupData.isNotEmpty && selectedGroupData['name'] != null) {
-        unitData['class'] = selectedGroupData['name']; // Add class reference
-        
-      } else {
-        
-      }
-      } else {
-      
-      }
+        final selectedGroupData = _mentorshipGroups.firstWhere(
+            (g) => g['id'] == _selectedMentorshipGroupId,
+            orElse: () => <String, dynamic>{});
+
+        if (selectedGroupData.isNotEmpty && selectedGroupData['name'] != null) {
+          unitData['class'] = selectedGroupData['name']; // Add class reference
+        } else {}
+      } else {}
     }
-    
+
     // Only add parentUnit if it's not null
     if (parentUnitRef != null) {
       unitData['parentUnit'] = parentUnitRef;
@@ -1808,32 +1973,30 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       await _setAdminAsParentUnit(unitData);
     } else if (_selectedRole == 'director') {
       // Ensure director's parent is the selected supervisor's management unit (moderator)
-      
+
       await _setSupervisorUnitAsParent(unitData);
     } else {
       // For other roles, default to supervisor's management unit if available
-      
+
       await _setSupervisorUnitAsParent(unitData);
     }
-    
+
     // Add province from Step 3 selection (auto-set to 'National' for moderator)
     unitData['province'] = _selectedProvince!; // Mandatory from Step 3
 
     // Enforce parentUnit for unit-managing roles
-    
-    
-    if (_unitManagingRoles.contains(_selectedRole) && unitData['parentUnit'] == null) {
-      
+
+    if (_unitManagingRoles.contains(_selectedRole) &&
+        unitData['parentUnit'] == null) {
       setState(() {
-        _message = 'Parent unit could not be determined. Please select a supervisor or ensure an Admin unit exists.';
+        _message =
+            'Parent unit could not be determined. Please select a supervisor or ensure an Admin unit exists.';
         _isLoading = false;
       });
       return null;
     }
 
-    
     batch.set(newUnitRef, unitData);
-    
 
     return newUnitRef.path;
   }
@@ -1842,21 +2005,21 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Future<void> _setAdminAsParentUnit(Map<String, dynamic> unitData) async {
     try {
       // Find Admin's organizational unit - try multiple approaches
-      
+
       // Approach 1: Find by type 'admin'
       var adminUnitsQuery = await _firestore
           .collection('organizationalUnits')
           .where('type', isEqualTo: 'admin')
           .limit(1)
           .get();
-      
+
       if (adminUnitsQuery.docs.isNotEmpty) {
         final adminUnitDoc = adminUnitsQuery.docs.first;
         unitData['parentUnit'] = adminUnitDoc.reference;
-        
+
         return;
       }
-      
+
       // Approach 2: Find by current admin user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
@@ -1865,20 +2028,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             .where('managedBy', isEqualTo: currentUser.uid)
             .limit(1)
             .get();
-        
+
         if (adminUnitsQuery.docs.isNotEmpty) {
           final adminUnitDoc = adminUnitsQuery.docs.first;
           unitData['parentUnit'] = adminUnitDoc.reference;
           return;
         }
       }
-      
+
       // Approach 3: Find first available unit as fallback
-      adminUnitsQuery = await _firestore
-          .collection('organizationalUnits')
-          .limit(1)
-          .get();
-      
+      adminUnitsQuery =
+          await _firestore.collection('organizationalUnits').limit(1).get();
+
       if (adminUnitsQuery.docs.isNotEmpty) {
         final adminUnitDoc = adminUnitsQuery.docs.first;
         unitData['parentUnit'] = adminUnitDoc.reference;
@@ -1893,34 +2054,33 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Future<void> _setSupervisorUnitAsParent(Map<String, dynamic> unitData) async {
     try {
       final supervisorMemberId = _selectedSupervisorId ?? '';
-      
+
       if (supervisorMemberId.isEmpty) {
-        
         return;
       }
 
       final supervisorUid = await _getUidFromMemberId(supervisorMemberId);
-      
+
       if (supervisorUid == null) {
-        
         return;
       }
 
-      final supervisorDoc = await _firestore.collection('users').doc(supervisorUid).get();
-      
+      final supervisorDoc =
+          await _firestore.collection('users').doc(supervisorUid).get();
+
       if (!supervisorDoc.exists) {
-        
         return;
       }
 
       final supervisorData = supervisorDoc.data();
       final supervisorRoles = supervisorData?['roles'] as List<dynamic>?;
-      
+
       String? parentEntityPath;
 
       if (supervisorRoles != null) {
-        final managementRolesLower = managementRoles.map((r) => r.toLowerCase()).toList();
-        
+        final managementRolesLower =
+            managementRoles.map((r) => r.toLowerCase()).toList();
+
         final managementRole = supervisorRoles.firstWhere(
           (r) {
             final role = r is Map ? r['role']?.toString() : null;
@@ -1931,22 +2091,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         );
         if (managementRole != null && managementRole is Map) {
           parentEntityPath = managementRole['managesEntity'] as String?;
-          
-        } else {
-          
-        }
+        } else {}
       }
 
       // Fallback to top-level managesEntity
       parentEntityPath ??= supervisorData?['managesEntity'] as String?;
-      
 
       if (parentEntityPath != null && parentEntityPath.isNotEmpty) {
         unitData['parentUnit'] = _firestore.doc(parentEntityPath);
-        
-      } else {
-        
-      }
+      } else {}
     } catch (_) {}
   }
 
@@ -1971,7 +2124,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       unitName = '${_selectedCity!} - Director (${_selectedUnitGender!})';
       unitLevel = 'director';
       unitType = 'unit';
-    } else if (_selectedRole!.contains('Coordinator') && !_selectedRole!.contains('AssistantCoordinator')) {
+    } else if (_selectedRole!.contains('Coordinator') &&
+        !_selectedRole!.contains('AssistantCoordinator')) {
       final roleTitle = _getRoleTitle(_selectedRole!);
       unitName = '${_selectedCity!} - $roleTitle (${_selectedUnitGender!})';
       unitLevel = 'coordinator';
@@ -1990,15 +2144,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       unitLevel = 'houseLeader';
       unitType = 'unit';
     } else if (_selectedRole == 'studentHouseLeader') {
-      unitName = '${_selectedCity!} - Student House Leader (${_selectedUnitGender!})';
+      unitName =
+          '${_selectedCity!} - Student House Leader (${_selectedUnitGender!})';
       unitLevel = 'studentHouseLeader';
       unitType = 'unit';
     } else if (_selectedRole == 'middleSchoolMentor') {
-      unitName = '${_selectedCity!} - Middle School Mentor (${_selectedUnitGender!})';
+      unitName =
+          '${_selectedCity!} - Middle School Mentor (${_selectedUnitGender!})';
       unitLevel = 'middleSchoolMentor';
       unitType = 'unit';
     } else if (_selectedRole == 'highSchoolMentor') {
-      unitName = '${_selectedCity!} - High School Mentor (${_selectedUnitGender!})';
+      unitName =
+          '${_selectedCity!} - High School Mentor (${_selectedUnitGender!})';
       unitLevel = 'highSchoolMentor';
       unitType = 'unit';
     }
@@ -2007,13 +2164,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     if (_hasOrphanedUnits && _orphanedUnitChoice != null) {
       if (_orphanedUnitChoice == 'recover' && _selectedOrphanedUnitId != null) {
         // User chose to recover a specific orphaned unit
- 
-        
+
         final selectedUnit = _availableOrphanedUnits.firstWhere(
           (unit) => unit['id'] == _selectedOrphanedUnitId,
           orElse: () => <String, dynamic>{},
         );
-        
+
         if (selectedUnit.isNotEmpty) {
           final unitRef = _firestore.doc(selectedUnit['path'] as String);
           // Ensure managedByMemberId is set when recovering an orphaned unit
@@ -2022,148 +2178,144 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             'managedBy': targetUserId,
             'managedByMemberId': recoveredMemberId,
             'status': 'active',
-            'managerChangedAt': FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
-            'lastManagerId': FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
-            'lastManagerRole': FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
+            'managerChangedAt':
+                FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
+            'lastManagerId':
+                FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
+            'lastManagerRole':
+                FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
             'updatedAt': FieldValue.serverTimestamp(),
           };
-          
+
           // 🎯 NEW: Add class field for mentor roles when recovering orphaned units (prefer cached name)
-          if ((_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor')) {
-            if (_selectedMentorshipGroupName != null && _selectedMentorshipGroupName!.isNotEmpty) {
+          if ((_selectedRole == 'middleSchoolMentor' ||
+              _selectedRole == 'highSchoolMentor')) {
+            if (_selectedMentorshipGroupName != null &&
+                _selectedMentorshipGroupName!.isNotEmpty) {
               updateData['class'] = _selectedMentorshipGroupName;
-              
             } else if (_selectedMentorshipGroupId != null) {
-            
-            final selectedGroupData = _mentorshipGroups.firstWhere((g) => g['id'] == _selectedMentorshipGroupId, orElse: () => <String, dynamic>{});
-            if (selectedGroupData.isNotEmpty && selectedGroupData['name'] != null) {
-              updateData['class'] = selectedGroupData['name']; // Add class reference
-              
-            } else {
-              
-            }
-            } else {
-            
-            }
+              final selectedGroupData = _mentorshipGroups.firstWhere(
+                  (g) => g['id'] == _selectedMentorshipGroupId,
+                  orElse: () => <String, dynamic>{});
+              if (selectedGroupData.isNotEmpty &&
+                  selectedGroupData['name'] != null) {
+                updateData['class'] =
+                    selectedGroupData['name']; // Add class reference
+              } else {}
+            } else {}
           }
-          
+
           batch.update(unitRef, updateData);
-          
+
           return selectedUnit['path'] as String;
         }
       } else if (_orphanedUnitChoice == 'create_new') {
         // User chose to create new unit despite orphaned units existing
- 
+
         return await _createOrganizationalUnit(
-          batch, parentUnitRef, parentUnitName, targetUserId
-        );
+            batch, parentUnitRef, parentUnitName, targetUserId);
       }
     }
 
     // Fallback: Check for existing organizational unit automatically (legacy behavior)
-    
-    
+
     final existingUnit = await _findExistingOrganizationalUnit(
       unitName,
       unitType,
       unitLevel,
       _selectedCountry!,
     );
-    
-    
 
     if (existingUnit != null) {
       // Found existing unit - check its current status
       final status = existingUnit['status'] as String?;
       final managedBy = existingUnit['managedBy'] as String?;
-      
+
       if (status == 'pendingReassignment' || managedBy == null) {
         // Existing unit is orphaned - recover it (fallback for when no choice was made)
- 
-        
+
         // Get Member IDs for references
         final targetMemberId = await _getUidToMemberId(targetUserId);
-        
+
         final unitRef = _firestore.doc(existingUnit['path'] as String);
         final updateData = <String, dynamic>{
           'managedBy': targetUserId,
           'managedByMemberId': targetMemberId,
           'status': 'active',
-          'managerChangedAt': FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
-          'lastManagerId': FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
-          'lastManagerRole': FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
+          'managerChangedAt':
+              FieldValue.serverTimestamp(), // 🆕 Yeni timestamp sistemi
+          'lastManagerId':
+              FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
+          'lastManagerRole':
+              FieldValue.delete(), // 🧹 Temizlik: Artık orphaned değil
           'updatedAt': FieldValue.serverTimestamp(),
         };
-        
+
         // 🎯 NEW: Add class field for mentor roles when recovering existing units (prefer cached name)
-        if ((_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor')) {
-          if (_selectedMentorshipGroupName != null && _selectedMentorshipGroupName!.isNotEmpty) {
+        if ((_selectedRole == 'middleSchoolMentor' ||
+            _selectedRole == 'highSchoolMentor')) {
+          if (_selectedMentorshipGroupName != null &&
+              _selectedMentorshipGroupName!.isNotEmpty) {
             updateData['class'] = _selectedMentorshipGroupName;
-            
           } else if (_selectedMentorshipGroupId != null) {
-          
-          final selectedGroupData = _mentorshipGroups.firstWhere((g) => g['id'] == _selectedMentorshipGroupId, orElse: () => <String, dynamic>{});
-          if (selectedGroupData.isNotEmpty && selectedGroupData['name'] != null) {
-            updateData['class'] = selectedGroupData['name']; // Add class reference
-            
-          } else {
-            
-          }
-          } else {
-          
-          }
+            final selectedGroupData = _mentorshipGroups.firstWhere(
+                (g) => g['id'] == _selectedMentorshipGroupId,
+                orElse: () => <String, dynamic>{});
+            if (selectedGroupData.isNotEmpty &&
+                selectedGroupData['name'] != null) {
+              updateData['class'] =
+                  selectedGroupData['name']; // Add class reference
+            } else {}
+          } else {}
         }
-        
+
         batch.update(unitRef, updateData);
-        
+
         return existingUnit['path'] as String;
       } else if (managedBy == targetUserId) {
         // Unit already belongs to this user
- 
+
         return existingUnit['path'] as String;
       } else {
         // Unit is managed by someone else - create new unit (fallback to original method)
- 
+
         return await _createOrganizationalUnit(
-          batch, parentUnitRef, parentUnitName, targetUserId
-        );
+            batch, parentUnitRef, parentUnitName, targetUserId);
       }
-        } else {
+    } else {
       // No existing unit found - create new one
-      
 
       return await _createOrganizationalUnit(
-        batch, parentUnitRef, parentUnitName, targetUserId
-      );
+          batch, parentUnitRef, parentUnitName, targetUserId);
     }
   }
 
-  // 🚀 NEW: Find and suggest cleanup for duplicate organizational units  
+  // 🚀 NEW: Find and suggest cleanup for duplicate organizational units
   Future<List<Map<String, dynamic>>> findDuplicateOrganizationalUnits() async {
     try {
       final allUnits = await _firestore.collection('organizationalUnits').get();
       final duplicateGroups = <String, List<Map<String, dynamic>>>{};
-      
+
       // Group units by name + type + level
       for (final doc in allUnits.docs) {
         final data = doc.data();
         final name = data['name'] as String?;
         final type = data['type'] as String?;
         final level = data['level'] as String?;
-        
+
         if (name == null) continue;
-        
+
         final key = '$name|$type|$level';
         if (!duplicateGroups.containsKey(key)) {
           duplicateGroups[key] = [];
         }
-        
+
         final unitData = Map<String, dynamic>.from(data);
         unitData['id'] = doc.id;
         unitData['path'] = doc.reference.path;
         duplicateGroups[key]!.add(unitData);
       }
-      
+
       // Find groups with duplicates
       final duplicates = <Map<String, dynamic>>[];
       for (final group in duplicateGroups.values) {
@@ -2171,10 +2323,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           duplicates.addAll(group);
         }
       }
-      
+
       return duplicates;
     } catch (e) {
- 
       return [];
     }
   }
@@ -2312,12 +2463,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ],
               ),
             ),
-            
+
             // Supervisors for this city
-            ...supervisors.map((supervisor) => 
-              _buildSupervisorCard(supervisor)
-            ),
-            
+            ...supervisors
+                .map((supervisor) => _buildSupervisorCard(supervisor)),
+
             const SizedBox(height: 24),
           ],
         );
@@ -2327,16 +2477,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   // 🚀 Build individual supervisor card
   Widget _buildSupervisorCard(Map<String, dynamic> supervisor) {
-    final isSelected = _selectedSupervisorId == (supervisor['memberId'] ?? supervisor['id']);
-    
+    final isSelected =
+        _selectedSupervisorId == (supervisor['memberId'] ?? supervisor['id']);
+
     return GestureDetector(
       onTap: () async {
         setState(() {
-          _selectedSupervisorId = supervisor['memberId'] ?? supervisor['id']; // 🎉 NEW: Use Member ID if available
+          _selectedSupervisorId = supervisor['memberId'] ??
+              supervisor['id']; // 🎉 NEW: Use Member ID if available
           // Dropdown stores selection in _selectedSupervisorId
-          
+
           // 🚀 NEW: Set supervisor user role for Create New Class functionality
-          final supervisorData = supervisor['userData'] as Map<String, dynamic>?;
+          final supervisorData =
+              supervisor['userData'] as Map<String, dynamic>?;
           if (supervisorData != null) {
             final supervisorRoles = supervisorData['roles'] as List<dynamic>?;
             if (supervisorRoles != null && supervisorRoles.isNotEmpty) {
@@ -2344,7 +2497,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               final schoolRole = supervisorRoles.firstWhere(
                 (r) {
                   final role = r is Map ? r['role']?.toString() : null;
-                  return role != null && (role.contains('middleSchool') || role.contains('highSchool'));
+                  return role != null &&
+                      (role.contains('middleSchool') ||
+                          role.contains('highSchool'));
                 },
                 orElse: () => supervisorRoles.first,
               );
@@ -2357,12 +2512,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             }
           }
         });
-        
-        // 🎯 NEW: For mentors, set supervisor unit path directly from dropdown data
-        if (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') {
 
+        // 🎯 NEW: For mentors, set supervisor unit path directly from dropdown data
+        if (_selectedRole == 'middleSchoolMentor' ||
+            _selectedRole == 'highSchoolMentor') {
           try {
-            final supervisorData = supervisor['userData'] as Map<String, dynamic>?;
+            final supervisorData =
+                supervisor['userData'] as Map<String, dynamic>?;
             if (supervisorData != null) {
               // Get supervisor's managesEntity from their roles array
               String? parentEntityPath;
@@ -2373,8 +2529,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     final role = r is Map ? r['role']?.toString() : null;
                     final roleLower = role?.toLowerCase();
                     // 🎯 FIX: Compare with lowercase versions of management roles
-                    final managementRolesLower = managementRoles.map((r) => r.toLowerCase()).toList();
-                    final isManagement = managementRolesLower.contains(roleLower);
+                    final managementRolesLower =
+                        managementRoles.map((r) => r.toLowerCase()).toList();
+                    final isManagement =
+                        managementRolesLower.contains(roleLower);
                     return r is Map && isManagement;
                   },
                   orElse: () => null,
@@ -2385,21 +2543,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               }
               // Fallback to top-level managesEntity for backward compatibility
               parentEntityPath ??= supervisorData['managesEntity'] as String?;
-              
+
               if (parentEntityPath != null) {
                 final unitDoc = await _firestore.doc(parentEntityPath).get();
                 if (unitDoc.exists && mounted) {
-          // Preserve supervisor unit path not needed; directly fetch groups
+                  // Preserve supervisor unit path not needed; directly fetch groups
                   _fetchMentorshipGroupsForUnit(parentEntityPath);
                 }
               }
             }
-          } catch (e) {
-      
-          }
+          } catch (e) {}
         }
-        
-      // Trigger supervisor validation handled inline now
+
+        // Trigger supervisor validation handled inline now
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -2407,7 +2563,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? Colors.blue.withOpacity(0.6)
                 : Colors.white.withOpacity(0.2),
             width: isSelected ? 2 : 1,
@@ -2453,8 +2609,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: isSelected
-                      ? [Colors.blue.withOpacity(0.8), Colors.blue.withOpacity(0.6)]
-                      : [Colors.grey.withOpacity(0.6), Colors.grey.withOpacity(0.4)],
+                      ? [
+                          Colors.blue.withOpacity(0.8),
+                          Colors.blue.withOpacity(0.6)
+                        ]
+                      : [
+                          Colors.grey.withOpacity(0.6),
+                          Colors.grey.withOpacity(0.4)
+                        ],
                 ),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.3),
@@ -2467,9 +2629,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 size: 24,
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Name and role info
             Expanded(
               child: Column(
@@ -2498,7 +2660,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ],
               ),
             ),
-            
+
             // Selection indicator
             Container(
               width: 24,
@@ -2506,7 +2668,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.white.withOpacity(0.4),
+                  color:
+                      isSelected ? Colors.blue : Colors.white.withOpacity(0.4),
                   width: 2,
                 ),
                 color: isSelected ? Colors.blue : Colors.transparent,
@@ -2521,16 +2684,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-
-
   // 🚀 NEW: Fetch available supervisors based on selected role
   Future<void> _fetchAvailableSupervisors() async {
     if (_selectedRole == null) return;
-    
+
     // 🎯 FILTERING: Create cache key with city and gender for filtered results
-    final cacheKey = '${_selectedRole!}_${_selectedCity ?? 'any'}_${_selectedUnitGender ?? 'any'}';
+    final cacheKey =
+        '${_selectedRole!}_${_selectedCity ?? 'any'}_${_selectedUnitGender ?? 'any'}';
     final cachedTime = _supervisorCacheTimestamps[cacheKey];
-    if (cachedTime != null && 
+    if (cachedTime != null &&
         DateTime.now().difference(cachedTime) < _cacheExpiry &&
         _supervisorCache.containsKey(cacheKey)) {
       setState(() {
@@ -2539,7 +2701,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       });
       return;
     }
-    
+
     setState(() {
       _isLoadingSupervisors = true;
       _supervisorsByCity = {};
@@ -2547,41 +2709,36 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
     try {
       // Determine required supervisor role using the proper function that handles dependent roles
-      String requiredSupervisorRole = _getRequiredSupervisorRole(_selectedRole!);
-      
+      String requiredSupervisorRole =
+          _getRequiredSupervisorRole(_selectedRole!);
 
-      
       // 🎯 UPDATED: All roles now have single supervisor - no special cases needed
       List<String> allowedSupervisorRoles = [requiredSupervisorRole];
-      
-      
 
       if (allowedSupervisorRoles.isEmpty) {
         setState(() => _isLoadingSupervisors = false);
-            return;
-          }
+        return;
+      }
 
       List<Map<String, dynamic>> allSupervisors = [];
 
       // Fetch supervisors for each allowed role
       for (String supervisorRole in allowedSupervisorRoles) {
-        
         // supervisorSnapshot not used
-        
+
         // For ALL roles (including admin), ONLY check roles array
         // Primary role field is ignored for supervisor selection
         // Get all users and filter manually since arrayContains doesn't work with partial objects
-        final allUsersSnapshot = await _firestore
-            .collection('users')
-            .get();
-            
+        final allUsersSnapshot = await _firestore.collection('users').get();
+
         List<QueryDocumentSnapshot> filteredDocs = [];
         for (var doc in allUsersSnapshot.docs) {
           final userData = doc.data();
           final roles = userData['roles'] as List<dynamic>?;
           if (roles != null) {
             for (var roleObj in roles) {
-              if (roleObj is Map<String, dynamic> && roleObj['role'] == supervisorRole) {
+              if (roleObj is Map<String, dynamic> &&
+                  roleObj['role'] == supervisorRole) {
                 filteredDocs.add(doc);
                 break;
               }
@@ -2592,13 +2749,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         for (var doc in filteredDocs) {
           final userData = doc.data() as Map<String, dynamic>;
           String displayName = _getFullNameFromFields(
-            userData['firstName'], 
-            userData['lastName']
-          );
-          
+              userData['firstName'], userData['lastName']);
+
           // Get city information from managesEntity (using 'name' field)
           String? city = 'Other';
-          
+
           // 🎯 Get managesEntity from user's roles array
           String? managesEntity;
           final userRoles = userData['roles'] as List<dynamic>?;
@@ -2614,7 +2769,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           }
           // Fallback to top-level managesEntity for backward compatibility
           managesEntity ??= userData['managesEntity'] as String?;
-          
+
           if (managesEntity != null) {
             try {
               final unitDoc = await _firestore.doc(managesEntity).get();
@@ -2637,10 +2792,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
           // 🎯 FILTERING: Get supervisor's gender for filtering
           String? supervisorGender = userData['gender'] as String?;
-          
+
           allSupervisors.add({
             'id': doc.id,
-            'memberId': userData['memberId'], // 🎉 NEW: Include Member ID for supervisor selection
+            'memberId': userData[
+                'memberId'], // 🎉 NEW: Include Member ID for supervisor selection
             'name': displayName,
             'role': supervisorRole,
             'city': city,
@@ -2652,21 +2808,23 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
       // 🎯 FILTERING: Apply city and gender filters based on Step 3 selections
       List<Map<String, dynamic>> filteredSupervisors = allSupervisors;
-      
+
       if (_selectedCity != null && _selectedUnitGender != null) {
         filteredSupervisors = allSupervisors.where((supervisor) {
           // 🎯 SPECIAL: Admin and Moderator are always available regardless of location/gender
-          if (supervisor['role'] == 'admin' || supervisor['role'] == 'moderator') {
+          if (supervisor['role'] == 'admin' ||
+              supervisor['role'] == 'moderator') {
             return true;
           }
-          
+
           // Filter by city: exact match
           bool cityMatches = supervisor['city'] == _selectedCity;
-          
+
           // Filter by gender: exact match OR if target role is moderator (Mixed accepts all)
-          bool genderMatches = supervisor['gender'] == _selectedUnitGender || 
-                               _selectedRole == 'moderator'; // Moderator accepts any supervisor gender
-          
+          bool genderMatches = supervisor['gender'] == _selectedUnitGender ||
+              _selectedRole ==
+                  'moderator'; // Moderator accepts any supervisor gender
+
           return cityMatches && genderMatches;
         }).toList();
       }
@@ -2692,23 +2850,23 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       // 🚀 PERFORMANCE: Cache supervisor results
       _supervisorCache[cacheKey] = sortedGrouped;
       _supervisorCacheTimestamps[cacheKey] = DateTime.now();
-      
+
       // Clean old supervisor cache entries (keep only last 10)
       if (_supervisorCache.length > 10) {
         final oldestKey = _supervisorCacheTimestamps.entries
-            .reduce((a, b) => a.value.isBefore(b.value) ? a : b).key;
+            .reduce((a, b) => a.value.isBefore(b.value) ? a : b)
+            .key;
         _supervisorCache.remove(oldestKey);
         _supervisorCacheTimestamps.remove(oldestKey);
       }
-      
+
       setState(() {
         _supervisorsByCity = sortedGrouped;
         _isLoadingSupervisors = false;
-        
+
         // 🚀 REMOVED: Don't auto-select even if only one supervisor
         // User should always choose manually
       });
-
     } catch (e) {
       setState(() {
         _isLoadingSupervisors = false;
@@ -2716,10 +2874,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       });
     }
   }
-
-
-
-  
 
   // 🚀 Show success message with timer and animation
   void _showSuccessMessageWithTimer(String message) {
@@ -2734,11 +2888,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     _slideAnimationController.reset();
 
     _successMessageTimer?.cancel();
-    _successMessageTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _successMessageTimer =
+        Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
         _progressValue -= 0.01; // 100ms * 100 = 10000ms = 10 seconds
-        _countdown = (_progressValue * 10).ceil(); // Real-time countdown from progress
-        
+        _countdown =
+            (_progressValue * 10).ceil(); // Real-time countdown from progress
+
         if (_progressValue <= 0) {
           timer.cancel();
           // Start slide down animation
@@ -2767,11 +2923,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     _slideAnimationController.reset();
 
     _successMessageTimer?.cancel();
-    _successMessageTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _successMessageTimer =
+        Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
         _progressValue -= 0.01; // 100ms * 100 = 10000ms = 10 seconds
-        _countdown = (_progressValue * 10).ceil(); // Real-time countdown from progress
-        
+        _countdown =
+            (_progressValue * 10).ceil(); // Real-time countdown from progress
+
         if (_progressValue <= 0) {
           timer.cancel();
           // Start slide down animation
@@ -2804,64 +2962,65 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   // 🚀 Reset form after successful assignment
   void _resetFormAfterSuccess() {
-      // Legacy listeners removed
+    // Legacy listeners removed
 
-      // Show success message with timer
-      final successMessage = _isAddingNewRole 
-          ? '${_getRoleTitle(_selectedRole!)} role successfully assigned to ${_targetUserName ?? 'User'}!'
-          : '${_getRoleTitle(_selectedRole!)} role successfully assigned to ${_targetUserName ?? 'User'}!';
-      
-      _showSuccessMessageWithTimer(successMessage);
+    // Show success message with timer
+    final successMessage = _isAddingNewRole
+        ? '${_getRoleTitle(_selectedRole!)} role successfully assigned to ${_targetUserName ?? 'User'}!'
+        : '${_getRoleTitle(_selectedRole!)} role successfully assigned to ${_targetUserName ?? 'User'}!';
 
-      setState(() {
-        _isLoading = false;
+    _showSuccessMessageWithTimer(successMessage);
+
+    setState(() {
+      _isLoading = false;
       _currentStep = 1;
-        _searchController.clear();
-        _selectedRole = null;
+      _searchController.clear();
+      _selectedRole = null;
       _selectedExistingRole = null;
 
       // 🎯 FIX: Clear selected user and search results after successful assignment
       _selectedUser = null;
       _searchResults = [];
       _searchController.clear();
-      
+
       // 🚨 FIX: Clear search cache to prevent stale data when searching same user again
       _searchCache.clear();
       _cacheTimestamps.clear();
 
       _currentOperation = '';
       _showRoleSelection = false;
-        _selectedUnitGender = null;
-        _selectedCity = null;
-        _selectedCountry = null;
-        _selectedMentorshipGroupId = null;
-        _mentorshipGroups = [];
+      _selectedUnitGender = null;
+      _selectedCity = null;
+      _selectedCountry = null;
+      _selectedMentorshipGroupId = null;
+      _mentorshipGroups = [];
       _selectedSupervisorId = null;
       _supervisorsByCity = {};
-        _targetUserName = null;
-        // _targetUserRole removed
+      _targetUserName = null;
+      // _targetUserRole removed
       _existingUserRoles = [];
       _isAddingNewRole = true;
       _supervisorUserName = null;
       _supervisorUserRole = null;
       _supervisorRoleMatches = null;
-      
+
       _isLoadingGroups = false;
     });
 
-      // Legacy listeners removed
+    // Legacy listeners removed
   }
 
   Future<void> assignRole() async {
-    setState(() { _isLoading = true; _message = ''; _error = null; });
-    
+    setState(() {
+      _isLoading = true;
+      _message = '';
+      _error = null;
+    });
+
     try {
       // 🚀 NETWORK: Check connectivity before proceeding
       await _checkNetworkConnectivity();
-      
-      
-      
-      
+
       // 🚀 Multi-role system: Default to 'add' operation
       await _performAddRole();
     } catch (e) {
@@ -2870,7 +3029,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           _isLoading = false;
           _error = _getAssignRoleErrorMessage(e);
         });
-        
+
         // Clear error after 5 seconds
         Timer(const Duration(seconds: 5), () {
           if (mounted) {
@@ -2887,7 +3046,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   /// Get user info from Member ID
-  Future<Map<String, dynamic>?> _getUserInfoFromMemberId(String memberId) async {
+  Future<Map<String, dynamic>?> _getUserInfoFromMemberId(
+      String memberId) async {
     return await MemberIdGenerator.getUserInfoFromMemberId(memberId);
   }
 
@@ -2895,10 +3055,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Future<String?> _getCurrentUserMemberId() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return null;
-    
-    final userDoc = await _firestore.collection('users').doc(currentUser.uid).get();
+
+    final userDoc =
+        await _firestore.collection('users').doc(currentUser.uid).get();
     if (!userDoc.exists) return null;
-    
+
     return userDoc.data()?['memberId'] as String?;
   }
 
@@ -2907,7 +3068,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     try {
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (!userDoc.exists) return null;
-      
+
       return userDoc.data()?['memberId'] as String?;
     } catch (e) {
 // print('Error converting UID to Member ID: $e');
@@ -2917,114 +3078,145 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   // 🚀 Add role operation
   Future<void> _performAddRole() async {
- 
     // 🎯 Use _selectedUser (modern system) for Member ID
     final targetMemberId = _selectedUser?['memberId'] ?? '';
- 
-    
+
     if (targetMemberId.isEmpty || _selectedRole == null) {
- 
-      setState(() { _message = 'Please enter a Member ID and select a role!'; _isLoading = false; });
+      setState(() {
+        _message = 'Please enter a Member ID and select a role!';
+        _isLoading = false;
+      });
       return;
     }
-    
+
     // Convert Member ID to UID for internal operations
- 
+
     final targetUserId = await _getUidFromMemberId(targetMemberId);
- 
+
     if (targetUserId == null) {
- 
-      setState(() { 
-        _message = 'Member ID not found. Please check the Member ID and try again.'; 
-        _isLoading = false; 
+      setState(() {
+        _message =
+            'Member ID not found. Please check the Member ID and try again.';
+        _isLoading = false;
       });
       return;
     }
 
     // Prevent admin role assignment completely
     if (_selectedRole == 'admin') {
-      setState(() { 
-        _message = 'Admin role cannot be assigned. Only system administrators can be admin.'; 
-        _isLoading = false; 
+      setState(() {
+        _message =
+            'Admin role cannot be assigned. Only system administrators can be admin.';
+        _isLoading = false;
       });
       return;
     }
 
     try {
       // Check if user already has this role
-      bool hasExistingRole = _existingUserRoles.any((r) => r['role'] == _selectedRole);
-      
+      bool hasExistingRole =
+          _existingUserRoles.any((r) => r['role'] == _selectedRole);
+
       if (hasExistingRole) {
-        setState(() { 
-          _message = 'User already has the ${_getRoleTitle(_selectedRole!)} role!'; 
-          _isLoading = false; 
+        setState(() {
+          _message =
+              'User already has the ${_getRoleTitle(_selectedRole!)} role!';
+          _isLoading = false;
         });
         return;
       }
 
       // Proceed with adding the role
- 
-      setState(() => _isAddingNewRole = true);
- 
-      _performMultiRoleAssignment();
 
+      setState(() => _isAddingNewRole = true);
+
+      _performMultiRoleAssignment();
     } catch (e) {
-      setState(() { _message = 'An error occurred: $e'; _isLoading = false; });
+      setState(() {
+        _message = 'An error occurred: $e';
+        _isLoading = false;
+      });
     }
   }
 
-
-
-
-
-
-
   String _getRoleTitle(String role) {
     switch (role) {
-      case 'admin': return 'Admin';
-      case 'moderator': return 'Moderator';
-      case 'director': return 'Director';
-      case 'middleSchoolCoordinator': return 'Middle School Coordinator';
-      case 'highSchoolCoordinator': return 'High School Coordinator';
-      case 'universityCoordinator': return 'University Coordinator';
-      case 'housingCoordinator': return 'Housing Coordinator';
-      case 'middleSchoolAssistantCoordinator': return 'Middle School Assistant Coordinator';
-      case 'highSchoolAssistantCoordinator': return 'High School Assistant Coordinator';
-      case 'universityAssistantCoordinator': return 'University Assistant Coordinator';
-      case 'housingAssistantCoordinator': return 'Housing Assistant Coordinator';
-      case 'middleSchoolMentor': return 'Middle School Mentor';
-      case 'highSchoolMentor': return 'High School Mentor';
-      case 'houseLeader': return 'House Leader';
-      case 'studentHouseLeader': return 'Student House Leader'; // 🎯 NEW: Student house leader title
-      case 'houseMember': return 'House Member'; // 🎯 NEW: House member title
-      case 'studentHouseMember': return 'Student House Member'; // 🎯 NEW: Student house member title
-      case 'accountant': return 'Accountant';
-      case 'user': return 'User';
-      default: return 'User';
+      case 'admin':
+        return 'Admin';
+      case 'moderator':
+        return 'Moderator';
+      case 'director':
+        return 'Director';
+      case 'middleSchoolCoordinator':
+        return 'Middle School Coordinator';
+      case 'highSchoolCoordinator':
+        return 'High School Coordinator';
+      case 'universityCoordinator':
+        return 'University Coordinator';
+      case 'housingCoordinator':
+        return 'Housing Coordinator';
+      case 'middleSchoolAssistantCoordinator':
+        return 'Middle School Assistant Coordinator';
+      case 'highSchoolAssistantCoordinator':
+        return 'High School Assistant Coordinator';
+      case 'universityAssistantCoordinator':
+        return 'University Assistant Coordinator';
+      case 'housingAssistantCoordinator':
+        return 'Housing Assistant Coordinator';
+      case 'middleSchoolMentor':
+        return 'Middle School Mentor';
+      case 'highSchoolMentor':
+        return 'High School Mentor';
+      case 'houseLeader':
+        return 'House Leader';
+      case 'studentHouseLeader':
+        return 'Student House Leader'; // 🎯 NEW: Student house leader title
+      case 'houseMember':
+        return 'House Member'; // 🎯 NEW: House member title
+      case 'studentHouseMember':
+        return 'Student House Member'; // 🎯 NEW: Student house member title
+      case 'accountant':
+        return 'Accountant';
+      case 'user':
+        return 'User';
+      default:
+        return 'User';
     }
   }
 
   IconData _getRoleIcon(String role) {
     switch (role) {
-      case 'moderator': return Icons.security;
-      case 'director': return Icons.flag;
-      case 'middleSchoolCoordinator': 
-      case 'highSchoolCoordinator': 
+      case 'moderator':
+        return Icons.security;
+      case 'director':
+        return Icons.flag;
+      case 'middleSchoolCoordinator':
+      case 'highSchoolCoordinator':
       case 'universityCoordinator':
-      case 'housingCoordinator': return Icons.location_city;
-      case 'middleSchoolAssistantCoordinator': 
-      case 'highSchoolAssistantCoordinator': 
+      case 'housingCoordinator':
+        return Icons.location_city;
+      case 'middleSchoolAssistantCoordinator':
+      case 'highSchoolAssistantCoordinator':
       case 'universityAssistantCoordinator':
-      case 'housingAssistantCoordinator': return Icons.business;
-      case 'middleSchoolMentor': 
-      case 'highSchoolMentor': return Icons.school;
-      case 'houseLeader': return Icons.home;
-      case 'studentHouseLeader': return Icons.home_work; // 🎯 NEW: Student house leader icon
-      case 'houseMember': return Icons.people; // 🎯 NEW: House member icon
-      case 'studentHouseMember': return Icons.groups; // 🎯 NEW: Student house member icon
-      case 'accountant': return Icons.account_balance;
-      case 'user': return Icons.account_circle;
-      default: return Icons.account_circle;
+      case 'housingAssistantCoordinator':
+        return Icons.business;
+      case 'middleSchoolMentor':
+      case 'highSchoolMentor':
+        return Icons.school;
+      case 'houseLeader':
+        return Icons.home;
+      case 'studentHouseLeader':
+        return Icons.home_work; // 🎯 NEW: Student house leader icon
+      case 'houseMember':
+        return Icons.people; // 🎯 NEW: House member icon
+      case 'studentHouseMember':
+        return Icons.groups; // 🎯 NEW: Student house member icon
+      case 'accountant':
+        return Icons.account_balance;
+      case 'user':
+        return Icons.account_circle;
+      default:
+        return Icons.account_circle;
     }
   }
 
@@ -3032,19 +3224,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   void initState() {
     super.initState();
     // Legacy listeners removed
-    
+
     // 🚀 NEW: Modern search listeners
     _searchController.addListener(_onSearchChanged);
-    
+
     // Initialize slide animation controller
     _slideAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0.0, 0.0), // Start at normal position
-      end: const Offset(0.0, 1.0),   // Slide down (off screen)
+      end: const Offset(0.0, 1.0), // Slide down (off screen)
     ).animate(CurvedAnimation(
       parent: _slideAnimationController,
       curve: Curves.easeInOut,
@@ -3060,12 +3252,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      final userDoc = await _firestore.collection('users').doc(currentUser.uid).get();
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
       if (!userDoc.exists) return;
 
       final userData = userDoc.data()!;
       final roles = userData['roles'] as List<dynamic>?;
-      
+
       if (roles != null && roles.isNotEmpty) {
         _currentUserRoles = [];
         for (var roleObj in roles) {
@@ -3077,10 +3270,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           }
         }
       }
-      
+
       // Get highest ranking role for permission checks
       _currentUserRole = _getHighestRankingRole(_currentUserRoles);
-      
+
       if (mounted) {
         setState(() {
           // Permissions will be checked dynamically in UI methods
@@ -3097,7 +3290,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   List<String> _extractUserRoles(Map<String, dynamic> userData) {
     final roles = userData['roles'] as List<dynamic>?;
     List<String> userRoles = [];
-    
+
     if (roles != null && roles.isNotEmpty) {
       for (var roleObj in roles) {
         if (roleObj is Map<String, dynamic>) {
@@ -3114,49 +3307,49 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         userRoles.add(role);
       }
     }
-    
+
     // If no roles found, default to user
     if (userRoles.isEmpty) {
       userRoles.add('user');
     }
-    
+
     return userRoles;
   }
 
   // 🚀 NEW: Modern search system methods
   void _onSearchChanged() {
     final query = _searchController.text.trim();
-    
+
     // 🚀 Clear success message when user starts typing
     if (query.isNotEmpty) {
       _clearSuccessMessage();
     }
-    
+
     // 🎯 FIX: Clear error messages and selected user when starting new search
-    if (query.isNotEmpty && ((_message.isNotEmpty && !_message.contains('successfully')) || _selectedUser != null)) {
+    if (query.isNotEmpty &&
+        ((_message.isNotEmpty && !_message.contains('successfully')) ||
+            _selectedUser != null)) {
       setState(() {
         if (!_message.contains('successfully')) {
-          _message = '';  // Clear error messages only
+          _message = ''; // Clear error messages only
         }
-        _selectedUser = null;  // Clear selected user
-        _targetUserName = null;  // Clear target user name
-        _existingUserRoles = [];  // Clear existing roles
+        _selectedUser = null; // Clear selected user
+        _targetUserName = null; // Clear target user name
+        _existingUserRoles = []; // Clear existing roles
       });
     }
-    
+
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 300), () {
       _performSearch(query, 'main');
     });
   }
 
-
-
   Future<void> _performSearch(String query, String searchType) async {
     if (query.length < 2) {
       setState(() {
-            _searchResults = [];
-            _isSearching = false;
+        _searchResults = [];
+        _isSearching = false;
       });
       return;
     }
@@ -3164,7 +3357,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     // 🚀 PERFORMANCE: Check cache first
     final cacheKey = query.toLowerCase().trim();
     final cachedTime = _cacheTimestamps[cacheKey];
-    if (cachedTime != null && 
+    if (cachedTime != null &&
         DateTime.now().difference(cachedTime) < _cacheExpiry &&
         _searchCache.containsKey(cacheKey)) {
       setState(() {
@@ -3175,16 +3368,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     }
 
     setState(() {
-          _isSearching = true;
+      _isSearching = true;
     });
 
     try {
       final List<Map<String, dynamic>> results = [];
-      
+
       // 🎯 NEW: Determine if this is a Member ID search
-      bool isMemberIdSearch = query.length >= 8 && !query.contains(' ') && !query.contains('@');
+      bool isMemberIdSearch =
+          query.length >= 8 && !query.contains(' ') && !query.contains('@');
       bool foundDirectMatch = false;
-      
+
       if (isMemberIdSearch) {
         try {
           // 🎉 NEW: First try Member ID search
@@ -3195,7 +3389,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             foundDirectMatch = true;
           } else {
             // 🎯 FALLBACK: Try as Firebase UID (backward compatibility)
-            final directDoc = await _firestore.collection('users').doc(query).get();
+            final directDoc =
+                await _firestore.collection('users').doc(query).get();
             if (directDoc.exists) {
               final data = directDoc.data()!;
               data['id'] = query;
@@ -3207,50 +3402,52 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           // Ignore errors for direct ID search
         }
       }
-      
+
       // 🎯 NEW: Name/email/username search with permission filtering
-      if (!foundDirectMatch || query.length < 15) { // Continue searching even if direct match found (for short queries)
-        // Get all users first, then filter both by text match AND role        
+      if (!foundDirectMatch || query.length < 15) {
+        // Continue searching even if direct match found (for short queries)
+        // Get all users first, then filter both by text match AND role
         final allUsersSnapshot = await _firestore
             .collection('users')
             .limit(50) // Get more users to filter from
             .get();
-        
+
         final queryLower = query.toLowerCase();
         final Set<String> addedIds = {};
-        
+
         for (final doc in allUsersSnapshot.docs) {
           if (addedIds.contains(doc.id)) continue;
-          
+
           final data = doc.data();
           final firstName = (data['firstName'] as String?)?.toLowerCase() ?? '';
           final lastName = (data['lastName'] as String?)?.toLowerCase() ?? '';
           final username = (data['username'] as String?)?.toLowerCase() ?? '';
           final email = (data['email'] as String?)?.toLowerCase() ?? '';
           final fullName = '$firstName $lastName'.trim();
-          
+
           // 🔍 CASE-INSENSITIVE: Check if query matches any field
-          bool matchesText = firstName.contains(queryLower) || 
-                           lastName.contains(queryLower) ||
-                           fullName.contains(queryLower) ||
-                           username.contains(queryLower) ||
-                           email.contains(queryLower);
-          
+          bool matchesText = firstName.contains(queryLower) ||
+              lastName.contains(queryLower) ||
+              fullName.contains(queryLower) ||
+              username.contains(queryLower) ||
+              email.contains(queryLower);
+
           if (matchesText) {
             // 🎯 NEW: Apply role-based permission filtering for name searches
             if (!isMemberIdSearch && _currentUserRole != null) {
               // Get user's roles for permission check
               final userRoles = _extractUserRoles(data);
-              
+
               // Check if current user can search this user by name
-              if (!RolePermissions.canSearchUserByName(_currentUserRole!, userRoles)) {
+              if (!RolePermissions.canSearchUserByName(
+                  _currentUserRole!, userRoles)) {
                 continue; // Skip this user - no permission to find by name
               }
             }
             // 🔒 SECURITY: Check user's role - only show non-"user" roles in search results
             // But allow "user" role if found by direct ID match
             bool canShow = false;
-            
+
             // Check roles array (new system)
             final roles = data['roles'] as List<dynamic>?;
             if (roles != null && roles.isNotEmpty) {
@@ -3270,12 +3467,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 canShow = true;
               }
             }
-            
+
             // Always show if found by direct ID (security exception)
             if (doc.id == query) {
               canShow = true;
             }
-            
+
             if (canShow) {
               data['id'] = doc.id;
               results.add(data);
@@ -3284,72 +3481,85 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           }
         }
       }
-      
+
       // 🔍 ENHANCED SORTING: Better relevance ranking with case-insensitive matching
       results.sort((a, b) {
-        final aName = '${a['firstName'] ?? ''} ${a['lastName'] ?? ''}'.toLowerCase().trim();
-        final bName = '${b['firstName'] ?? ''} ${b['lastName'] ?? ''}'.toLowerCase().trim();
+        final aName = '${a['firstName'] ?? ''} ${a['lastName'] ?? ''}'
+            .toLowerCase()
+            .trim();
+        final bName = '${b['firstName'] ?? ''} ${b['lastName'] ?? ''}'
+            .toLowerCase()
+            .trim();
         final aUsername = (a['username'] as String?)?.toLowerCase() ?? '';
         final bUsername = (b['username'] as String?)?.toLowerCase() ?? '';
         final aEmail = (a['email'] as String?)?.toLowerCase() ?? '';
         final bEmail = (b['email'] as String?)?.toLowerCase() ?? '';
         final queryLower = query.toLowerCase();
-        
+
         // Direct ID match gets highest priority
         if (a['id'] == query && b['id'] != query) return -1;
         if (b['id'] == query && a['id'] != query) return 1;
-        
+
         // Exact full name match
         if (aName == queryLower && bName != queryLower) return -1;
         if (bName == queryLower && aName != queryLower) return 1;
-        
+
         // Username exact match
         if (aUsername == queryLower && bUsername != queryLower) return -1;
         if (bUsername == queryLower && aUsername != queryLower) return 1;
-        
+
         // Email exact match
         if (aEmail == queryLower && bEmail != queryLower) return -1;
         if (bEmail == queryLower && aEmail != queryLower) return 1;
-        
+
         // First name starts with query
         final aFirstName = (a['firstName'] as String?)?.toLowerCase() ?? '';
         final bFirstName = (b['firstName'] as String?)?.toLowerCase() ?? '';
-        if (aFirstName.startsWith(queryLower) && !bFirstName.startsWith(queryLower)) return -1;
-        if (bFirstName.startsWith(queryLower) && !aFirstName.startsWith(queryLower)) return 1;
-        
-        // Last name starts with query  
+        if (aFirstName.startsWith(queryLower) &&
+            !bFirstName.startsWith(queryLower)) return -1;
+        if (bFirstName.startsWith(queryLower) &&
+            !aFirstName.startsWith(queryLower)) return 1;
+
+        // Last name starts with query
         final aLastName = (a['lastName'] as String?)?.toLowerCase() ?? '';
         final bLastName = (b['lastName'] as String?)?.toLowerCase() ?? '';
-        if (aLastName.startsWith(queryLower) && !bLastName.startsWith(queryLower)) return -1;
-        if (bLastName.startsWith(queryLower) && !aLastName.startsWith(queryLower)) return 1;
-        
+        if (aLastName.startsWith(queryLower) &&
+            !bLastName.startsWith(queryLower)) return -1;
+        if (bLastName.startsWith(queryLower) &&
+            !aLastName.startsWith(queryLower)) return 1;
+
         // Full name starts with query
-        if (aName.startsWith(queryLower) && !bName.startsWith(queryLower)) return -1;
-        if (bName.startsWith(queryLower) && !aName.startsWith(queryLower)) return 1;
-        
+        if (aName.startsWith(queryLower) && !bName.startsWith(queryLower))
+          return -1;
+        if (bName.startsWith(queryLower) && !aName.startsWith(queryLower))
+          return 1;
+
         // Username starts with query
-        if (aUsername.startsWith(queryLower) && !bUsername.startsWith(queryLower)) return -1;
-        if (bUsername.startsWith(queryLower) && !aUsername.startsWith(queryLower)) return 1;
-        
+        if (aUsername.startsWith(queryLower) &&
+            !bUsername.startsWith(queryLower)) return -1;
+        if (bUsername.startsWith(queryLower) &&
+            !aUsername.startsWith(queryLower)) return 1;
+
         // Alphabetical by full name
         return aName.compareTo(bName);
       });
-      
+
       if (!mounted) return;
-      
+
       // 🚀 PERFORMANCE: Cache results for future use
       final finalResults = results.take(8).toList();
       _searchCache[cacheKey] = finalResults;
       _cacheTimestamps[cacheKey] = DateTime.now();
-      
+
       // Clean old cache entries (keep only last 20)
       if (_searchCache.length > 20) {
         final oldestKey = _cacheTimestamps.entries
-            .reduce((a, b) => a.value.isBefore(b.value) ? a : b).key;
+            .reduce((a, b) => a.value.isBefore(b.value) ? a : b)
+            .key;
         _searchCache.remove(oldestKey);
         _cacheTimestamps.remove(oldestKey);
       }
-      
+
       setState(() {
         _searchResults = finalResults;
         _isSearching = false;
@@ -3361,7 +3571,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         _isSearching = false;
         _error = _getSearchErrorMessage(e);
       });
-      
+
       // Clear error after 3 seconds
       Timer(const Duration(seconds: 3), () {
         if (mounted) {
@@ -3381,10 +3591,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   String _getSearchErrorMessage(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
+
     if (errorString.contains('network') || errorString.contains('connection')) {
       return 'No internet connection. Please check your network.';
-    } else if (errorString.contains('permission') || errorString.contains('denied')) {
+    } else if (errorString.contains('permission') ||
+        errorString.contains('denied')) {
       return 'Permission denied. Please contact support.';
     } else if (errorString.contains('timeout')) {
       return 'Search timed out. Please try again.';
@@ -3396,23 +3607,29 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Future<void> _checkNetworkConnectivity() async {
     try {
       // Simple connectivity check with timeout
-      await _firestore.collection('users').limit(1).get()
+      await _firestore
+          .collection('users')
+          .limit(1)
+          .get()
           .timeout(const Duration(seconds: 5));
     } catch (e) {
-      throw Exception('Network connection failed. Please check your internet connection.');
+      throw Exception(
+          'Network connection failed. Please check your internet connection.');
     }
   }
 
   String _getAssignRoleErrorMessage(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
+
     if (errorString.contains('network') || errorString.contains('connection')) {
       return 'Network error. Please check your internet connection and try again.';
-    } else if (errorString.contains('permission') || errorString.contains('denied')) {
+    } else if (errorString.contains('permission') ||
+        errorString.contains('denied')) {
       return 'Permission denied. You may not have the required permissions.';
     } else if (errorString.contains('timeout')) {
       return 'Operation timed out. Please try again.';
-    } else if (errorString.contains('firebase') || errorString.contains('firestore')) {
+    } else if (errorString.contains('firebase') ||
+        errorString.contains('firestore')) {
       return 'Database error. Please try again later.';
     } else {
       return 'Role assignment failed. Please try again.';
@@ -3427,43 +3644,42 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     // 🚀 PERFORMANCE: Check mentorship groups cache first
     final cacheKey = unitPath;
     final cachedTime = _mentorshipCacheTimestamps[cacheKey];
-    if (cachedTime != null && 
+    if (cachedTime != null &&
         DateTime.now().difference(cachedTime) < _cacheExpiry &&
         _mentorshipGroupsCache.containsKey(cacheKey)) {
       // 🎯 PRESERVE: Keep selected mentorship group ID when using cache
       final previouslySelectedGroupId = _selectedMentorshipGroupId;
-      
+
       setState(() {
         final cachedGroups = _mentorshipGroupsCache[cacheKey]!;
-        
+
         // 🎯 PRESERVE: Keep any pending groups that were created locally
-        final existingPendingGroups = _mentorshipGroups.where((g) => g['isPending'] == true).toList();
+        final existingPendingGroups =
+            _mentorshipGroups.where((g) => g['isPending'] == true).toList();
         _mentorshipGroups = [...cachedGroups, ...existingPendingGroups];
-        
-        
+
         _isLoadingGroups = false;
-        
+
         // 🎯 RESTORE: Restore previously selected group if it still exists in cache
         if (previouslySelectedGroupId != null) {
-          final groupStillExists = _mentorshipGroups.any((g) => g['id'] == previouslySelectedGroupId);
+          final groupStillExists = _mentorshipGroups
+              .any((g) => g['id'] == previouslySelectedGroupId);
           if (groupStillExists) {
             _selectedMentorshipGroupId = previouslySelectedGroupId;
-            
-          } else {
-            
-          }
+          } else {}
         }
       });
       return;
     }
-    
+
     // 🎯 PRESERVE: Keep selected mentorship group ID when refetching
     final previouslySelectedGroupId = _selectedMentorshipGroupId;
-    
+
     setState(() {
       _isLoadingGroups = true;
       _mentorshipGroups = [];
-      _selectedMentorshipGroupId = null; // Temporarily clear, will restore if group still exists
+      _selectedMentorshipGroupId =
+          null; // Temporarily clear, will restore if group still exists
     });
 
     try {
@@ -3494,23 +3710,24 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             .collection('users')
             .where(FieldPath.documentId, whereIn: mentorIds)
             .get();
-        
+
         // Filter mentors by role compatibility and get names
         for (var doc in mentorDocs.docs) {
           final userData = doc.data();
           final roles = userData['roles'] as List<dynamic>?;
-          
+
           // Check if mentor has the expected role
           bool hasCorrectRole = false;
           if (roles != null && expectedMentorRole != null) {
-            hasCorrectRole = roles.any((role) => 
-              role is Map<String, dynamic> && role['role'] == expectedMentorRole);
+            hasCorrectRole = roles.any((role) =>
+                role is Map<String, dynamic> &&
+                role['role'] == expectedMentorRole);
           }
-          
+
           // Only include mentors with correct role, or if no role filtering needed
           if (expectedMentorRole == null || hasCorrectRole) {
-          mentorNames[doc.id] =
-                _getFullNameFromFields(userData['firstName'], userData['lastName']);
+            mentorNames[doc.id] = _getFullNameFromFields(
+                userData['firstName'], userData['lastName']);
           }
         }
       }
@@ -3526,42 +3743,40 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               currentMentorId != null ? mentorNames[currentMentorId] : null,
         };
       }).toList();
-      
+
       // 🎯 PRESERVE: Keep any pending groups that were created locally
-      final existingPendingGroups = _mentorshipGroups.where((g) => g['isPending'] == true).toList();
+      final existingPendingGroups =
+          _mentorshipGroups.where((g) => g['isPending'] == true).toList();
       groups.addAll(existingPendingGroups);
-      
 
       if (mounted) {
         // 🚀 PERFORMANCE: Cache mentorship groups results
         _mentorshipGroupsCache[cacheKey] = groups;
         _mentorshipCacheTimestamps[cacheKey] = DateTime.now();
-        
+
         // Clean old mentorship cache entries (keep only last 15)
         if (_mentorshipGroupsCache.length > 15) {
           final oldestKey = _mentorshipCacheTimestamps.entries
-              .reduce((a, b) => a.value.isBefore(b.value) ? a : b).key;
+              .reduce((a, b) => a.value.isBefore(b.value) ? a : b)
+              .key;
           _mentorshipGroupsCache.remove(oldestKey);
           _mentorshipCacheTimestamps.remove(oldestKey);
         }
-        
+
         setState(() {
           _mentorshipGroups = groups;
           _isLoadingGroups = false;
-          
+
           // 🎯 RESTORE: Restore previously selected group if it still exists
           if (previouslySelectedGroupId != null) {
-            final groupStillExists = groups.any((g) => g['id'] == previouslySelectedGroupId);
+            final groupStillExists =
+                groups.any((g) => g['id'] == previouslySelectedGroupId);
             if (groupStillExists) {
               _selectedMentorshipGroupId = previouslySelectedGroupId;
-              
-            } else {
-              
-            }
+            } else {}
           }
         });
       }
-
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -3575,12 +3790,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   void _createMentorshipGroup(int grade, String unitType) {
     // 🎯 NEW SYSTEM: No supervisor unit path required - class created before supervisor selection
     final gradeNameBase = _getBaseGradeName(grade, unitType);
-    
+
     final allGroupsForGrade = _mentorshipGroups
         .where((doc) => (doc['name'] as String).startsWith(gradeNameBase))
         .toList();
 
-    final newSuffix = String.fromCharCode('A'.codeUnitAt(0) + allGroupsForGrade.length);
+    final newSuffix =
+        String.fromCharCode('A'.codeUnitAt(0) + allGroupsForGrade.length);
     final newGroupName = '$gradeNameBase - $newSuffix';
 
     final tempId = 'pending_${DateTime.now().millisecondsSinceEpoch}';
@@ -3590,7 +3806,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       'name': newGroupName,
       'currentMentorId': null,
       'mentorName': null,
-      'isPending': true, 
+      'isPending': true,
     };
 
     setState(() {
@@ -3606,21 +3822,25 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   void _showCreateGroupDialog() async {
     // 🎯 NEW SYSTEM: Determine school type from selected role instead of supervisor
     String? supervisorRole;
-    
+
     // For mentors, use the selected role to determine school type
     if (_selectedRole == 'middleSchoolMentor') {
-      supervisorRole = 'middleSchoolAssistantCoordinator'; // Any role containing 'middleSchool'
+      supervisorRole =
+          'middleSchoolAssistantCoordinator'; // Any role containing 'middleSchool'
     } else if (_selectedRole == 'highSchoolMentor') {
-      supervisorRole = 'highSchoolAssistantCoordinator'; // Any role containing 'highSchool'
+      supervisorRole =
+          'highSchoolAssistantCoordinator'; // Any role containing 'highSchool'
     }
-    
+
     if (supervisorRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Class creation is only available for Middle School and High School mentors.")),
+        const SnackBar(
+            content: Text(
+                "Class creation is only available for Middle School and High School mentors.")),
       );
       return;
     }
-    
+
     String unitType;
     List<int> allGrades;
 
@@ -3632,11 +3852,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       allGrades = [6, 7, 8];
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Class creation is only available for High School and Middle School mentors.")),
+        const SnackBar(
+            content: Text(
+                "Class creation is only available for High School and Middle School mentors.")),
       );
       return;
     }
-    
+
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -3665,7 +3887,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ],
             ),
             child: Column(
-            mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
@@ -3723,24 +3945,24 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     ],
                   ),
                 ),
-                
+
                 // Content
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
                       ...allGrades.map((grade) {
-              return Container(
+                        return Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                width: double.infinity,
+                          width: double.infinity,
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(16),
                               onTap: () {
-                    Navigator.of(context).pop();
-                    _createMentorshipGroup(grade, unitType);
-                  },
+                                Navigator.of(context).pop();
+                                _createMentorshipGroup(grade, unitType);
+                              },
                               child: Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
@@ -3775,8 +3997,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
-                  child: Text(
-                    _getBaseGradeName(grade, unitType),
+                                      child: Text(
+                                        _getBaseGradeName(grade, unitType),
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -3792,18 +4014,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                                   ],
                                 ),
                               ),
-                  ),
-                ),
-              );
-            }),
-                      
+                            ),
+                          ),
+                        );
+                      }),
+
                       const SizedBox(height: 16),
-                      
+
                       // Cancel Button
                       SizedBox(
                         width: double.infinity,
                         child: TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -3830,9 +4052,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       body: Stack(
         children: [
@@ -3856,9 +4078,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     // Header with back button and title - Responsive centered
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final buttonWidth = MediaQuery.of(context).size.width > 600 ? 56.0 : 48.0;
-                        final iconSize = MediaQuery.of(context).size.width > 600 ? 26.0 : 24.0;
-                        
+                        final buttonWidth =
+                            MediaQuery.of(context).size.width > 600
+                                ? 56.0
+                                : 48.0;
+                        final iconSize = MediaQuery.of(context).size.width > 600
+                            ? 26.0
+                            : 24.0;
+
                         return Row(
                           children: [
                             SizedBox(
@@ -3875,7 +4102,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                                 ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                splashRadius: MediaQuery.of(context).size.width > 600 ? 28 : 24,
+                                splashRadius:
+                                    MediaQuery.of(context).size.width > 600
+                                        ? 28
+                                        : 24,
                               ),
                             ),
                             Expanded(
@@ -3892,23 +4122,29 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            SizedBox(width: buttonWidth), // Balance the left button
+                            SizedBox(
+                                width: buttonWidth), // Balance the left button
                           ],
                         );
                       },
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 12),
+                    SizedBox(
+                        height:
+                            MediaQuery.of(context).size.width > 600 ? 16 : 12),
                     Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: MediaQuery.of(context).size.width > 600 ? 20 : 16,
-                        vertical: MediaQuery.of(context).size.width > 600 ? 10 : 8,
+                        horizontal:
+                            MediaQuery.of(context).size.width > 600 ? 20 : 16,
+                        vertical:
+                            MediaQuery.of(context).size.width > 600 ? 10 : 8,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(
                           MediaQuery.of(context).size.width > 600 ? 24 : 20,
                         ),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Text(
                         'Step $_currentStep of $_totalSteps',
@@ -3919,89 +4155,103 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                         ),
                       ),
                     ),
-                    
-                    SizedBox(height: MediaQuery.of(context).size.width > 600 ? 20 : 16),
-                    
+
+                    SizedBox(
+                        height:
+                            MediaQuery.of(context).size.width > 600 ? 20 : 16),
+
                     // Modern Progress bar with steps - Fully responsive
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final screenWidth = MediaQuery.of(context).size.width;
-                        final horizontalMargin = screenWidth > 600 ? 40.0 : 
-                                               screenWidth > 400 ? 20.0 : 16.0;
-                        
+                        final horizontalMargin = screenWidth > 600
+                            ? 40.0
+                            : screenWidth > 400
+                                ? 20.0
+                                : 16.0;
+
                         return Container(
                           margin: EdgeInsets.symmetric(
                             horizontal: horizontalMargin,
                             vertical: screenWidth > 600 ? 8 : 6,
                           ),
-                      child: Column(
-                        children: [
-                          // Step indicators
-                          Row(
-                            children: List.generate(_totalSteps, (index) {
-                              final stepNumber = index + 1;
-                              final isActive = stepNumber <= _currentStep;
-                              
-                              return Expanded(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 300),
-                                        height: 4,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(2),
-                                          color: isActive 
-                                              ? Colors.white 
-                                              : Colors.white.withOpacity(0.3),
+                          child: Column(
+                            children: [
+                              // Step indicators
+                              Row(
+                                children: List.generate(_totalSteps, (index) {
+                                  final stepNumber = index + 1;
+                                  final isActive = stepNumber <= _currentStep;
+
+                                  return Expanded(
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 300),
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                              color: isActive
+                                                  ? Colors.white
+                                                  : Colors.white
+                                                      .withOpacity(0.3),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        if (index < _totalSteps - 1)
+                                          const SizedBox(width: 8),
+                                      ],
                                     ),
-                                    if (index < _totalSteps - 1) const SizedBox(width: 8),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ),
-                          const SizedBox(height: 8),
-                          // Step dots
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(_totalSteps, (index) {
-                              final stepNumber = index + 1;
-                              final isActive = stepNumber <= _currentStep;
-                              final isCurrent = stepNumber == _currentStep;
-                              
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                width: isCurrent ? 12 : 8,
-                                height: isCurrent ? 12 : 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isActive 
-                                      ? Colors.white 
-                                      : Colors.white.withOpacity(0.4),
-                                  boxShadow: isCurrent ? [
-                                    BoxShadow(
-                                      color: Colors.white.withOpacity(0.5),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: 8),
+                              // Step dots
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: List.generate(_totalSteps, (index) {
+                                  final stepNumber = index + 1;
+                                  final isActive = stepNumber <= _currentStep;
+                                  final isCurrent = stepNumber == _currentStep;
+
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    width: isCurrent ? 12 : 8,
+                                    height: isCurrent ? 12 : 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isActive
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.4),
+                                      boxShadow: isCurrent
+                                          ? [
+                                              BoxShadow(
+                                                color: Colors.white
+                                                    .withOpacity(0.5),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ]
+                                          : null,
                                     ),
-                                  ] : null,
-                                ),
-                              );
-                            }),
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
                         );
                       },
                     ),
-                    
+
                     // Step content - Responsive glassmorphic container with accessibility
                     Expanded(
                       child: Semantics(
-                        label: 'Role assignment step $_currentStep of $_totalSteps',
+                        label:
+                            'Role assignment step $_currentStep of $_totalSteps',
                         child: Container(
                           margin: const EdgeInsets.only(top: 0),
                           padding: EdgeInsets.all(
@@ -4019,11 +4269,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                             borderRadius: BorderRadius.circular(
                               MediaQuery.of(context).size.width > 600 ? 28 : 20,
                             ),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
-                                blurRadius: MediaQuery.of(context).size.width > 600 ? 25 : 15,
+                                blurRadius:
+                                    MediaQuery.of(context).size.width > 600
+                                        ? 25
+                                        : 15,
                                 offset: const Offset(0, 10),
                               ),
                             ],
@@ -4044,7 +4298,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-
   Widget _buildCurrentStep() {
     Widget stepWidget;
     switch (_currentStep) {
@@ -4055,10 +4308,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         stepWidget = _buildRoleStep();
         break;
       case 3:
-        stepWidget = _buildDetailsStep(); // 🎯 REORDERED: Location Details moved to Step 3
+        stepWidget =
+            _buildDetailsStep(); // 🎯 REORDERED: Location Details moved to Step 3
         break;
       case 4:
-        stepWidget = _buildSupervisorStep(); // 🎯 REORDERED: Supervisor moved to Step 4
+        stepWidget =
+            _buildSupervisorStep(); // 🎯 REORDERED: Supervisor moved to Step 4
         break;
       case 5:
         stepWidget = _buildOrphanedUnitsChoiceStep();
@@ -4066,7 +4321,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       default:
         stepWidget = _buildUserIdStep();
     }
-    
+
     // 🎨 ANIMATION: Smooth step transitions
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
@@ -4095,111 +4350,116 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   Widget _buildUserIdStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.start, // 🎯 Force content to start from top
+      mainAxisAlignment:
+          MainAxisAlignment.start, // 🎯 Force content to start from top
       children: [
         Expanded(
           child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🚀 NEW: Modern User Search
-          _buildModernUserSearch(
-            title: 'Find User',
-            subtitle: 'Search for the user you want to assign a role to.',
-            controller: _searchController,
-            searchResults: _searchResults,
-            isSearching: _isSearching,
-            selectedUser: _selectedUser,
-            onUserSelected: (user) {
-              setState(() {
-                if (user.containsKey('clear')) {
-                  // Clear selected user
-                  _selectedUser = null;
-                  _targetUserName = null;
-                  // _targetUserRole removed
-                  _existingUserRoles = [];
-                  _searchResults = [];
-                  // Legacy controller removed
-                } else {
-                  _selectedUser = user;
-                  
-                  // Update legacy variables for backward compatibility
-                  _targetUserName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
-                  // _targetUserRole removed; roles are shown via _existingUserRoles
-                  
-                  // 🔧 FIX: Store the UID separately for reliable access
-                  
-                  // Legacy controller removed
- 
-                  
-                  // Clear search results
-                  _searchResults = [];
-                  _searchController.clear();
-                  
-                  // Fetch existing roles for the selected user
-                  _getExistingRoles(user['id']).then((roles) {
-                    if (mounted) {
-                      setState(() {
-                        _existingUserRoles = roles;
-                      });
-                    }
-                  });
-                }
-              });
-            },
-            placeholder: "",
-          ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🚀 NEW: Modern User Search
+                _buildModernUserSearch(
+                  title: 'Find User',
+                  subtitle: 'Search for the user you want to assign a role to.',
+                  controller: _searchController,
+                  searchResults: _searchResults,
+                  isSearching: _isSearching,
+                  selectedUser: _selectedUser,
+                  onUserSelected: (user) {
+                    setState(() {
+                      if (user.containsKey('clear')) {
+                        // Clear selected user
+                        _selectedUser = null;
+                        _targetUserName = null;
+                        // _targetUserRole removed
+                        _existingUserRoles = [];
+                        _searchResults = [];
+                        // Legacy controller removed
+                      } else {
+                        _selectedUser = user;
 
-          const SizedBox(height: 40),
-          
-          // Navigation buttons
-          Row(
-            children: [
-              const Spacer(),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: _selectedUser != null
-                      ? Colors.green.withOpacity(0.3)
-                      : Colors.white.withOpacity(0.2),
-                  border: Border.all(
-                    color: _selectedUser != null
-                        ? Colors.green.withOpacity(0.5)
-                        : Colors.white.withOpacity(0.4),
-                  ),
-                  boxShadow: _selectedUser != null
-                      ? [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.2),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ]
-                      : [],
+                        // Update legacy variables for backward compatibility
+                        _targetUserName =
+                            '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'
+                                .trim();
+                        // _targetUserRole removed; roles are shown via _existingUserRoles
+
+                        // 🔧 FIX: Store the UID separately for reliable access
+
+                        // Legacy controller removed
+
+                        // Clear search results
+                        _searchResults = [];
+                        _searchController.clear();
+
+                        // Fetch existing roles for the selected user
+                        _getExistingRoles(user['id']).then((roles) {
+                          if (mounted) {
+                            setState(() {
+                              _existingUserRoles = roles;
+                            });
+                          }
+                        });
+                      }
+                    });
+                  },
+                  placeholder: "",
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: _selectedUser != null ? _goToNextStep : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-                  label: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+                const SizedBox(height: 40),
+
+                // Navigation buttons
+                Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: _selectedUser != null
+                            ? Colors.green.withOpacity(0.3)
+                            : Colors.white.withOpacity(0.2),
+                        border: Border.all(
+                          color: _selectedUser != null
+                              ? Colors.green.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.4),
+                        ),
+                        boxShadow: _selectedUser != null
+                            ? [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.2),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: _selectedUser != null ? _goToNextStep : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                        label: const Text('Next',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
-
 
   Widget _buildRoleStep() {
     return SingleChildScrollView(
@@ -4229,18 +4489,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ],
             ),
             const SizedBox(height: 12),
-        Container(
+            Container(
               padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Check if user has any non-user roles
-                  if (_existingUserRoles.where((r) => r['role'] != 'user').isEmpty) ...[
+                  if (_existingUserRoles
+                      .where((r) => r['role'] != 'user')
+                      .isEmpty) ...[
                     RichText(
                       text: TextSpan(
                         children: [
@@ -4258,9 +4520,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                               color: Colors.white70,
                               fontSize: 16,
                             ),
-              ),
-            ],
-          ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Container(
@@ -4273,11 +4535,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                          Icon(Icons.info_outline,
+                              color: Colors.grey, size: 20),
                           SizedBox(width: 12),
                           Text(
                             'Ready to assign first role',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -4306,37 +4572,46 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     ),
                     const SizedBox(height: 12),
                     // Only show non-user roles - sorted by hierarchy
-                    ...(_sortRolesByHierarchy(_existingUserRoles.where((role) => role['role'] != 'user').toList()).map((role) => Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.green.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(_getRoleIcon(role['role']), color: Colors.green, size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                            _getRoleTitle(role['role']),
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )).toList()),
+                    ...(_sortRolesByHierarchy(_existingUserRoles
+                            .where((role) => role['role'] != 'user')
+                            .toList())
+                        .map((role) => Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: Colors.green.withOpacity(0.4)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(_getRoleIcon(role['role']),
+                                      color: Colors.green, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _getRoleTitle(role['role']),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                        .toList()),
                   ],
                 ],
               ),
             ),
             const SizedBox(height: 30),
           ],
-          
+
           // Operation selection - Clean design
           Row(
             children: [
@@ -4358,12 +4633,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Modern operation buttons with better visual hierarchy
           LayoutBuilder(
             builder: (context, constraints) {
               final isWideScreen = constraints.maxWidth > 400;
-              
+
               if (isWideScreen) {
                 // Wide screen: Side by side buttons
                 return IntrinsicHeight(
@@ -4371,22 +4646,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     children: [
                       Expanded(
                         child: _buildOperationButton(
-                          'add',
-                          'Add Role',
-                          Icons.add_circle_outline,
-                          Colors.green,
-                          'Assign new role to user'
-                        ),
+                            'add',
+                            'Add Role',
+                            Icons.add_circle_outline,
+                            Colors.green,
+                            'Assign new role to user'),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildOperationButton(
-                          'delete',
-                          'Delete Role',
-                          Icons.delete_outline,
-                          Colors.red,
-                          'Remove existing role'
-                        ),
+                            'delete',
+                            'Delete Role',
+                            Icons.delete_outline,
+                            Colors.red,
+                            'Remove existing role'),
                       ),
                     ],
                   ),
@@ -4396,215 +4669,240 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 return Column(
                   children: [
                     _buildOperationButton(
-                      'add',
-                      'Add Role',
-                      Icons.add_circle_outline,
-                      Colors.green,
-                      'Assign new role to user'
-                    ),
+                        'add',
+                        'Add Role',
+                        Icons.add_circle_outline,
+                        Colors.green,
+                        'Assign new role to user'),
                     const SizedBox(height: 12),
                     _buildOperationButton(
-                      'delete',
-                      'Delete Role',
-                      Icons.delete_outline,
-                      Colors.red,
-                      'Remove existing role'
-                    ),
+                        'delete',
+                        'Delete Role',
+                        Icons.delete_outline,
+                        Colors.red,
+                        'Remove existing role'),
                   ],
                 );
               }
             },
           ),
-          
+
           const SizedBox(height: 30),
-          
+
           // Role selection based on operation
           if (_showRoleSelection) ...[
             _buildRoleSelectionForOperation(),
             const SizedBox(height: 20),
           ],
-          
+
           // Summary section
           if (_currentOperation.isNotEmpty && _canShowSummary()) ...[
             _buildOperationSummary(),
             const SizedBox(height: 30),
           ],
-          
+
           // Navigation buttons
-        Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.white.withOpacity(0.2),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withOpacity(0.2),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: _goToPreviousStep,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                   ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: _goToPreviousStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                  label: const Text('Back',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-                icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                label: const Text('Back', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-            ),
-            const Spacer(),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+              const Spacer(),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
                   color: _canProceedToNext()
-                    ? Colors.green.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.1),
-                border: Border.all(
+                      ? Colors.green.withOpacity(0.3)
+                      : Colors.white.withOpacity(0.1),
+                  border: Border.all(
                     color: _canProceedToNext()
-                      ? Colors.green.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.2),
-                ),
+                        ? Colors.green.withOpacity(0.5)
+                        : Colors.white.withOpacity(0.2),
+                  ),
                   boxShadow: _canProceedToNext()
-                    ? [
-                        BoxShadow(
-                          color: Colors.green.withOpacity(0.2),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: ElevatedButton.icon(
-                  onPressed: _canProceedToNext() ? () {
-                    HapticFeedback.mediumImpact();
-                    _proceedToNextStep();
-                  } : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ? [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ]
+                      : [],
                 ),
-                  icon: Icon(_currentOperation == 'delete' ? Icons.delete_forever : Icons.arrow_forward_rounded, size: 20),
-                label: Text(
+                child: ElevatedButton.icon(
+                  onPressed: _canProceedToNext()
+                      ? () {
+                          HapticFeedback.mediumImpact();
+                          _proceedToNextStep();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
+                  icon: Icon(
+                      _currentOperation == 'delete'
+                          ? Icons.delete_forever
+                          : Icons.arrow_forward_rounded,
+                      size: 20),
+                  label: Text(
                     _currentOperation == 'delete' ? 'Delete' : 'Next',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
       ),
     );
   }
 
   // 🚀 Build operation button widget - Compact version without description
-  Widget _buildOperationButton(String operation, String title, IconData icon, Color color, String description) {
+  Widget _buildOperationButton(String operation, String title, IconData icon,
+      Color color, String description) {
     final isSelected = _currentOperation == operation;
-    
+
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.of(context).size.width > 600 ? 120 : 100, // Reduced height
-        minWidth: double.infinity,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: isSelected 
-          ? LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.3),
-                color.withOpacity(0.1),
-              ],
-            )
-          : LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.15),
-                Colors.white.withOpacity(0.05),
-              ],
-            ),
-        border: Border.all(
-          color: isSelected ? color.withOpacity(0.6) : Colors.white.withOpacity(0.3),
-          width: isSelected ? 2.5 : 1.5,
+        duration: const Duration(milliseconds: 200),
+        constraints: BoxConstraints(
+          minHeight: MediaQuery.of(context).size.width > 600
+              ? 120
+              : 100, // Reduced height
+          minWidth: double.infinity,
         ),
-        boxShadow: isSelected ? [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ] : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Semantics(
-          label: title,
-          button: true,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _selectOperation(operation);
-            },
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: MediaQuery.of(context).size.width > 600 ? 20 : 16, // Reduced padding
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(10), // Slightly reduced icon padding
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(isSelected ? 0.2 : 0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    icon, 
-                    color: color, 
-                    size: MediaQuery.of(context).size.width > 600 ? 32 : 28, // Slightly smaller icon
-                  ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withOpacity(0.3),
+                    color.withOpacity(0.1),
+                  ],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.15),
+                    Colors.white.withOpacity(0.05),
+                  ],
                 ),
-                const SizedBox(height: 8), // Reduced spacing
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: MediaQuery.of(context).size.width > 600 ? 18 : 16, // Slightly smaller text
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                // Description removed for compact design
-              ],
-            ),
+          border: Border.all(
+            color: isSelected
+                ? color.withOpacity(0.6)
+                : Colors.white.withOpacity(0.3),
+            width: isSelected ? 2.5 : 1.5,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
-      ),
-    ));
+        child: Material(
+          color: Colors.transparent,
+          child: Semantics(
+            label: title,
+            button: true,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _selectOperation(operation);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: MediaQuery.of(context).size.width > 600
+                      ? 20
+                      : 16, // Reduced padding
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(
+                          10), // Slightly reduced icon padding
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(isSelected ? 0.2 : 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: MediaQuery.of(context).size.width > 600
+                            ? 32
+                            : 28, // Slightly smaller icon
+                      ),
+                    ),
+                    const SizedBox(height: 8), // Reduced spacing
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width > 600
+                            ? 18
+                            : 16, // Slightly smaller text
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    // Description removed for compact design
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ));
   }
 
   // 🚀 Build role selection based on operation with smooth animation
@@ -4612,10 +4910,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     return AnimatedContainer(
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeOutBack,
-      child: _showRoleSelection ? _buildRoleSelectionContent() : const SizedBox.shrink(),
+      child: _showRoleSelection
+          ? _buildRoleSelectionContent()
+          : const SizedBox.shrink(),
     );
   }
-  
+
   // 🎯 Role selection content
   Widget _buildRoleSelectionContent() {
     switch (_currentOperation) {
@@ -4631,8 +4931,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   // 🚀 Build add role selection
   Widget _buildAddRoleSelection() {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         // Enhanced role selection with visual hierarchy
         const Row(
           children: [
@@ -4640,45 +4940,45 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             SizedBox(width: 12),
             Text(
               'Add New Role',
-          style: TextStyle(
+              style: TextStyle(
                 fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
-        
 
-        
         // Enhanced role selection cards
-        
+
         // Role selection cards with enhanced UI
         ..._buildRoleSelectionCards(),
-        
+
         const SizedBox(height: 24),
       ],
     );
   }
-
-
 
   // 🚀 Build enhanced role selection cards with categories
   List<Widget> _buildRoleSelectionCards() {
     // 🎯 NEW: Filter roles based on current user permissions
     List<String> allowedRoles = _selectableRoles;
     if (_currentUserRole != null) {
-      final assignableRoles = RolePermissions.getAssignableRoles(_currentUserRole!);
+      final assignableRoles =
+          RolePermissions.getAssignableRoles(_currentUserRole!);
       if (!assignableRoles.contains('*')) {
-        allowedRoles = _selectableRoles.where((role) => assignableRoles.contains(role)).toList();
+        allowedRoles = _selectableRoles
+            .where((role) => assignableRoles.contains(role))
+            .toList();
       }
     }
-    
-    final selectableRoles = allowedRoles.where((role) => 
-      !_existingUserRoles.any((existing) => existing['role'] == role)
-    ).toList();
-    
+
+    final selectableRoles = allowedRoles
+        .where((role) =>
+            !_existingUserRoles.any((existing) => existing['role'] == role))
+        .toList();
+
     if (selectableRoles.isEmpty) {
       return [
         Container(
@@ -4703,52 +5003,68 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         ),
       ];
     }
-    
+
     // 🚀 Categorize roles
     final Map<String, List<String>> roleCategories = {
       'Moderator': ['moderator'],
       'Director': ['director'],
-      'Coordinators': ['middleSchoolCoordinator', 'highSchoolCoordinator', 'universityCoordinator', 'housingCoordinator'],
-      'Assistant Coordinators': ['middleSchoolAssistantCoordinator', 'highSchoolAssistantCoordinator', 'universityAssistantCoordinator', 'housingAssistantCoordinator'],
+      'Coordinators': [
+        'middleSchoolCoordinator',
+        'highSchoolCoordinator',
+        'universityCoordinator',
+        'housingCoordinator'
+      ],
+      'Assistant Coordinators': [
+        'middleSchoolAssistantCoordinator',
+        'highSchoolAssistantCoordinator',
+        'universityAssistantCoordinator',
+        'housingAssistantCoordinator'
+      ],
       'Mentors': ['middleSchoolMentor', 'highSchoolMentor'],
-      'House Leader': ['houseLeader', 'studentHouseLeader'], // 🎯 FIXED: Added studentHouseLeader
-      'House Member': ['houseMember', 'studentHouseMember'], // 🎯 NEW: House member roles
+      'House Leader': [
+        'houseLeader',
+        'studentHouseLeader'
+      ], // 🎯 FIXED: Added studentHouseLeader
+      'House Member': [
+        'houseMember',
+        'studentHouseMember'
+      ], // 🎯 NEW: House member roles
       'Accountant': ['accountant'],
     };
-    
+
     List<Widget> widgets = [];
-    
+
     for (String category in roleCategories.keys) {
       final categoryRoles = roleCategories[category]!
           .where((role) => selectableRoles.contains(role))
           .toList();
-      
+
       if (categoryRoles.isEmpty) continue;
-      
+
       // Add category header
       widgets.add(_buildCategoryHeader(category));
       widgets.add(const SizedBox(height: 16));
-      
+
       // Add roles for this category
       for (String role in categoryRoles) {
         widgets.add(_buildRoleCard(role));
         widgets.add(const SizedBox(height: 12));
       }
-      
+
       widgets.add(const SizedBox(height: 12)); // Extra space between categories
     }
-    
+
     return widgets;
   }
-  
+
   // 🚀 Build category header (similar to supervisor page)
   Widget _buildCategoryHeader(String category) {
     Color categoryColor = _getCategoryColor(category);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
+      child: Row(
+        children: [
           Container(
             width: 8,
             height: 8,
@@ -4768,7 +5084,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ),
           ),
           const SizedBox(width: 12),
-              Expanded(
+          Expanded(
             child: Container(
               height: 1,
               decoration: BoxDecoration(
@@ -4777,9 +5093,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     categoryColor.withOpacity(0.6),
                     Colors.transparent,
                   ],
-                  ),
                 ),
               ),
+            ),
           ),
         ],
       ),
@@ -4789,23 +5105,32 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   // 🚀 Get category color
   Color _getCategoryColor(String category) {
     switch (category) {
-      case 'Moderator': return Colors.orange;
-      case 'Director': return Colors.yellow;
-      case 'Coordinators': return Colors.green;
-      case 'Assistant Coordinators': return Colors.blue;
-      case 'Mentors': return Colors.cyan;
-      case 'House Leader': return Colors.deepPurple;
-      case 'House Member': return Colors.purple; // 🎯 NEW: House member category color
-      case 'Accountant': return Colors.teal;
-      default: return Colors.orange;
+      case 'Moderator':
+        return Colors.orange;
+      case 'Director':
+        return Colors.yellow;
+      case 'Coordinators':
+        return Colors.green;
+      case 'Assistant Coordinators':
+        return Colors.blue;
+      case 'Mentors':
+        return Colors.cyan;
+      case 'House Leader':
+        return Colors.deepPurple;
+      case 'House Member':
+        return Colors.purple; // 🎯 NEW: House member category color
+      case 'Accountant':
+        return Colors.teal;
+      default:
+        return Colors.orange;
     }
   }
-  
+
   // 🚀 Build individual role card
   Widget _buildRoleCard(String role) {
     final isSelected = _selectedRole == role;
     final roleColor = _getRoleColor(role);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 0),
       child: Material(
@@ -4815,28 +5140,28 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             setState(() {
               _selectedRole = role;
               _message = '';
-              
+
               // 🎯 CRITICAL FIX: Clear location state when role changes to prevent dropdown errors
               _selectedCountry = null;
               _selectedProvince = null;
               _selectedCity = null;
               _selectedUnitGender = null;
-              
+
               // Also clear supervisor and other dependent states
               _selectedSupervisorId = null;
               _supervisorUserName = null;
               _supervisorUserRole = null;
               _supervisorRoleMatches = null;
-              
+
               _isLoadingSupervisors = false;
               _supervisorsByCity = {};
-              
+
               // Clear mentorship groups
               _selectedMentorshipGroupId = null;
               _selectedMentorshipGroupName = null;
               _mentorshipGroups = [];
               _isLoadingGroups = false;
-              
+
               // Clear orphaned units state
               _hasOrphanedUnits = false;
               _availableOrphanedUnits = [];
@@ -4853,23 +5178,25 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             height: 160, // Sabit yükseklik - daha büyük (accessibility için)
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isSelected 
+              color: isSelected
                   ? roleColor.withOpacity(0.2)
                   : Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(15),
               border: Border.all(
-                color: isSelected 
+                color: isSelected
                     ? roleColor.withOpacity(0.6)
                     : Colors.white.withOpacity(0.3),
                 width: isSelected ? 2 : 1,
               ),
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: roleColor.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ] : [],
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: roleColor.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ]
+                  : [],
             ),
             child: Stack(
               children: [
@@ -4877,12 +5204,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 Row(
                   children: [
                     // Role icon
-                Container(
+                    Container(
                       padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
+                      decoration: BoxDecoration(
                         color: roleColor.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Icon(
                         _getRoleIcon(role),
                         color: Colors.white,
@@ -4890,7 +5217,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       ),
                     ),
                     const SizedBox(width: 16),
-                    
+
                     // Role details - tam genişlik
                     Expanded(
                       child: Column(
@@ -4910,19 +5237,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                           const SizedBox(height: 8),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                            children: [
                               Icon(
                                 Icons.supervisor_account,
                                 color: Colors.white70,
                                 size: 18,
                               ),
                               const SizedBox(width: 6),
-                Expanded(
-                  child: RichText(
+                              Expanded(
+                                child: RichText(
                                   maxLines: 3,
                                   overflow: TextOverflow.clip,
-                    text: TextSpan(
-                      children: [
+                                  text: TextSpan(
+                                    children: [
                                       const TextSpan(
                                         text: 'Supervisor: ',
                                         style: TextStyle(
@@ -4931,26 +5258,26 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                        TextSpan(
+                                      TextSpan(
                                         text: _getSupervisorDisplayText(role),
                                         style: const TextStyle(
                                           fontSize: 15,
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                         ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                
+
                 // Check icon overlay - sağ üst köşe
                 if (isSelected)
                   Positioned(
@@ -4958,9 +5285,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     right: 8,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: const Icon(
@@ -4978,67 +5305,95 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-
   // 🚀 Get role color
   Color _getRoleColor(String role) {
     switch (role) {
-      case 'admin': return Colors.red;
-      case 'moderator': return Colors.orange;
-      case 'director': return Colors.yellow;
-      case 'middleSchoolCoordinator': 
-      case 'highSchoolCoordinator': 
+      case 'admin':
+        return Colors.red;
+      case 'moderator':
+        return Colors.orange;
+      case 'director':
+        return Colors.yellow;
+      case 'middleSchoolCoordinator':
+      case 'highSchoolCoordinator':
       case 'universityCoordinator':
-      case 'housingCoordinator': return Colors.green;
+      case 'housingCoordinator':
+        return Colors.green;
       case 'middleSchoolAssistantCoordinator':
       case 'highSchoolAssistantCoordinator':
       case 'universityAssistantCoordinator':
-      case 'housingAssistantCoordinator': return Colors.blue;
-      case 'middleSchoolMentor': 
-      case 'highSchoolMentor': return Colors.cyan;
-      case 'houseLeader': return Colors.deepPurple;
-      case 'studentHouseLeader': return Colors.deepPurple; // 🎯 NEW: Student house leader color
-      case 'houseMember': return Colors.purple; // 🎯 NEW: House member color
-      case 'studentHouseMember': return Colors.purple; // 🎯 NEW: Student house member color
-      case 'accountant': return Colors.teal;
-      case 'user': return Colors.grey;
-      default: return Colors.grey;
+      case 'housingAssistantCoordinator':
+        return Colors.blue;
+      case 'middleSchoolMentor':
+      case 'highSchoolMentor':
+        return Colors.cyan;
+      case 'houseLeader':
+        return Colors.deepPurple;
+      case 'studentHouseLeader':
+        return Colors.deepPurple; // 🎯 NEW: Student house leader color
+      case 'houseMember':
+        return Colors.purple; // 🎯 NEW: House member color
+      case 'studentHouseMember':
+        return Colors.purple; // 🎯 NEW: Student house member color
+      case 'accountant':
+        return Colors.teal;
+      case 'user':
+        return Colors.grey;
+      default:
+        return Colors.grey;
     }
   }
-
-
 
   // 🚀 Get required supervisor role
   String _getRequiredSupervisorRole(String role) {
     switch (role) {
-      case 'moderator': return 'admin';
-      case 'director': return 'moderator';
-      case 'middleSchoolCoordinator': return 'director';
-      case 'highSchoolCoordinator': return 'director';
-      case 'universityCoordinator': return 'director';
-      case 'housingCoordinator': return 'director';
-      case 'middleSchoolAssistantCoordinator': return 'middleSchoolCoordinator';
-      case 'highSchoolAssistantCoordinator': return 'highSchoolCoordinator';
-      case 'universityAssistantCoordinator': return 'universityCoordinator';
-      case 'housingAssistantCoordinator': return 'housingCoordinator';
-      case 'middleSchoolMentor': return 'middleSchoolAssistantCoordinator';
-      case 'highSchoolMentor': return 'highSchoolAssistantCoordinator';
-      case 'houseLeader': return 'housingAssistantCoordinator'; // 🎯 UPDATED: Housing assistant coordinator
-      case 'studentHouseLeader': return 'universityAssistantCoordinator'; // 🎯 NEW: University assistant coordinator
-      case 'houseMember': return 'houseLeader'; // 🎯 NEW: House member supervised by house leader
-      case 'studentHouseMember': return 'studentHouseLeader'; // 🎯 NEW: Student house member supervised by student house leader
-      case 'accountant': return 'director';
-      default: return 'admin';
+      case 'moderator':
+        return 'admin';
+      case 'director':
+        return 'moderator';
+      case 'middleSchoolCoordinator':
+        return 'director';
+      case 'highSchoolCoordinator':
+        return 'director';
+      case 'universityCoordinator':
+        return 'director';
+      case 'housingCoordinator':
+        return 'director';
+      case 'middleSchoolAssistantCoordinator':
+        return 'middleSchoolCoordinator';
+      case 'highSchoolAssistantCoordinator':
+        return 'highSchoolCoordinator';
+      case 'universityAssistantCoordinator':
+        return 'universityCoordinator';
+      case 'housingAssistantCoordinator':
+        return 'housingCoordinator';
+      case 'middleSchoolMentor':
+        return 'middleSchoolAssistantCoordinator';
+      case 'highSchoolMentor':
+        return 'highSchoolAssistantCoordinator';
+      case 'houseLeader':
+        return 'housingAssistantCoordinator'; // 🎯 UPDATED: Housing assistant coordinator
+      case 'studentHouseLeader':
+        return 'universityAssistantCoordinator'; // 🎯 NEW: University assistant coordinator
+      case 'houseMember':
+        return 'houseLeader'; // 🎯 NEW: House member supervised by house leader
+      case 'studentHouseMember':
+        return 'studentHouseLeader'; // 🎯 NEW: Student house member supervised by student house leader
+      case 'accountant':
+        return 'director';
+      default:
+        return 'admin';
     }
   }
 
   // 🚀 Get supervisor display text for UI
   String _getSupervisorDisplayText(String role) {
     switch (role) {
-      case 'middleSchoolMentor': 
+      case 'middleSchoolMentor':
         return 'Middle School Assistant Coordinator';
-      case 'highSchoolMentor': 
+      case 'highSchoolMentor':
         return 'High School Assistant Coordinator';
-      case 'houseLeader': 
+      case 'houseLeader':
         return 'Housing Assistant Coordinator'; // 🎯 UPDATED: Only housing assistant coordinator
       case 'studentHouseLeader':
         return 'University Assistant Coordinator'; // 🎯 NEW: University assistant coordinator
@@ -5046,13 +5401,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         return 'House Leader'; // 🎯 NEW: House member supervised by house leader
       case 'studentHouseMember':
         return 'Student House Leader'; // 🎯 NEW: Student house member supervised by student house leader
-      default: 
+      default:
         return _getRoleTitle(_getRequiredSupervisorRole(role));
     }
   }
+
   // 🚀 Build delete role selection
   Widget _buildDeleteRoleSelection() {
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -5072,18 +5427,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           ],
         ),
         const SizedBox(height: 16),
-        
+
         // Important notice section
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
             color: Colors.orange.withOpacity(0.15),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.orange.withOpacity(0.4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            children: [
               const Row(
                 children: [
                   Icon(Icons.info_outline, color: Colors.orange, size: 24),
@@ -5114,52 +5469,53 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.blue.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'What happens?',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'What happens?',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 12),
+                    if (_selectedExistingRole == 'houseMember' ||
+                        _selectedExistingRole == 'studentHouseMember')
+                      Text(
+                        '• The person loses this role and its permissions\n• No cascade effects - members don\'t supervise others\n• Personal data and account remain safe',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      )
+                    else
+                      Text(
+                        '• The person loses this role and its permissions\n• If they supervise others, they\'ll need a new supervisor assigned\n• Personal data and account remain safe',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                if (_selectedExistingRole == 'houseMember' || _selectedExistingRole == 'studentHouseMember')
-                Text(
-                    '• The person loses this role and its permissions\n• No cascade effects - members don\'t supervise others\n• Personal data and account remain safe',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                      height: 1.4,
-                    ),
-                  )
-                else
-                  Text(
-                    '• The person loses this role and its permissions\n• If they supervise others, they\'ll need a new supervisor assigned\n• Personal data and account remain safe',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-              ],
-            ),
-          ),
-        
+        ),
+
         const SizedBox(height: 24),
-        
+
         // Role selection cards for deletion - show all roles with permission indicators
         const Text(
           'Select Role to Remove',
@@ -5170,12 +5526,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // 🎯 NEW: Show all roles with permission indicators
         ..._buildDeletableRoleCardsWithPermissions(),
-          
+
         const SizedBox(height: 24),
-        
+
         // Impact analysis
         if (_selectedExistingRole != null) ...[
           _buildImpactAnalysis(),
@@ -5184,13 +5540,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-
-
   // 🎯 NEW: Build deletable role cards with permission indicators
   List<Widget> _buildDeletableRoleCardsWithPermissions() {
     // Get all non-user roles
-    final allRoles = _existingUserRoles.where((role) => role['role'] != 'user').toList();
-    
+    final allRoles =
+        _existingUserRoles.where((role) => role['role'] != 'user').toList();
+
     if (allRoles.isEmpty) {
       return [
         Container(
@@ -5215,29 +5570,31 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         ),
       ];
     }
-    
+
     // Sort by hierarchy before building cards
     final sortedRoles = _sortRolesByHierarchy(allRoles);
     return sortedRoles.map((roleData) {
       final role = roleData['role'] as String;
       final isSelected = _selectedExistingRole == role;
       final roleColor = _getRoleColor(role);
-      
+
       // 🎯 NEW: Check if current user can delete this role
-      final canDelete = _currentUserRole != null && 
-                      RolePermissions.canAssignRole(_currentUserRole!, role);
-      
+      final canDelete = _currentUserRole != null &&
+          RolePermissions.canAssignRole(_currentUserRole!, role);
+
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: canDelete ? () {
-              setState(() {
-                _selectedExistingRole = role;
-                _message = '';
-              });
-            } : null, // Disable tap if no permission
+            onTap: canDelete
+                ? () {
+                    setState(() {
+                      _selectedExistingRole = role;
+                      _message = '';
+                    });
+                  }
+                : null, // Disable tap if no permission
             borderRadius: BorderRadius.circular(15),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -5246,25 +5603,27 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               decoration: BoxDecoration(
                 color: !canDelete
                     ? Colors.grey.withOpacity(0.1) // Disabled appearance
-                    : isSelected 
+                    : isSelected
                         ? Colors.red.withOpacity(0.2)
                         : Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
                   color: !canDelete
                       ? Colors.grey.withOpacity(0.3) // Disabled border
-                      : isSelected 
+                      : isSelected
                           ? Colors.red.withOpacity(0.6)
                           : Colors.white.withOpacity(0.3),
                   width: isSelected ? 2 : 1,
                 ),
-                boxShadow: isSelected && canDelete ? [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ] : [],
+                boxShadow: isSelected && canDelete
+                    ? [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ]
+                    : [],
               ),
               child: Row(
                 children: [
@@ -5273,7 +5632,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: canDelete ? roleColor.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                      color: canDelete
+                          ? roleColor.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -5283,7 +5644,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Role info
                   Expanded(
                     child: Column(
@@ -5299,7 +5660,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          canDelete 
+                          canDelete
                               ? 'Tap to select for deletion'
                               : 'Insufficient permissions to delete',
                           style: TextStyle(
@@ -5310,7 +5671,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       ],
                     ),
                   ),
-                  
+
                   // Permission indicator
                   Icon(
                     canDelete ? Icons.delete_outline : Icons.lock_outline,
@@ -5355,7 +5716,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Simple summary
           Text(
             'Removing the ${_getRoleTitle(_selectedExistingRole!)} role from this person.',
@@ -5366,13 +5727,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ),
           ),
           const SizedBox(height: 12),
-          if (_selectedExistingRole != 'houseMember' && _selectedExistingRole != 'studentHouseMember') 
-          Text(
-            'If they supervise others, those people will need a new supervisor assigned.',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
+          if (_selectedExistingRole != 'houseMember' &&
+              _selectedExistingRole != 'studentHouseMember')
+            Text(
+              'If they supervise others, those people will need a new supervisor assigned.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
             )
           else
             Text(
@@ -5381,11 +5743,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 fontSize: 14,
                 color: Colors.green,
                 fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Simple helpful tip
           Container(
             padding: const EdgeInsets.all(12),
@@ -5415,8 +5777,6 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       ),
     );
   }
-                        
-  
 
   // Legacy impact helpers removed
 
@@ -5491,11 +5851,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       ),
     );
   }
+
   // 🚀 Build summary content - User-friendly English for 40-50+ age group
   Widget _buildSummaryContent() {
     switch (_currentOperation) {
       case 'add':
-        final nonUserRoles = _existingUserRoles.where((role) => role['role'] != 'user').toList();
+        final nonUserRoles =
+            _existingUserRoles.where((role) => role['role'] != 'user').toList();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -5513,7 +5875,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.person_add_rounded, color: Colors.green, size: 24),
+                      const Icon(Icons.person_add_rounded,
+                          color: Colors.green, size: 24),
                       const SizedBox(width: 12),
                       const Text(
                         'Adding New Role',
@@ -5571,7 +5934,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Roles after operation
             const Text(
               'Roles After Operation:',
@@ -5589,7 +5952,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 style: TextStyle(fontSize: 16, color: Colors.white70),
               ),
               const SizedBox(height: 8),
-              ...(_sortRolesByHierarchy(nonUserRoles).map((role) => _buildRoleSummaryItem(role['role'], Colors.blue, isExisting: true)).toList()),
+              ...(_sortRolesByHierarchy(nonUserRoles)
+                  .map((role) => _buildRoleSummaryItem(
+                      role['role'], Colors.blue,
+                      isExisting: true))
+                  .toList()),
               const SizedBox(height: 12),
             ],
             const Text(
@@ -5602,7 +5969,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         );
 
       case 'delete':
-        final remainingRoles = _existingUserRoles.where((role) => role['role'] != _selectedExistingRole && role['role'] != 'user').toList();
+        final remainingRoles = _existingUserRoles
+            .where((role) =>
+                role['role'] != _selectedExistingRole && role['role'] != 'user')
+            .toList();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -5620,7 +5990,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.person_remove_rounded, color: Colors.red, size: 24),
+                      const Icon(Icons.person_remove_rounded,
+                          color: Colors.red, size: 24),
                       const SizedBox(width: 12),
                       const Text(
                         'Removing Role',
@@ -5678,7 +6049,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ),
             ),
             const SizedBox(height: 20),
-            
+
             const Text(
               'Roles After Operation:',
               style: TextStyle(
@@ -5689,7 +6060,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ),
             const SizedBox(height: 12),
             if (remainingRoles.isNotEmpty) ...[
-              ...(_sortRolesByHierarchy(remainingRoles).map((role) => _buildRoleSummaryItem(role['role'], Colors.blue, isExisting: true)).toList())
+              ...(_sortRolesByHierarchy(remainingRoles)
+                  .map((role) => _buildRoleSummaryItem(
+                      role['role'], Colors.blue,
+                      isExisting: true))
+                  .toList())
             ] else
               Container(
                 width: double.infinity,
@@ -5701,7 +6076,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, color: Colors.grey, size: 20),
+                    Icon(Icons.info_outline_rounded,
+                        color: Colors.grey, size: 20),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -5726,7 +6102,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   // 🚀 Build role summary item - Enhanced for better readability
-  Widget _buildRoleSummaryItem(String role, Color color, {bool isNew = false, bool isExisting = false}) {
+  Widget _buildRoleSummaryItem(String role, Color color,
+      {bool isNew = false, bool isExisting = false}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -5738,13 +6115,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           color: color.withOpacity(isNew ? 0.5 : 0.3),
           width: isNew ? 2 : 1,
         ),
-        boxShadow: isNew ? [
-          BoxShadow(
-            color: color.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ] : [],
+        boxShadow: isNew
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [],
       ),
       child: Row(
         children: [
@@ -5816,7 +6195,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     if (_currentStep == 2) {
       // First check if operation is selected
       if (_currentOperation.isEmpty) return false;
-      
+
       switch (_currentOperation) {
         case 'add':
           return _selectedRole != null;
@@ -5826,10 +6205,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           return false;
       }
     }
-    
+
     // For other steps, check if user is selected first
     if (_selectedUser == null) return false;
-    
+
     switch (_currentOperation) {
       case 'add':
         return _selectedRole != null;
@@ -5844,18 +6223,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-                                  const Text(
+        const Text(
           'Select Supervisor',
-                                    style: TextStyle(
+          style: TextStyle(
             fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         const SizedBox(height: 16),
-                                  Container(
+        Container(
           padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.blue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.blue.withOpacity(0.3)),
@@ -5876,19 +6255,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               ),
               const SizedBox(width: 12),
               Expanded(
-                                    child: RichText(
+                child: RichText(
                   text: TextSpan(
                     children: [
                       const TextSpan(
                         text: 'This role requires a ',
                         style: TextStyle(
                           fontSize: 15,
-                                        color: Colors.white,
-                                        height: 1.3,
-                                      ),
+                          color: Colors.white,
+                          height: 1.3,
+                        ),
                       ),
                       TextSpan(
-                        text: _getSupervisorDisplayText(_selectedRole!).toLowerCase(),
+                        text: _getSupervisorDisplayText(_selectedRole!)
+                            .toLowerCase(),
                         style: const TextStyle(
                           fontSize: 15,
                           color: Colors.white,
@@ -5907,17 +6287,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     ],
                   ),
                 ),
-                                  ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
         const SizedBox(height: 24),
-        
+
         // 🚀 NEW: Card-based supervisor selection
         _buildSupervisorCards(),
-        
+
         const SizedBox(height: 40),
-        
+
         // Navigation buttons with glassmorphic design
         Row(
           children: [
@@ -5940,11 +6320,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
                 icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                label: const Text('Back', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text('Back',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const Spacer(),
@@ -5975,13 +6359,20 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
-                icon: Icon((_currentStep < _totalSteps) ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 20),
+                icon: Icon(
+                    (_currentStep < _totalSteps)
+                        ? Icons.arrow_forward_rounded
+                        : Icons.check_rounded,
+                    size: 20),
                 label: Text(
                   (_currentStep < _totalSteps) ? 'Next' : 'Complete',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -6009,42 +6400,47 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           style: TextStyle(fontSize: 16, color: Colors.white70),
         ),
         const SizedBox(height: 30),
-        
+
         Expanded(
           child: SingleChildScrollView(
             controller: _scrollController,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                                // Country Selection
-                  const Text(
+                // Country Selection
+                const Text(
                   "Country *",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
+                ),
+                const SizedBox(height: 8),
                 _buildGlassmorphicDropdown(
-                  _countries, 
-                  _selectedCountry, 
-                  '', 
+                  _countries,
+                  _selectedCountry,
+                  '',
                   (value) {
                     setState(() {
                       _selectedCountry = value;
                       _selectedCity = null; // Reset city when country changes
-                      
+
                       // 🎯 MODERATOR: Auto-set National values
                       if (_selectedRole == 'moderator' && value != null) {
                         _selectedProvince = 'National';
                         _selectedCity = 'National';
-                        _selectedUnitGender = 'Mixed'; // Auto-set to Mixed for country-wide management
+                        _selectedUnitGender =
+                            'Mixed'; // Auto-set to Mixed for country-wide management
                       }
                     });
                   },
                   isRequired: true,
                 ),
-                  const SizedBox(height: 20),
-                
+                const SizedBox(height: 20),
+
                 // 🎯 MODERATOR: Show special info message
-                if (_selectedRole == 'moderator' && _selectedCountry != null) ...[
+                if (_selectedRole == 'moderator' &&
+                    _selectedCountry != null) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -6071,12 +6467,16 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ),
                   const SizedBox(height: 20),
                 ],
-                
+
                 // Province Selection (only show if country is selected AND not moderator)
-                if (_selectedCountry != null && _selectedRole != 'moderator') ...[
+                if (_selectedCountry != null &&
+                    _selectedRole != 'moderator') ...[
                   const Text(
                     "Province/State *",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   _buildGlassmorphicDropdown(
@@ -6086,19 +6486,24 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     (value) {
                       setState(() {
                         _selectedProvince = value;
-                        _selectedCity = null; // Reset city when province changes
+                        _selectedCity =
+                            null; // Reset city when province changes
                       });
                     },
                     isRequired: true,
                   ),
                   const SizedBox(height: 20),
                 ],
-                
+
                 // City Selection (only show if province is selected AND not moderator)
-                if (_selectedProvince != null && _selectedRole != 'moderator') ...[
+                if (_selectedProvince != null &&
+                    _selectedRole != 'moderator') ...[
                   const Text(
                     "City *",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   _buildGlassmorphicDropdown(
@@ -6106,24 +6511,30 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     _selectedCity,
                     '',
                     (value) {
-                    setState(() => _selectedCity = value);
+                      setState(() => _selectedCity = value);
                     },
                     isRequired: true,
                   ),
                   const SizedBox(height: 20),
                 ],
-                
+
                 // Gender Selection (show if city is selected, but NOT for moderator)
                 if (_selectedCity != null && _selectedRole != 'moderator') ...[
                   _buildGlassmorphicGenderToggle(isRequired: true),
                   const SizedBox(height: 30),
                 ],
-                
+
                 // Role-specific additional details (only show if gender is selected)
-                if (_selectedCity != null && _selectedUnitGender != null && (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor')) ...[
+                if (_selectedCity != null &&
+                    _selectedUnitGender != null &&
+                    (_selectedRole == 'middleSchoolMentor' ||
+                        _selectedRole == 'highSchoolMentor')) ...[
                   const Text(
                     "Mentorship Class Assignment",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   _buildGlassmorphicMentorClassSelection(),
@@ -6133,7 +6544,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ),
           ),
         ),
-        
+
         // Navigation buttons with glassmorphic design
         Row(
           children: [
@@ -6153,8 +6564,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white70,
                     shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                   ),
                   icon: const Icon(Icons.arrow_back_rounded, size: 20),
                   label: const Text(
@@ -6188,30 +6601,34 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     : [],
               ),
               child: ElevatedButton.icon(
-                onPressed: _canComplete() ? () {
-                  HapticFeedback.mediumImpact();
-                  _goToNextStep();
-                } : null,
+                onPressed: _canComplete()
+                    ? () {
+                        HapticFeedback.mediumImpact();
+                        _goToNextStep();
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
-                icon: _isLoading 
+                icon: _isLoading
                     ? const SizedBox(
-                        width: 20, 
-                        height: 20, 
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.arrow_forward_rounded, size: 20),
                 label: _isLoading
                     ? const Text('')
-                    : const Text(
-                        'Next', 
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                      ),
+                    : const Text('Next',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -6225,12 +6642,13 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "Gender *", 
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          "Gender *",
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         const SizedBox(height: 4),
         const Text(
-          "Which group will this person work with?", 
+          "Which group will this person work with?",
           style: TextStyle(fontSize: 13, color: Colors.white70),
         ),
         const SizedBox(height: 12),
@@ -6241,23 +6659,24 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 onTap: () {
                   setState(() => _selectedUnitGender = 'Male');
                   // 🎯 AUTO-SCROLL: Show mentor class options after gender selection
-                  if (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') {
+                  if (_selectedRole == 'middleSchoolMentor' ||
+                      _selectedRole == 'highSchoolMentor') {
                     _scrollToMentorClassSection();
                   }
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: _selectedUnitGender == 'Male' 
-                        ? Colors.white.withOpacity(0.3) 
+                    color: _selectedUnitGender == 'Male'
+                        ? Colors.white.withOpacity(0.3)
                         : Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(
-                      color: _selectedUnitGender == 'Male' 
-                          ? Colors.white.withOpacity(0.6) 
+                      color: _selectedUnitGender == 'Male'
+                          ? Colors.white.withOpacity(0.6)
                           : Colors.white.withOpacity(0.3),
                     ),
-                    boxShadow: _selectedUnitGender == 'Male' 
+                    boxShadow: _selectedUnitGender == 'Male'
                         ? [
                             BoxShadow(
                               color: Colors.white.withOpacity(0.2),
@@ -6273,7 +6692,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _selectedUnitGender == 'Male' ? Colors.white : Colors.white70,
+                      color: _selectedUnitGender == 'Male'
+                          ? Colors.white
+                          : Colors.white70,
                     ),
                   ),
                 ),
@@ -6285,23 +6706,24 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 onTap: () {
                   setState(() => _selectedUnitGender = 'Female');
                   // 🎯 AUTO-SCROLL: Show mentor class options after gender selection
-                  if (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') {
+                  if (_selectedRole == 'middleSchoolMentor' ||
+                      _selectedRole == 'highSchoolMentor') {
                     _scrollToMentorClassSection();
                   }
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: _selectedUnitGender == 'Female' 
-                        ? Colors.white.withOpacity(0.3) 
+                    color: _selectedUnitGender == 'Female'
+                        ? Colors.white.withOpacity(0.3)
                         : Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(
-                      color: _selectedUnitGender == 'Female' 
-                          ? Colors.white.withOpacity(0.6) 
+                      color: _selectedUnitGender == 'Female'
+                          ? Colors.white.withOpacity(0.6)
                           : Colors.white.withOpacity(0.3),
                     ),
-                    boxShadow: _selectedUnitGender == 'Female' 
+                    boxShadow: _selectedUnitGender == 'Female'
                         ? [
                             BoxShadow(
                               color: Colors.white.withOpacity(0.2),
@@ -6317,7 +6739,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _selectedUnitGender == 'Female' ? Colors.white : Colors.white70,
+                      color: _selectedUnitGender == 'Female'
+                          ? Colors.white
+                          : Colors.white70,
                     ),
                   ),
                 ),
@@ -6329,16 +6753,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-  Widget _buildGlassmorphicDropdown(List<String> items, String? value, String label, ValueChanged<String?> onChanged, {bool isRequired = false}) {
+  Widget _buildGlassmorphicDropdown(List<String> items, String? value,
+      String label, ValueChanged<String?> onChanged,
+      {bool isRequired = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label.isNotEmpty) ...[
-        Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        const SizedBox(height: 12),
+          Text(
+            label,
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
         ],
         Container(
           decoration: BoxDecoration(
@@ -6361,33 +6788,38 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               'Select...',
               style: TextStyle(fontSize: 16, color: Colors.white60),
             ),
-            style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+                fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500),
             dropdownColor: const Color(0xFF2D3748),
             iconEnabledColor: Colors.white70,
             iconDisabledColor: Colors.white30,
             borderRadius: BorderRadius.circular(20),
             elevation: 8,
             underline: const SizedBox(), // Alt çizgiyi kaldır
-            items: items.map((item) => DropdownMenuItem(
-              value: item,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                child: Text(
-                  item, 
-                  style: const TextStyle(
-                    fontSize: 16, 
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            )).toList(),
+            items: items
+                .map((item) => DropdownMenuItem(
+                      value: item,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 4),
+                        child: Text(
+                          item,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ))
+                .toList(),
             onChanged: onChanged,
           ),
         ),
       ],
     );
   }
+
   Widget _buildGlassmorphicMentorClassSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -6418,16 +6850,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ),
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text('Create New Class', style: TextStyle(color: Colors.white)),
+                  label: const Text('Create New Class',
+                      style: TextStyle(color: Colors.white)),
                   onPressed: () {
-                    
                     _showCreateGroupDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
               ),
@@ -6436,7 +6870,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         else
           Column(
             children: [
-                            Container(
+              Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   color: Colors.white.withOpacity(0.15),
@@ -6449,7 +6883,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                 child: DropdownButtonFormField<String>(
                   value: _selectedMentorshipGroupId,
                   isExpanded: true,
@@ -6487,7 +6922,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                         (g) => g['id'] == value,
                         orElse: () => <String, dynamic>{},
                       );
-                      _selectedMentorshipGroupName = selected['name'] as String?; // 🎯 Cache selected name
+                      _selectedMentorshipGroupName =
+                          selected['name'] as String?; // 🎯 Cache selected name
                     });
                   },
                 ),
@@ -6500,16 +6936,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                 ),
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text('Create New Class', style: TextStyle(color: Colors.white)),
+                  label: const Text('Create New Class',
+                      style: TextStyle(color: Colors.white)),
                   onPressed: () {
-                    
                     _showCreateGroupDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
               ),
@@ -6520,22 +6958,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   bool _needsSupervisor() {
-    return _supervisorRoleHierarchy.containsKey(_selectedRole) || 
-           _dependentRoles.contains(_selectedRole);
+    return _supervisorRoleHierarchy.containsKey(_selectedRole) ||
+        _dependentRoles.contains(_selectedRole);
   }
 
   // _needsDetails retained for readability, used by flow-related conditions
   // _needsDetails removed; Step 4 gating is handled directly in _canCompleteAddRole and flow methods
 
   bool _canComplete() {
-    
-    
     // Basic validation: must have target user and selected role
     if (_targetUserName == null || _selectedRole == null) {
       return false;
     }
-    
-    
+
     // Operation-specific validations
     switch (_currentOperation) {
       case 'add':
@@ -6552,7 +6987,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
 
   bool _canCompleteAddRole() {
     if (_selectedRole == null) return false;
-    
+
     // 🎯 REORDERED: Universal Step 3 validation - ALL roles need location data
     if (_currentStep == 3) {
       // 🎯 MODERATOR: Special validation (only country and gender required)
@@ -6562,25 +6997,26 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         }
       } else {
         // Mandatory fields for NON-MODERATOR roles in Step 3 (Location Details)
-      if (_selectedCountry == null || 
-          _selectedProvince == null || 
-          _selectedCity == null || 
-          _selectedUnitGender == null) {
-        return false;
+        if (_selectedCountry == null ||
+            _selectedProvince == null ||
+            _selectedCity == null ||
+            _selectedUnitGender == null) {
+          return false;
         }
       }
-      
+
       // Role-specific additional requirements
-      if (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') {
+      if (_selectedRole == 'middleSchoolMentor' ||
+          _selectedRole == 'highSchoolMentor') {
         // Mentors also need class selection
         if (_selectedMentorshipGroupId == null) {
           return false;
         }
       }
-      
+
       return true;
     }
-    
+
     // 🎯 REORDERED: Step 4 validation - Supervisor Selection
     if (_currentStep == 4) {
       // Check if supervisor is required and selected
@@ -6589,8 +7025,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       }
       return true;
     }
-    
-          // Check if supervisor is required and validated (for earlier steps)
+
+    // Check if supervisor is required and validated (for earlier steps)
     if (_needsSupervisor()) {
       // Special case for moderator: admin can assign moderator role
       if (_selectedRole == 'moderator') {
@@ -6598,42 +7034,42 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         if (_supervisorUserName == null) {
           return false;
         }
-        
+
         // Validate supervisor role
-        if (_supervisorUserRole != 'admin' && _supervisorUserRole?.toLowerCase() != 'admin') {
+        if (_supervisorUserRole != 'admin' &&
+            _supervisorUserRole?.toLowerCase() != 'admin') {
           return false;
         }
-        
+
         // For moderator, if we're on step 5, check orphaned units choice
         if (_currentStep == 5 && _hasOrphanedUnits) {
           if (_orphanedUnitChoice == null) return false;
-          if (_orphanedUnitChoice == 'recover' && _selectedOrphanedUnitId == null) return false;
+          if (_orphanedUnitChoice == 'recover' &&
+              _selectedOrphanedUnitId == null) return false;
         }
-        
+
         return true;
       }
-      
+
       // For other roles, use existing validation
       if (_supervisorUserName == null || _supervisorRoleMatches != true) {
         return false;
       }
-      }
-      
-      // Check orphaned units choice if we're on step 5
-      if (_currentStep == 5 && _hasOrphanedUnits) {
-        if (_orphanedUnitChoice == null) return false;
-        if (_orphanedUnitChoice == 'recover' && _selectedOrphanedUnitId == null) return false;
     }
-    
+
+    // Check orphaned units choice if we're on step 5
+    if (_currentStep == 5 && _hasOrphanedUnits) {
+      if (_orphanedUnitChoice == null) return false;
+      if (_orphanedUnitChoice == 'recover' && _selectedOrphanedUnitId == null)
+        return false;
+    }
+
     return true;
   }
-
 
   bool _canCompleteDeleteRole() {
     return _selectedExistingRole != null;
   }
-
-
 
   void _goToNextStep() async {
     if (_currentStep < _totalSteps) {
@@ -6659,9 +7095,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           _selectedProvince = null;
           _selectedCity = null;
           _selectedUnitGender = null;
-          
+
           // Reset mentorship groups for mentor roles
-          if (_selectedRole == 'middleSchoolMentor' || _selectedRole == 'highSchoolMentor') {
+          if (_selectedRole == 'middleSchoolMentor' ||
+              _selectedRole == 'highSchoolMentor') {
             _selectedMentorshipGroupId = null;
             _selectedMentorshipGroupName = null;
             _mentorshipGroups = [];
@@ -6677,7 +7114,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           _supervisorRoleMatches = null;
           _isLoadingSupervisors = false;
         });
-        
+
         // 🎯 FILTERING: Load supervisors with city and gender filters after state reset
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _fetchAvailableSupervisors();
@@ -6690,7 +7127,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           _orphanedUnitChoice = null;
           _selectedOrphanedUnitId = null;
         });
-        
+
         // Check for orphaned units when entering step 5
         if (_unitManagingRoles.contains(_selectedRole)) {
           await _checkForOrphanedUnits();
@@ -6708,11 +7145,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
       setState(() {
         _currentStep--;
         _message = ''; // Clear any error messages when going back
-        
+
         // 🎯 NEW STRATEGY: PRESERVE all state when going backward
         // Users should see their previous selections intact
         // No state clearing when going back - everything is preserved!
-        
+
         // 🎯 SPECIAL CASE: Fix role selection UI visibility when going back to Step 2
         if (_currentStep == 2 && _currentOperation.isNotEmpty) {
           // If user has selected an operation before, show role selection UI
@@ -6722,21 +7159,19 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     }
   }
 
-
-
   @override
   void dispose() {
     // Legacy listeners removed
-    
+
     // 🚀 NEW: Modern search cleanup
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _scrollController.dispose();
-    
+
     // Cancel timers
     _searchDebounce?.cancel();
     _successMessageTimer?.cancel();
-    
+
     // 🚀 PERFORMANCE: Clear all caches to free memory
     _searchCache.clear();
     _cacheTimestamps.clear();
@@ -6744,16 +7179,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     _supervisorCacheTimestamps.clear();
     _mentorshipGroupsCache.clear();
     _mentorshipCacheTimestamps.clear();
-    
+
     // Dispose animation controller
     _slideAnimationController.dispose();
-    
+
     super.dispose();
   }
 
   // 🚀 NEW: Enhanced Success Message Widget with Timer
   Widget _buildEnhancedSuccessMessage() {
-    if (!_showSuccessMessage || _message.isEmpty) return const SizedBox.shrink();
+    if (!_showSuccessMessage || _message.isEmpty)
+      return const SizedBox.shrink();
 
     return Positioned(
       bottom: 100, // Above Next button
@@ -6764,15 +7200,14 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _showDeletionMessage 
+            color: _showDeletionMessage
                 ? Colors.red.withOpacity(0.9)
                 : Colors.green.withOpacity(0.9),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: _showDeletionMessage 
-                  ? Colors.red.withOpacity(0.4)
-                  : Colors.green.withOpacity(0.4)
-            ),
+                color: _showDeletionMessage
+                    ? Colors.red.withOpacity(0.4)
+                    : Colors.green.withOpacity(0.4)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -6784,12 +7219,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           child: Row(
             children: [
               Icon(
-                _showDeletionMessage 
-                    ? Icons.delete_forever 
-                    : Icons.check_circle, 
-                color: Colors.white, 
-                size: 24
-              ),
+                  _showDeletionMessage
+                      ? Icons.delete_forever
+                      : Icons.check_circle,
+                  color: Colors.white,
+                  size: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -6812,7 +7246,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       value: _progressValue,
                       strokeWidth: 3,
                       backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                     Positioned(
                       top: 0,
@@ -6821,7 +7256,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       bottom: 0,
                       child: Center(
                         child: Transform.translate(
-                          offset: const Offset(-2, -2), // Hafif sola ve yukarı kaydır
+                          offset: const Offset(
+                              -2, -2), // Hafif sola ve yukarı kaydır
                           child: Text(
                             '$_countdown',
                             style: const TextStyle(
@@ -6902,7 +7338,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   style: const TextStyle(fontSize: 18, color: Colors.white),
                   decoration: InputDecoration(
                     hintText: placeholder,
-                    hintStyle: const TextStyle(fontSize: 16, color: Colors.white70),
+                    hintStyle:
+                        const TextStyle(fontSize: 16, color: Colors.white70),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -6927,7 +7364,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             ],
           ),
         ),
-        
+
         // Search hint text
         Padding(
           padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
@@ -7028,7 +7465,8 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                       onPressed: () {
                         // Clear selected user and search results
                         controller.clear();
-                        onUserSelected({'clear': true}); // Special signal to clear
+                        onUserSelected(
+                            {'clear': true}); // Special signal to clear
                       },
                       icon: const Icon(
                         Icons.close_rounded,
@@ -7041,15 +7479,18 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildUserInfoRow(Icons.person, 'Name', 
-                  '${selectedUser['firstName'] ?? ''} ${selectedUser['lastName'] ?? ''}'.trim()),
-                _buildUserInfoRow(Icons.alternate_email, 'Username', 
-                  selectedUser['username'] ?? 'N/A'),
-                _buildUserInfoRow(Icons.email, 'Email', 
-                  selectedUser['email'] ?? 'N/A'),
-                _buildUserInfoRow(Icons.fingerprint, 'Member ID', 
-                  selectedUser['memberId'] ?? selectedUser['id'] ?? 'N/A'),
-                
+                _buildUserInfoRow(
+                    Icons.person,
+                    'Name',
+                    '${selectedUser['firstName'] ?? ''} ${selectedUser['lastName'] ?? ''}'
+                        .trim()),
+                _buildUserInfoRow(Icons.alternate_email, 'Username',
+                    selectedUser['username'] ?? 'N/A'),
+                _buildUserInfoRow(
+                    Icons.email, 'Email', selectedUser['email'] ?? 'N/A'),
+                _buildUserInfoRow(Icons.fingerprint, 'Member ID',
+                    selectedUser['memberId'] ?? selectedUser['id'] ?? 'N/A'),
+
                 // Show all roles
                 _buildUserRolesRow(selectedUser),
               ],
@@ -7063,8 +7504,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           Container(
             constraints: const BoxConstraints(maxHeight: 300),
             child: Column(
-              children: List.generate(3, (index) => 
-                Container(
+              children: List.generate(
+                3,
+                (index) => Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -7122,7 +7564,9 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         ],
 
         // Search Results
-        if (searchResults.isNotEmpty && selectedUser == null && !isSearching) ...[
+        if (searchResults.isNotEmpty &&
+            selectedUser == null &&
+            !isSearching) ...[
           Container(
             constraints: const BoxConstraints(maxHeight: 400),
             child: ListView.builder(
@@ -7134,7 +7578,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
               },
             ),
           ),
-        ] else if (controller.text.length >= 2 && !isSearching && searchResults.isEmpty && selectedUser == null) ...[
+        ] else if (controller.text.length >= 2 &&
+            !isSearching &&
+            searchResults.isEmpty &&
+            selectedUser == null) ...[
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -7195,7 +7642,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     // Get all user roles
     List<String> userRoles = [];
     final roles = user['roles'] as List<dynamic>?;
-    
+
     if (roles != null && roles.isNotEmpty) {
       for (var roleObj in roles) {
         if (roleObj is Map<String, dynamic>) {
@@ -7212,12 +7659,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         userRoles.add(role);
       }
     }
-    
+
     // If no non-user roles found, show user role
     if (userRoles.isEmpty) {
       userRoles.add('user');
     }
-    
+
     // 🎯 Sort roles by hierarchy
     userRoles = _sortRoleStringsByHierarchy(userRoles);
 
@@ -7240,22 +7687,26 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             child: Wrap(
               spacing: 6,
               runSpacing: 4,
-              children: userRoles.map((role) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _getRoleColor(role).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _getRoleColor(role).withOpacity(0.4)),
-                ),
-                child: Text(
-                  _getRoleTitle(role),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _getRoleColor(role),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )).toList(),
+              children: userRoles
+                  .map((role) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _getRoleColor(role).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: _getRoleColor(role).withOpacity(0.4)),
+                        ),
+                        child: Text(
+                          _getRoleTitle(role),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _getRoleColor(role),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ))
+                  .toList(),
             ),
           ),
         ],
@@ -7263,15 +7714,17 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     );
   }
 
-  Widget _buildUserSearchResult(Map<String, dynamic> user, Function(Map<String, dynamic>) onTap) {
-    final fullName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
+  Widget _buildUserSearchResult(
+      Map<String, dynamic> user, Function(Map<String, dynamic>) onTap) {
+    final fullName =
+        '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
     final username = user['username'] ?? '';
     final email = user['email'] ?? '';
-    
+
     // Get all user roles
     List<String> userRoles = [];
     final roles = user['roles'] as List<dynamic>?;
-    
+
     if (roles != null && roles.isNotEmpty) {
       for (var roleObj in roles) {
         if (roleObj is Map<String, dynamic>) {
@@ -7288,15 +7741,15 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
         userRoles.add(role);
       }
     }
-    
+
     // If no non-user roles found, show user role
     if (userRoles.isEmpty) {
       userRoles.add('user');
     }
-    
+
     // 🎯 Sort roles by hierarchy
     userRoles = _sortRoleStringsByHierarchy(userRoles);
-    
+
     // Use primary role for avatar color (first non-user role or user)
     final primaryRole = userRoles.first;
 
@@ -7350,7 +7803,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // User Info
                 Expanded(
                   child: Column(
@@ -7367,7 +7820,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      
+
                       // Username and Email
                       if (username.isNotEmpty)
                         Text(
@@ -7388,33 +7841,36 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                      
+
                       const SizedBox(height: 6),
-                      
+
                       // Role Badges - Show all roles
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
-                        children: userRoles.map((role) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getRoleColor(role).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _getRoleTitle(role),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _getRoleColor(role),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        )).toList(),
+                        children: userRoles
+                            .map((role) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _getRoleColor(role).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    _getRoleTitle(role),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _getRoleColor(role),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Select Icon
                 Icon(
                   Icons.arrow_forward_ios_rounded,
@@ -7438,8 +7894,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
     return name[0].toUpperCase();
   }
 
-  String _getFullNameFromFields(String? name, String? lastName, {String id = ''}) {
-    if ((name == null || name.isEmpty) && (lastName == null || lastName.isEmpty)) {
+  String _getFullNameFromFields(String? name, String? lastName,
+      {String id = ''}) {
+    if ((name == null || name.isEmpty) &&
+        (lastName == null || lastName.isEmpty)) {
       return id;
     }
     return '${name ?? ''} ${lastName ?? ''}'.trim();
@@ -7476,54 +7934,55 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   // 🚀 Handle organizational unit updates for role deletion
-  Future<void> _handleOrganizationalUnitForRoleDeletion(String userId, String deletedRole) async {
+  Future<void> _handleOrganizationalUnitForRoleDeletion(
+      String userId, String deletedRole) async {
     try {
 // print('🗑️ Handling organizational units for deleted role: $deletedRole, userId: $userId');
-      
+
       // 🚀 Handle mentor roles separately (they use currentMentorId, not supervisorId)
-      if (deletedRole == 'middleSchoolMentor' || deletedRole == 'highSchoolMentor') {
+      if (deletedRole == 'middleSchoolMentor' ||
+          deletedRole == 'highSchoolMentor') {
         await _handleMentorRoleDeletion(userId, deletedRole);
         return;
       }
-      
 
-      
       // 🚀 Handle unit-managing roles (they use managedBy)
       final unitsQuery = await _firestore
           .collection('organizationalUnits')
           .where('managedBy', isEqualTo: userId)
           .get();
-      
+
 // print('📋 Found ${unitsQuery.docs.length} organizational units supervised by user');
-      
+
       if (unitsQuery.docs.isEmpty) {
 // print('❌ No organizational units found for user $userId');
         return;
       }
-      
+
       // Check if user still has other unit-managing roles
-      final remainingUnitRoles = _existingUserRoles.where((r) => 
-        r['role'] != deletedRole && 
-        r['role'] != 'user' &&
-        _unitManagingRoles.contains(r['role'])
-      ).toList();
-      
+      final remainingUnitRoles = _existingUserRoles
+          .where((r) =>
+              r['role'] != deletedRole &&
+              r['role'] != 'user' &&
+              _unitManagingRoles.contains(r['role']))
+          .toList();
+
 // print('📊 User has ${remainingUnitRoles.length} remaining unit-managing roles');
-      
+
       // Process each organizational unit
       for (final unitDoc in unitsQuery.docs) {
         final unitData = unitDoc.data();
         // unitName not used in logic below
         final unitLevel = unitData['level'] as String? ?? 'unknown';
-        
+
 // print('🏢 Processing unit: $unitName (${unitDoc.id})');
-        
+
         // Check if this specific unit type can be managed by remaining roles
         bool canStillManageThisUnit = false;
-        
+
         for (final remainingRole in remainingUnitRoles) {
           final roleStr = remainingRole['role'] as String;
-          
+
           // Check if the remaining role can manage this unit type
           if (_canRoleManageUnitType(roleStr, unitLevel, unitData)) {
             canStillManageThisUnit = true;
@@ -7531,16 +7990,16 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             break;
           }
         }
-        
+
         if (!canStillManageThisUnit) {
           // User can no longer manage this unit - mark as orphaned
 // print('🔄 Marking unit as orphaned: $unitName');
-          await _handleOrganizationalUnitTransition(unitDoc.reference, unitData, deletedRole, userId);
+          await _handleOrganizationalUnitTransition(
+              unitDoc.reference, unitData, deletedRole, userId);
         } else {
 // print('✅ Unit remains under user management via other roles');
         }
       }
-      
     } catch (e) {
 // print('❌ Error handling organizational units for role deletion: $e');
       // Don't throw - this shouldn't block the role deletion
@@ -7548,10 +8007,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   // 🚀 NEW: Handle mentor role deletion specifically
-  Future<void> _handleMentorRoleDeletion(String userId, String deletedRole) async {
+  Future<void> _handleMentorRoleDeletion(
+      String userId, String deletedRole) async {
     try {
 // print('🎓 Handling mentor role deletion: $deletedRole, userId: $userId');
-      
+
       // Find all mentorship groups where this user is the current mentor
       // 🎯 NEW: Use standard managedBy field instead of currentMentorId
       final mentorshipGroupsQuery = await _firestore
@@ -7559,35 +8019,37 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           .where('managedBy', isEqualTo: userId)
           .where('level', isEqualTo: 'mentor')
           .get();
-      
+
 // print('📚 Found ${mentorshipGroupsQuery.docs.length} mentorship groups assigned to this mentor');
-      
+
       if (mentorshipGroupsQuery.docs.isEmpty) {
 // print('❌ No mentorship groups found for mentor $userId');
         return;
       }
-      
+
       // Check if user has other mentor roles
-      final remainingMentorRoles = _existingUserRoles.where((r) => 
-        r['role'] != deletedRole && 
-        (r['role'] == 'middleSchoolMentor' || r['role'] == 'highSchoolMentor')
-      ).toList();
-      
+      final remainingMentorRoles = _existingUserRoles
+          .where((r) =>
+              r['role'] != deletedRole &&
+              (r['role'] == 'middleSchoolMentor' ||
+                  r['role'] == 'highSchoolMentor'))
+          .toList();
+
 // print('🎯 User has ${remainingMentorRoles.length} remaining mentor roles');
-      
+
       // Process each mentorship group
       for (final groupDoc in mentorshipGroupsQuery.docs) {
         final groupData = groupDoc.data();
         // groupName and groupType not used in logic below
-        
+
 // print('🏫 Processing mentorship group: $groupName (${groupDoc.id})');
-        
+
         // Check if user can still mentor this specific group type with remaining roles
         bool canStillMentorThisGroup = false;
-        
+
         for (final remainingRole in remainingMentorRoles) {
           final roleStr = remainingRole['role'] as String;
-          
+
           // Check if the remaining mentor role matches this group type
           if (_canMentorRoleManageGroup(roleStr, groupData)) {
             canStillMentorThisGroup = true;
@@ -7595,11 +8057,11 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             break;
           }
         }
-        
+
         if (!canStillMentorThisGroup) {
           // User can no longer mentor this group - mark as awaiting mentor
 // print('🔄 Marking mentorship group as awaiting mentor: $groupName');
-          
+
           await groupDoc.reference.update({
             // 🎯 NEW: Clear standard management fields
             'managedBy': FieldValue.delete(),
@@ -7613,13 +8075,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
             // Mentor's own unit will handle recovery tracking
             'updatedAt': FieldValue.serverTimestamp(),
           });
-          
+
 // print('✅ Mentorship group updated successfully');
         } else {
 // print('✅ Group remains under user mentorship via other mentor roles');
         }
       }
-      
     } catch (e) {
 // print('❌ Error handling mentor role deletion: $e');
       // Don't throw - this shouldn't block the role deletion
@@ -7627,100 +8088,115 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
   }
 
   // 🚀 NEW: Check if a mentor role can manage a specific group type
-  bool _canMentorRoleManageGroup(String mentorRole, Map<String, dynamic> groupData) {
+  bool _canMentorRoleManageGroup(
+      String mentorRole, Map<String, dynamic> groupData) {
     final groupName = groupData['name'] as String? ?? '';
-    
+
     // Middle school mentors can only mentor middle school groups
     if (mentorRole == 'middleSchoolMentor') {
-      return groupName.toLowerCase().contains('middle') || 
-             groupName.toLowerCase().contains('grade') && 
-             (groupName.contains('6') || groupName.contains('7') || groupName.contains('8'));
+      return groupName.toLowerCase().contains('middle') ||
+          groupName.toLowerCase().contains('grade') &&
+              (groupName.contains('6') ||
+                  groupName.contains('7') ||
+                  groupName.contains('8'));
     }
-    
-    // High school mentors can only mentor high school groups  
+
+    // High school mentors can only mentor high school groups
     if (mentorRole == 'highSchoolMentor') {
       return groupName.toLowerCase().contains('high') ||
-             groupName.toLowerCase().contains('grade') && 
-             (groupName.contains('9') || groupName.contains('10') || groupName.contains('11') || groupName.contains('12'));
+          groupName.toLowerCase().contains('grade') &&
+              (groupName.contains('9') ||
+                  groupName.contains('10') ||
+                  groupName.contains('11') ||
+                  groupName.contains('12'));
     }
-    
+
     return false;
   }
-  
+
   // 🚀 NEW: Check if a role can manage a specific unit type
-  bool _canRoleManageUnitType(String role, String unitLevel, Map<String, dynamic> unitData) {
+  bool _canRoleManageUnitType(
+      String role, String unitLevel, Map<String, dynamic> unitData) {
     final unitName = unitData['name'] as String? ?? '';
-    
+
     // 🎯 NEW SYSTEM: Role-unit compatibility based on new levels
-    
+
     // Moderator can manage moderator-level units
     if (role == 'moderator' && unitLevel == 'moderator') {
       return true;
     }
-    
+
     // Director can manage director-level units
     if (role == 'director' && unitLevel == 'director') {
       return true;
     }
-    
+
     // Coordinators can manage coordinator-level units of their education level
-    if (role.contains('Coordinator') && !role.contains('AssistantCoordinator') && unitLevel == 'coordinator') {
-      final roleEducationLevel = role.replaceAll('Coordinator', '').toLowerCase();
+    if (role.contains('Coordinator') &&
+        !role.contains('AssistantCoordinator') &&
+        unitLevel == 'coordinator') {
+      final roleEducationLevel =
+          role.replaceAll('Coordinator', '').toLowerCase();
       final unitNameLower = unitName.toLowerCase();
-      return unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'));
+      return unitNameLower
+          .contains(roleEducationLevel.replaceAll('school', ' school'));
     }
-    
+
     // Assistant coordinators can manage assistantCoordinator-level units of their education level
-    if (role.contains('AssistantCoordinator') && unitLevel == 'assistantCoordinator') {
-      final roleEducationLevel = role.replaceAll('AssistantCoordinator', '').toLowerCase();
+    if (role.contains('AssistantCoordinator') &&
+        unitLevel == 'assistantCoordinator') {
+      final roleEducationLevel =
+          role.replaceAll('AssistantCoordinator', '').toLowerCase();
       final unitNameLower = unitName.toLowerCase();
-      return unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'));
+      return unitNameLower
+          .contains(roleEducationLevel.replaceAll('school', ' school'));
     }
-    
+
     // Accountants can manage accountant-level units
     if (role == 'accountant' && unitLevel == 'accountant') {
       return true;
     }
-    
+
     // Mentors can manage mentor-level units of their education level
-    if ((role == 'middleSchoolMentor' || role == 'highSchoolMentor') && unitLevel == 'mentor') {
+    if ((role == 'middleSchoolMentor' || role == 'highSchoolMentor') &&
+        unitLevel == 'mentor') {
       final roleEducationLevel = role.replaceAll('Mentor', '').toLowerCase();
       final unitNameLower = unitName.toLowerCase();
-      return unitNameLower.contains(roleEducationLevel.replaceAll('school', ' school'));
+      return unitNameLower
+          .contains(roleEducationLevel.replaceAll('school', ' school'));
     }
-    
+
     // House leaders can manage houseLeader-level units
     if (role == 'houseLeader' && unitLevel == 'houseLeader') {
       return true;
     }
-    
+
     // Student house leaders can manage studentHouseLeader-level units
     if (role == 'studentHouseLeader' && unitLevel == 'studentHouseLeader') {
       return true;
     }
-    
+
     // House members can manage houseMember-level units (if any)
     if (role == 'houseMember' && unitLevel == 'houseMember') {
       return true;
     }
-    
+
     // Student house members can manage studentHouseMember-level units (if any)
     if (role == 'studentHouseMember' && unitLevel == 'studentHouseMember') {
       return true;
     }
-    
+
     return false;
   }
 
   // 🚀 Handle organizational unit transition when supervisor leaves
   Future<void> _handleOrganizationalUnitTransition(
-    DocumentReference unitRef, 
-    Map<String, dynamic> unitData, 
+    DocumentReference unitRef,
+    Map<String, dynamic> unitData,
     String deletedRole,
     String userId,
   ) async {
     try {
-
       // Strategy depends on unit type and deleted role
       if (_unitManagingRoles.contains(deletedRole)) {
         // This was a unit-managing role - mark unit as needing reassignment
@@ -7730,12 +8206,12 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           'status': 'pendingReassignment',
           'lastManagerId': userId, // 🎉 STANDARD: Recovery tracking
           'lastManagerRole': deletedRole, // 🎉 STANDARD: Audit tracking
-          'managerChangedAt': FieldValue.serverTimestamp(), // 🎉 STANDARD: Change timestamp
+          'managerChangedAt':
+              FieldValue.serverTimestamp(), // 🎉 STANDARD: Change timestamp
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        
-      } else if (deletedRole == 'middleSchoolMentor' || deletedRole == 'highSchoolMentor') {
+      } else if (deletedRole == 'middleSchoolMentor' ||
+          deletedRole == 'highSchoolMentor') {
         // Mentor role - use standard deletion logic
         await unitRef.update({
           'managedBy': FieldValue.delete(),
@@ -7743,11 +8219,10 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           'status': 'pendingReassignment',
           'lastManagerId': userId, // 🎉 STANDARD: Recovery tracking
           'lastManagerRole': deletedRole, // 🎉 STANDARD: Audit tracking
-          'managerChangedAt': FieldValue.serverTimestamp(), // 🎉 STANDARD: Change timestamp
+          'managerChangedAt':
+              FieldValue.serverTimestamp(), // 🎉 STANDARD: Change timestamp
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        
       } else {
         // Other dependent roles - update last known info
         await unitRef.update({
@@ -7755,9 +8230,7 @@ class _UniversalRoleAssignmentPageState extends State<UniversalRoleAssignmentPag
           'lastKnownRoleRemoved': deletedRole,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
       }
-      
     } catch (e) {
       // Log error but don't throw - role deletion should still proceed
     }

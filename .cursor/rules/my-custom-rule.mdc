@@ -1,0 +1,78 @@
+---
+description: Project-wide Flutter coding & design rules
+alwaysApply: false
+---
+# === General Principles ===
+- Always write concise, technical Dart code with accurate examples.
+- Use functional and declarative programming patterns where possible.
+- Prefer composition over inheritance.
+- Use descriptive variable names with auxiliary verbs (isLoading, hasError).
+- Keep lines ≤ 80 characters, use trailing commas for formatting consistency.
+- Document non-obvious code decisions inline with comments.
+
+# === File Structure ===
+- Structure files with this order: exported widget → subwidgets → helpers → static content → types.
+- Separate large widgets into private widgets instead of private build methods.
+
+# === Flutter / Dart Conventions ===
+- Use const constructors for immutable widgets.
+- Prefer expression bodies (=>) for one-liners.
+- Use Freezed for immutable state classes & sealed unions.
+- Use @JsonSerializable(fieldRename: FieldRename.snake) for models.
+- Always add createdAt, updatedAt, isDeleted in database models.
+
+# === Error Handling & Empty States ===
+- Use AsyncValue (Riverpod) for async state.
+- Show errors using SelectableText.rich with red color (no SnackBars).
+- Empty states must be handled inside the screen widget itself.
+
+# === Riverpod ===
+- Use @riverpod annotation to generate providers.
+- Prefer AsyncNotifierProvider / NotifierProvider over StateProvider.
+- Avoid StateProvider, StateNotifierProvider, ChangeNotifierProvider unless necessary.
+- Use ref.invalidate() for refreshing providers.
+- Cancel async ops when widget is disposed.
+
+# === Performance ===
+- Use const widgets whenever possible to reduce rebuilds.
+- Optimize list rendering with ListView.builder.
+- Use AssetImage for static images, cached_network_image for remote.
+- Handle Supabase errors gracefully (network, auth, DB errors).
+
+# === Navigation ===
+- Use GoRouter (preferred) or auto_route for navigation.
+- Implement deep linking if possible.
+
+# === UI & Styling ===
+- Responsive layouts with LayoutBuilder or MediaQuery.
+- Use Theme.of(context).textTheme (e.g., titleLarge, bodyMedium).
+- Prefer Apple-style minimal, clean UI with subtle depth.
+- Spacing always uses AppSpacing constants.
+- Colors always come from AppColors and must support ThemeColorPicker.
+- Cards must use CleanCard instead of Container/Material.
+- No heavy shadows — only subtle shadows (0.04–0.1 opacity).
+- For buttons:
+  - Use CleanCard for action buttons in dashboard.
+  - Labels can wrap up to 3 lines, centered, consistent fontSize.
+  - Always align icon + label vertically centered.
+- Notification widgets must be wrapped in CleanCard with border + subtle shadow.
+- Bottom navigation bar must have a subtle top border or shadow to separate it from background.
+
+# === Project-Specific Rules ===
+- Dashboard buttons:
+  - Use equal sizes for all icons.
+  - Labels allow up to 3 lines (e.g., “Fix Orphaned Groups” should break into 3 clean lines if needed).
+  - Prefer icons or logos instead of text-only for visual engagement.
+- RoleDashboardWrapper:
+  - Keep role title left-aligned, bold, prominent.
+  - Always show notification card at the top with CleanCard.
+- ThemeColorPicker:
+  - All custom components (cards, buttons, bars) must adapt to theme colors.
+- Replace private `_buildXYZ` methods with private widgets if >20 lines.
+
+# === Misc ===
+- Use log() instead of print() for debugging.
+- Add errorBuilder for all Image.network.
+- Use RefreshIndicator for pull-to-refresh where relevant.
+- Run build_runner after modifying annotated classes:
+  flutter pub run build_runner build --delete-conflicting-outputs
